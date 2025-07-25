@@ -1,0 +1,66 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "enabled": true,
+  "extends": [
+    "config:recommended",
+    ":preserveSemverRanges",
+    "group:monorepos",
+    "group:recommended"
+  ],
+  "packageRules": [
+    {
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
+      "automerge": true,
+      "automergeType": "pr"
+    },
+    {
+      "matchDepTypes": [
+        "engines"
+      ],
+      "matchPackageNames": [
+        "node"
+      ],
+      "rangeStrategy": "replace"
+    },
+    {
+      "groupName": "MUI packages",
+      "matchPackageNames": [
+        "/^@mui//"
+      ]
+    },
+    {
+      "groupName": "React core",
+      "matchPackageNames": [
+        "/^react/",
+        "/^react-dom/",
+        "/^react-scripts/"
+      ]
+    },
+    {
+      "groupName": "Testing libraries",
+      "matchPackageNames": [
+        "/^@testing-library//",
+        "/^jest/"
+      ]
+    },
+    {
+      "groupName": "TypeScript",
+      "matchPackageNames": [
+        "typescript",
+        "/^@types//"
+      ]
+    },
+    {
+      "matchDepTypes": [
+        "engines"
+      ],
+      "matchCategories": [
+        "node"
+      ],
+      "rangeStrategy": "replace"
+    }
+  ]
+}

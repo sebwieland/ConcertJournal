@@ -1,0 +1,93 @@
+version: '3.8'
+
+services:
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: concert-journal-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: concertjournal
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: rootpassword
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - concert-journal-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "user", "-ppassword"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: development
+    container_name: concert-journal-backend
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/concertjournal?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: user
+      SPRING_DATASOURCE_PASSWORD: password
+      CORS_ALLOWED_ORIGINS: http://localhost:3000
+      SERVER_ADDRESS: 0.0.0.0
+      # DevTools settings
+      SPRING_DEVTOOLS_RESTART_ENABLED: "true"
+      SPRING_DEVTOOLS_LIVERELOAD_ENABLED: "true"
+      SPRING_DEVTOOLS_REMOTE_SECRET: "mysecret"
+    ports:
+      - "8080:8080"
+      - "35729:35729" # LiveReload port
+    volumes:
+      - ./backend:/app
+      - ./backend/src:/app/src:delegated
+      - ./backend/target:/app/target
+      - maven-repo:/root/.m2
+    networks:
+      - concert-journal-network
+    # Use Maven to run the application in development mode
+    command: "./mvnw spring-boot:run -Dspring-boot.run.jvmArguments='-Dspring.devtools.restart.enabled=true -Dspring.devtools.livereload.enabled=true'"
+
+  # Frontend Application
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: development
+    container_name: concert-journal-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      NODE_ENV: development
+      VITE_API_URL: http://localhost:8080
+      # Enable HMR and Fast Refresh
+      VITE_HMR: "true"
+      VITE_FAST_REFRESH: "true"
+    ports:
+      - "3000:3000"
+      - "24678:24678" # Vite HMR websocket port
+    volumes:
+      - ./frontend:/app:delegated
+      - /app/node_modules
+    networks:
+      - concert-journal-network
+    command: npm run dev -- --host 0.0.0.0 --hmr
+
+networks:
+  concert-journal-network:
+    driver: bridge
+
+volumes:
+  mysql-data:
+  maven-repo:

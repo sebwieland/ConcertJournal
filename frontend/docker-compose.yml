@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  backend:
+    #    image: wielandseb/concertjournal:api-v8
+    build: ./../ConcertJournalAPI
+    container_name: backend
+    volumes:
+      - ./DB:/app/DB
+    environment:
+      - JWT_SECRET=${JWT_SECRET}
+    ports:
+      - "8080:8080"
+
+  frontend:
+    #    image: wielandseb/concertjournal:frontend-v7
+    build:
+      context: .
+      args:
+        REACT_APP_BACKEND_IP: http://backend:8080
+    container_name: frontend
+    depends_on:
+      - backend
+    ports:
+      - "3020:3000"
+    environment:
+      - REACT_APP_BACKEND_IP=http://backend:8080
+      - NODE_ENV=production
+      - VITE_ENSURE_COMPONENTS=true
+

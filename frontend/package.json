@@ -1,0 +1,82 @@
+{
+  "name": "concertjournal",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@emotion/styled": "^11.13.0",
+    "@mui/icons-material": "^7.0.0",
+    "@mui/material": "^7.0.0",
+    "@mui/x-data-grid": "^7.28.3",
+    "@mui/x-date-pickers": "^7.28.3",
+    "axios": "^1.8.4",
+    "dayjs": "^1.11.13",
+    "material-ui-confirm": "^4.0.0",
+    "musicbrainz-api": "^0.24.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-query": "^3.39.3",
+    "react-router-dom": "^7.0.0",
+    "react-swipeable-list": "^1.10.0",
+    "typescript": "^5.0.0",
+    "web-vitals": "^2.1.4"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.0.0",
+    "@types/jest": "^29.0.0",
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.2",
+    "@vitejs/plugin-react": "^4.2.1",
+    "@vitest/coverage-v8": "^1.2.1",
+    "jsdom": "^23.0.1",
+    "serve": "^14.2.1",
+    "vite": "^5.1.4",
+    "vite-plugin-sitemap": "^0.5.3",
+    "vite-tsconfig-paths": "^4.2.1",
+    "vitest": "^1.2.1"
+  },
+  "type": "module",
+  "scripts": {
+"start": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "test": "vitest",
+    "test:coverage": "vitest run --coverage"
+  },
+  "vitest": {
+    "coverage": {
+      "provider": "v8",
+      "reporter": [
+        "text",
+        "html",
+        "lcov"
+      ],
+      "exclude": [
+        "node_modules/",
+        "dist/",
+        "**/*.test.tsx",
+        "**/*.test.ts"
+      ]
+    }
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}
