@@ -159,6 +159,20 @@ npm install
 npm run build
 ```
 
+## Continuous Integration
+
+The monorepo uses GitHub Actions for CI/CD with path-based triggers to optimize build times:
+
+- **Backend CI**: Triggered only when files in `backend/**` are modified
+- **Frontend CI**: Triggered only when files in `frontend/**` are modified
+- **Shared features**:
+  - Automatic version tagging on main branch
+  - Docker image building and publishing
+  - Code testing and quality checks
+  - Cross-platform Docker image support (amd64, arm64)
+
+The workflow is defined in `.github/workflows/ci.yml` and maintains the independent build processes from the previous separate repositories while consolidating them into a single configuration.
+
 ## License
 
 [Add license information here]

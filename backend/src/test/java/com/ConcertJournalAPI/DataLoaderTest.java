@@ -8,6 +8,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.core.env.Environment;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import static org.mockito.Mockito.*;
@@ -26,11 +27,15 @@ public class DataLoaderTest {
 
     @Mock
     private BandEventRepository bandEventRepository;
+    
+    @Mock
+    private Environment environment;
 
     @Test
     public void testCreateDefaultUser() {
         // Arrange
         when(appUserRepository.existsAppUserByEmail("admin@example.com")).thenReturn(false);
+        when(environment.getProperty("spring.datasource.url")).thenReturn("jdbc:h2:mem:testdb");
 
         // Act
         dataLoader.run();
@@ -43,6 +48,7 @@ public class DataLoaderTest {
     public void testDefaultUserAlreadyExists() {
         // Arrange
         when(appUserRepository.existsAppUserByEmail("admin@example.com")).thenReturn(true);
+        when(environment.getProperty("spring.datasource.url")).thenReturn("jdbc:h2:mem:testdb");
 
         // Act
         dataLoader.run();
