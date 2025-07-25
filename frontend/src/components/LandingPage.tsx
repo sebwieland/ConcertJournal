@@ -43,7 +43,7 @@ export default function LandingPage() {
         <DefaultLayout>
             <ConfirmProvider>
                 <div>
-                    <h1>Welcome to your Concert Journal!</h1>
+                    <h1>Welcome to your Concert Journal TEST!</h1>
                     <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center' }}>
                         <StatCard title="Concerts attended" value={statistics.totalCount.toString()} icon={<PlaylistAddCheck />} />
                         <StatCard title="Most Seen Artist" value={statistics.mostSeenArtist} icon={<MusicNote />} />

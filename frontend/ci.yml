@@ -1,0 +1,129 @@
+name: Build, Test and Publish
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    name: Build and publish Docker image
+    permissions:
+      contents: write  # For pushing tags
+      packages: write  # For pushing to container registry
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.npm
+            node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install dependencies
+        run: |
+          npm install
+
+      - name: Lint code
+        run: |
+          # Install ESLint if not already in dependencies
+          npx eslint . --ext .js,.jsx,.ts,.tsx || echo "Linting issues found, but continuing"
+
+      - name: Run security scan
+        run: |
+          npm audit --production || echo "Security issues found, but continuing"
+
+      - name: Run tests
+        run: |
+          npm test
+
+      - name: Build React app
+        run: |
+          npm run build
+
+      - name: Validate build
+        run: |
+          if [ ! -d "dist" ] || [ -z "$(ls -A dist)" ]; then
+            echo "Build directory is empty or does not exist!"
+            exit 1
+          fi
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        if: github.ref =='refs/heads/main'
+        with:
+          registry: https://registry.wielandseb.synology.me/concertjournalfrontend
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Determine latest tag
+        if: github.ref =='refs/heads/main'
+        id: get_latest_tag
+        run: |
+          latest_tag=$(git tag -l 'v*' | sort -rV | head -n 1 || echo "v0")
+          echo "Latest tag: $latest_tag"
+          echo "latest_tag=$latest_tag" >> $GITHUB_ENV
+
+      - name: Increment version
+        if: github.ref =='refs/heads/main'
+        id: increment_version
+        run: |
+          latest_tag="${{ env.latest_tag }}"
+          if [[ $latest_tag =~ ^v([0-9]+)$ ]]; then
+            version_number=${BASH_REMATCH[1]}
+            new_version_number=$((version_number + 1))
+            new_version="v$new_version_number"
+          else
+          new_version="v1"  # Default to v1 if no valid tag is found
+          fi
+          echo "New version: $new_version"
+          echo "new_version=$new_version" >> $GITHUB_ENV
+
+      - name: Set up Docker Buildx
+        if: github.ref =='refs/heads/main'
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push Docker image
+        if: github.ref =='refs/heads/main'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            registry.wielandseb.synology.me/concertjournalfrontend:${{ env.new_version }}
+            registry.wielandseb.synology.me/concertjournalfrontend:latest
+          platforms: linux/amd64,linux/arm64
+          cache-from: type=registry,ref=registry.wielandseb.synology.me/concertjournalfrontend:cache
+          cache-to: type=registry,ref=registry.wielandseb.synology.me/concertjournalfrontend:cache,mode=max
+
+      - name: Scan Docker image
+        if: github.ref == 'refs/heads/main'
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: registry.wielandseb.synology.me/concertjournalfrontend:${{ env.new_version }}
+          format: 'table'
+          exit-code: '0'  # Don't fail the build, just report
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Tag new version
+        if: github.ref =='refs/heads/main'
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git tag ${{ env.new_version }}
+          git push origin ${{ env.new_version }}

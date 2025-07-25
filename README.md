@@ -103,6 +103,44 @@ The frontend development server will be available at http://localhost:3000.
 3. Make changes to the code
 4. Test your changes locally
 5. Commit and push your changes
+## Test Data Management
+
+The Concert Journal application generates test data automatically when starting up, ensuring a consistent development experience across all environments.
+
+### Test Data Generation
+
+Test data is created by the `DataLoader` component in `backend/src/main/java/com/ConcertJournalAPI/DataLoader.java`:
+
+- 10 test concert events are created if no events exist in the database
+- Works with both H2 (local development) and MySQL (Docker) databases
+- Data is generated on every application startup when the database is empty
+- This approach ensures test data is available regardless of environment or restarts
+
+### Usage
+
+**For Local Development:**
+```bash
+cd backend
+./mvnw spring-boot:run
+```
+Test data will be automatically generated if no events exist.
+
+**For Docker Development:**
+```bash
+docker-compose up
+```
+Test data will be automatically generated if no events exist.
+
+### Customizing Test Data
+
+To modify the test data, update the `createDummyBandEvent` method in `DataLoader.java`. The same test data generation logic is used for both H2 and MySQL databases.
+
+To reset test data, remove the database volume:
+```bash
+# For Docker environment
+docker-compose down -v
+docker-compose up
+```
 
 ## Building for Production
 
@@ -120,6 +158,20 @@ cd frontend
 npm install
 npm run build
 ```
+
+## Continuous Integration
+
+The monorepo uses GitHub Actions for CI/CD with path-based triggers to optimize build times:
+
+- **Backend CI**: Triggered only when files in `backend/**` are modified
+- **Frontend CI**: Triggered only when files in `frontend/**` are modified
+- **Shared features**:
+  - Automatic version tagging on main branch
+  - Docker image building and publishing
+  - Code testing and quality checks
+  - Cross-platform Docker image support (amd64, arm64)
+
+The workflow is defined in `.github/workflows/ci.yml` and maintains the independent build processes from the previous separate repositories while consolidating them into a single configuration.
 
 ## License
 

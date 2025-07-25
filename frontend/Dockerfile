@@ -44,4 +44,4 @@ FROM node:20-slim
 WORKDIR /app
 COPY --from=build /app/dist ./build
 RUN npm install -g serve
-CMD ["serve", "-s", "build"]
+CMD ["serve", "-s", "build", "-p", "80"]
