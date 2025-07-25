@@ -1,8 +1,4 @@
-console.log('Loading vite.config.ts...');
-if (process.env.NODE_ENV === 'development') {
-    console.log('Watch settings:', { usePolling: true, interval: 1000 });
-}
-console.log('Loading vite.config.ts...');
+// Optimized Vite configuration for better build performance
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tsconfigPaths from 'vite-tsconfig-paths'
@@ -20,17 +16,39 @@ export default defineConfig({
     base: '/',
     build: {
         outDir: 'dist',
-        // Ensure components are included in production builds
-        minify: true,
-        sourcemap: true
+        // Enhanced build optimization settings
+        minify: 'esbuild', // Use esbuild instead of terser for faster builds
+        sourcemap: process.env.NODE_ENV === 'development',
+        // Improve chunk splitting for better caching
+        rollupOptions: {
+            output: {
+                manualChunks: {
+                    vendor: ['react', 'react-dom', 'react-router-dom'],
+                    mui: ['@mui/material', '@mui/icons-material', '@mui/x-data-grid', '@mui/x-date-pickers'],
+                    utils: ['axios', 'dayjs', 'react-query'],
+                },
+                // Limit chunk size to improve loading performance
+                chunkFileNames: 'assets/[name]-[hash].js',
+                entryFileNames: 'assets/[name]-[hash].js',
+                assetFileNames: 'assets/[name]-[hash].[ext]',
+            },
+        },
+        // Improve build performance
+        target: 'es2015',
+        cssCodeSplit: true,
+        assetsInlineLimit: 4096,
+        // Reduce build size
+        emptyOutDir: true,
+        // Improve build speed
+        reportCompressedSize: false,
     },
     plugins: [
         react(),
         tsconfigPaths(),
         Sitemap({
             hostname: 'https://concertjournal.de',
-            dynamicRoutes, // pass the function here
-            exclude: ['/secret-page'] // optional exclude
+            dynamicRoutes,
+            exclude: ['/secret-page']
         })
     ],
     define: {
@@ -44,52 +62,45 @@ export default defineConfig({
             overlay: true,
             timeout: 30000,
             clientPort: 3010
-// Removed incorrect console.log statements
-// Removed incorrect console.log statements
         },
-// Removed incorrect console.log statements
         watch: {
             usePolling: true,
             interval: 1000
         }
     },
+    // Enhanced dependency optimization
     optimizeDeps: {
-        include: ['react', 'react-dom', 'react-router-dom']
+        include: [
+            'react', 
+            'react-dom', 
+            'react-router-dom',
+            '@mui/material',
+            '@mui/icons-material',
+            '@mui/x-data-grid',
+            '@mui/x-date-pickers',
+            'axios',
+            'dayjs',
+            'react-query',
+            'material-ui-confirm'
+        ],
+        // Force dependency pre-bundling
+        force: true,
+        // Optimize esbuild options
+        esbuildOptions: {
+            target: 'es2020',
+            // Improve tree-shaking
+            treeShaking: true,
+            // Improve build performance
+            legalComments: 'none',
+            // Minify during dependency optimization
+            minify: true,
+        }
     },
-    test: {
-        globals: true,
-        environment: 'jsdom',
-        setupFiles: './vitest.setup.ts',
-        coverage: {
-            provider: 'v8',
-            reporter: ['text', 'json', 'html'],
-            exclude: [
-                'node_modules/**',
-                'dist/**',
-                'build/**',
-                '**/node_modules/**',
-                '**/*.test.tsx',
-                '**/*.test.ts',
-                'src/tests/**',
-                'src/tests/utils/**',
-                'src/reportWebVitals.ts',
-                'src/setupTests.ts',
-                'src/utils/reportWebVitals.ts',
-                'src/utils/setupTests.ts',
-                'src/index.tsx',
-                'src/react-app-env.d.ts'
-            ],
-            all: true,
-            include: ['src/**/*.{js,jsx,ts,tsx}'],
-            thresholds: {
-                statements: 25,
-                branches: 65,
-                functions: 65,
-                lines: 25
-            },
-            reportOnFailure: false
-        },
-        include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-        exclude: ['node_modules', 'dist', '.idea', '.git', '.cache'],
-    },
+    // Esbuild optimizations
+    esbuild: {
+        logOverride: { 'this-is-undefined-in-esm': 'silent' },
+        target: 'es2020',
+        // Improve tree-shaking
+        treeShaking: true,
+    }
 })

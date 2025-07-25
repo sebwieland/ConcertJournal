@@ -32,6 +32,7 @@
     "@vitest/coverage-v8": "^1.2.1",
     "jsdom": "^23.0.1",
     "serve": "^14.2.1",
+    "terser": "^5.29.2",
     "vite": "^5.1.4",
     "vite-plugin-sitemap": "^0.5.3",
     "vite-tsconfig-paths": "^4.2.1",
@@ -39,7 +40,7 @@
   },
   "type": "module",
   "scripts": {
-"start": "vite",
+    "start": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
     "test": "vitest",
