@@ -14,6 +14,11 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  # Enable BuildKit for faster Docker builds
+  DOCKER_BUILDKIT: 1
+  COMPOSE_DOCKER_CLI_BUILD: 1
+
 jobs:
   # Determine which components have changed
   changes:
@@ -64,10 +69,11 @@ jobs:
           cd backend
           mvn --version
 
+      # Run tests in parallel
       - name: Build and run unit tests
         run: |
           cd backend
-          mvn clean test
+          mvn clean test -T 1C
 
       - name: Create coverage report
         run: |
@@ -110,15 +116,22 @@ jobs:
           cd backend
           mvn --version
 
+      # Build with parallel execution
       - name: Build project
         run: |
           cd backend
-          mvn clean package -Dmaven.test.skip=true
+          mvn clean package -Dmaven.test.skip=true -T 1C
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
+        with:
+          # Use more powerful builder instance
+          driver-opts: |
+            image=moby/buildkit:latest
+            network=host
 
-      - name: Build Docker image (feature branch)
+      # Optimize Docker build with improved caching
+      - name: Build Docker image
         uses: docker/build-push-action@v6
         with:
           context: backend
@@ -127,7 +140,9 @@ jobs:
           tags: concertjournalbackend:test
           platforms: linux/amd64
           cache-from: type=registry,ref=registry.wielandseb.synology.me/concertjournalbackend:cache
-          cache-to: type=inline
+          # Add BuildKit optimizations
+          build-args: |
+            BUILDKIT_INLINE_CACHE=1
 
       # For main branch: Login, tag, and push
       - name: Login to Docker Hub (main branch)
@@ -161,6 +176,7 @@ jobs:
           echo "New version: $new_version"
           echo "new_version=$new_version" >> $GITHUB_ENV
 
+      # Optimize multi-platform build with improved caching
       - name: Build and push Docker image (main branch)
         if: github.ref == 'refs/heads/main'
         uses: docker/build-push-action@v6
@@ -173,6 +189,9 @@ jobs:
           platforms: linux/amd64,linux/arm64
           cache-from: type=registry,ref=registry.wielandseb.synology.me/concertjournalbackend:cache
           cache-to: type=registry,ref=registry.wielandseb.synology.me/concertjournalbackend:cache,mode=max
+          # Add BuildKit optimizations
+          build-args: |
+            BUILDKIT_INLINE_CACHE=1
 
       - name: Tag new version (main branch)
         if: github.ref == 'refs/heads/main'
@@ -201,41 +220,50 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
+          # Specify the correct path to the package-lock.json file
+          cache: 'npm'
+          cache-dependency-path: 'frontend/package-lock.json'
 
+      # Improved caching strategy
       - name: Cache dependencies
         uses: actions/cache@v4
         with:
           path: |
             ~/.npm
             frontend/node_modules
+            ~/.cache/Cypress
+            ~/.cache/yarn
           key: ${{ runner.os }}-node-${{ hashFiles('frontend/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-node-
 
+      # Use npm install instead of npm ci to update the lock file with terser
       - name: Install dependencies
         run: |
           cd frontend
-          npm install
+          npm install --prefer-offline --no-audit
 
       - name: Lint code
         run: |
           cd frontend
-          npx eslint . --ext .js,.jsx,.ts,.tsx || echo "Linting issues found, but continuing"
+          npx eslint . --ext .js,.jsx,.ts,.tsx --cache || echo "Linting issues found, but continuing"
 
       - name: Run security scan
         run: |
           cd frontend
           npm audit --production || echo "Security issues found, but continuing"
 
+      # Run tests without specifying maxWorkers to avoid conflicts
       - name: Run tests
         run: |
           cd frontend
-          npm test
+          npm test -- --run
 
+      # Build with optimized settings
       - name: Build React app
         run: |
           cd frontend
-          npm run build
+          NODE_ENV=production VITE_ENSURE_COMPONENTS=true npm run build
 
       - name: Validate build
         run: |
@@ -245,11 +273,17 @@ jobs:
             exit 1
           fi
 
-      # Set up Docker Buildx for all branches
+      # Set up Docker Buildx with optimizations
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
+        with:
+          # Use more powerful builder instance
+          driver-opts: |
+            image=moby/buildkit:latest
+            network=host
 
-      - name: Build Docker image (feature branch)
+      # Optimize Docker build with improved caching
+      - name: Build Docker image
         uses: docker/build-push-action@v6
         with:
           context: frontend
@@ -258,7 +292,9 @@ jobs:
           tags: concertjournalfrontend:test
           platforms: linux/amd64
           cache-from: type=registry,ref=registry.wielandseb.synology.me/concertjournalfrontend:cache
-          cache-to: type=inline
+          # Add BuildKit optimizations
+          build-args: |
+            BUILDKIT_INLINE_CACHE=1
 
       # For main branch: Login, tag, and push
       - name: Login to Docker Hub (main branch)
@@ -292,6 +328,7 @@ jobs:
           echo "New version: $new_version"
           echo "new_version=$new_version" >> $GITHUB_ENV
 
+      # Optimize multi-platform build with improved caching
       - name: Build and push Docker image (main branch)
         if: github.ref == 'refs/heads/main'
         uses: docker/build-push-action@v6
@@ -304,6 +341,9 @@ jobs:
           platforms: linux/amd64,linux/arm64
           cache-from: type=registry,ref=registry.wielandseb.synology.me/concertjournalfrontend:cache
           cache-to: type=registry,ref=registry.wielandseb.synology.me/concertjournalfrontend:cache,mode=max
+          # Add BuildKit optimizations
+          build-args: |
+            BUILDKIT_INLINE_CACHE=1
 
       - name: Scan Docker image
         if: github.ref == 'refs/heads/main'
