@@ -1,0 +1,177 @@
+name: Backend CI/CD
+
+on:
+  push:
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend-ci.yml'
+      - '.github/workflows/change-detection.yml'
+      - '.github/workflows/version-tagging.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'backend/**'
+  workflow_dispatch:
+  workflow_call:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Enable BuildKit for faster Docker builds
+  DOCKER_BUILDKIT: 1
+  COMPOSE_DOCKER_CLI_BUILD: 1
+
+jobs:
+  # Reuse the change detection workflow
+  changes:
+    name: Detect Changes
+    uses: ./.github/workflows/change-detection.yml
+
+  backend-test:
+    name: Test
+    runs-on: ubuntu-latest
+    needs: changes
+    if: |
+      needs.changes.outputs.backend == 'true' ||
+      github.ref == 'refs/heads/main' ||
+      github.event_name == 'workflow_dispatch'
+    env:
+      JWT_SECRET: ${{ vars.JWT_SECRET }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: 21
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Print Java version
+        run: |
+          cd backend
+          mvn --version
+
+      # Run tests in parallel
+      - name: Build and run unit tests
+        run: |
+          cd backend
+          mvn clean test -T 1C
+
+      - name: Create coverage report
+        run: |
+          cd backend
+          mvn jacoco:report
+
+      - name: Upload code coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage
+          path: backend/target/site/jacoco/*
+          retention-days: 7
+
+  backend-build:
+    name: Build and Publish
+    runs-on: ubuntu-latest
+    needs: [changes, backend-test]
+    if: |
+      (needs.changes.outputs.backend == 'true' ||
+      github.ref == 'refs/heads/main' ||
+      github.event_name == 'workflow_dispatch') &&
+      github.event_name != 'pull_request'
+    permissions:
+      contents: write
+      packages: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: 21
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Print Java version
+        run: |
+          cd backend
+          mvn --version
+
+      # Build with parallel execution
+      - name: Build project
+        run: |
+          cd backend
+          mvn clean package -Dmaven.test.skip=true -T 1C
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          # Use more powerful builder instance
+          driver-opts: |
+            image=moby/buildkit:latest
+            network=host
+
+      # Optimize Docker build with improved caching
+      - name: Build Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: backend
+          push: false
+          load: true
+          tags: concertjournalbackend:test
+          platforms: linux/amd64
+          cache-from: type=registry,ref=registry.wielandseb.synology.me/concertjournalbackend:cache
+          # Add BuildKit optimizations
+          build-args: |
+            BUILDKIT_INLINE_CACHE=1
+
+      # For main branch: Login, tag, and push
+      - name: Login to Docker Hub (main branch)
+        if: github.ref == 'refs/heads/main'
+        uses: docker/login-action@v2
+        with:
+          registry: https://registry.wielandseb.synology.me/concertjournalbackend
+          username: ${{ vars.DOCKER_USERNAME }}
+          password: ${{ vars.DOCKER_PASSWORD }}
+
+      # Use the shared version tagging workflow for main branch
+      - name: Get version tag (main branch)
+        if: github.ref == 'refs/heads/main'
+        id: version
+        uses: ./.github/workflows/version-tagging.yml
+        with:
+          component: 'backend'
+
+      # Optimize multi-platform build with improved caching
+      - name: Build and push Docker image (main branch)
+        if: github.ref == 'refs/heads/main'
+        uses: docker/build-push-action@v6
+        with:
+          context: backend
+          push: true
+          tags: |
+            registry.wielandseb.synology.me/concertjournalbackend:${{ steps.version.outputs.new_version }}
+            registry.wielandseb.synology.me/concertjournalbackend:latest
+          platforms: linux/amd64,linux/arm64
+          cache-from: type=registry,ref=registry.wielandseb.synology.me/concertjournalbackend:cache
+          cache-to: type=registry,ref=registry.wielandseb.synology.me/concertjournalbackend:cache,mode=max
+          # Add BuildKit optimizations
+          build-args: |
+            BUILDKIT_INLINE_CACHE=1
+
+      - name: Scan Docker image
+        if: github.ref == 'refs/heads/main'
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: registry.wielandseb.synology.me/concertjournalbackend:${{ steps.version.outputs.new_version }}
+          format: 'table'
+          exit-code: '0'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'

@@ -1,0 +1,203 @@
+name: Frontend CI/CD
+
+on:
+  push:
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/frontend-ci.yml'
+      - '.github/workflows/change-detection.yml'
+      - '.github/workflows/version-tagging.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'frontend/**'
+  workflow_dispatch:
+  workflow_call:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Enable BuildKit for faster Docker builds
+  DOCKER_BUILDKIT: 1
+  COMPOSE_DOCKER_CLI_BUILD: 1
+
+jobs:
+  # Reuse the change detection workflow
+  changes:
+    name: Detect Changes
+    uses: ./.github/workflows/change-detection.yml
+
+  frontend-build:
+    name: Build and Test
+    runs-on: ubuntu-latest
+    needs: changes
+    if: |
+      needs.changes.outputs.frontend == 'true' ||
+      github.ref == 'refs/heads/main' ||
+      github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          # Specify the correct path to the package-lock.json file
+          cache: 'npm'
+          cache-dependency-path: 'frontend/package-lock.json'
+
+      # Improved caching strategy
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.npm
+            frontend/node_modules
+            ~/.cache/Cypress
+            ~/.cache/yarn
+          key: ${{ runner.os }}-node-${{ hashFiles('frontend/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      # Use npm install instead of npm ci to update the lock file with terser
+      - name: Install dependencies
+        run: |
+          cd frontend
+          npm install --prefer-offline --no-audit
+
+      - name: Lint code
+        run: |
+          cd frontend
+          npx eslint . --ext .js,.jsx,.ts,.tsx --cache || echo "Linting issues found, but continuing"
+
+      - name: Run security scan
+        run: |
+          cd frontend
+          npm audit --production || echo "Security issues found, but continuing"
+
+      # Run tests without specifying maxWorkers to avoid conflicts
+      - name: Run tests
+        run: |
+          cd frontend
+          npm test -- --run
+
+      # Build with optimized settings
+      - name: Build React app
+        run: |
+          cd frontend
+          NODE_ENV=production VITE_ENSURE_COMPONENTS=true npm run build
+
+      - name: Validate build
+        run: |
+          cd frontend
+          if [ ! -d "dist" ] || [ -z "$(ls -A dist)" ]; then
+            echo "Build directory is empty or does not exist!"
+            exit 1
+          fi
+
+  frontend-publish:
+    name: Publish
+    runs-on: ubuntu-latest
+    needs: [changes, frontend-build]
+    if: |
+      (needs.changes.outputs.frontend == 'true' ||
+      github.ref == 'refs/heads/main' ||
+      github.event_name == 'workflow_dispatch') &&
+      github.event_name != 'pull_request'
+    permissions:
+      contents: write
+      packages: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Set up Docker Buildx with optimizations
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          # Use more powerful builder instance
+          driver-opts: |
+            image=moby/buildkit:latest
+            network=host
+
+      # Build the React app again for Docker
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: 'frontend/package-lock.json'
+
+      - name: Install dependencies
+        run: |
+          cd frontend
+          npm install --prefer-offline --no-audit
+
+      - name: Build React app
+        run: |
+          cd frontend
+          NODE_ENV=production VITE_ENSURE_COMPONENTS=true npm run build
+
+      # Optimize Docker build with improved caching
+      - name: Build Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: frontend
+          push: false
+          load: true
+          tags: concertjournalfrontend:test
+          platforms: linux/amd64
+          cache-from: type=registry,ref=registry.wielandseb.synology.me/concertjournalfrontend:cache
+          # Add BuildKit optimizations
+          build-args: |
+            BUILDKIT_INLINE_CACHE=1
+
+      # For main branch: Login, tag, and push
+      - name: Login to Docker Hub (main branch)
+        if: github.ref == 'refs/heads/main'
+        uses: docker/login-action@v3
+        with:
+          registry: https://registry.wielandseb.synology.me/concertjournalfrontend
+          username: ${{ vars.DOCKER_USERNAME }}
+          password: ${{ vars.DOCKER_PASSWORD }}
+
+      # Use the shared version tagging workflow for main branch
+      - name: Get version tag (main branch)
+        if: github.ref == 'refs/heads/main'
+        id: version
+        uses: ./.github/workflows/version-tagging.yml
+        with:
+          component: 'frontend'
+
+      # Optimize multi-platform build with improved caching
+      - name: Build and push Docker image (main branch)
+        if: github.ref == 'refs/heads/main'
+        uses: docker/build-push-action@v6
+        with:
+          context: frontend
+          push: true
+          tags: |
+            registry.wielandseb.synology.me/concertjournalfrontend:${{ steps.version.outputs.new_version }}
+            registry.wielandseb.synology.me/concertjournalfrontend:latest
+          platforms: linux/amd64,linux/arm64
+          cache-from: type=registry,ref=registry.wielandseb.synology.me/concertjournalfrontend:cache
+          cache-to: type=registry,ref=registry.wielandseb.synology.me/concertjournalfrontend:cache,mode=max
+          # Add BuildKit optimizations
+          build-args: |
+            BUILDKIT_INLINE_CACHE=1
+
+      - name: Scan Docker image
+        if: github.ref == 'refs/heads/main'
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: registry.wielandseb.synology.me/concertjournalfrontend:${{ steps.version.outputs.new_version }}
+          format: 'table'
+          exit-code: '0'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
