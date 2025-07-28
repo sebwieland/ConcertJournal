@@ -34,7 +34,7 @@ jobs:
       - name: Build and run unit tests
         run: |
           cd backend
-          mvn clean test -T 1C
+          mvn -f pom.xml clean test
 
       - name: Create coverage report
         run: |
