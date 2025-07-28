@@ -33,7 +33,7 @@ jobs:
     if: |
       needs.changes.outputs.frontend == 'true' ||
       github.ref == 'refs/heads/main' ||
-      github.event_name == 'workflow_dispatch'
+      github.event_name == 'workflow_call'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4

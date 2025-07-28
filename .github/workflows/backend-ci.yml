@@ -33,7 +33,7 @@ jobs:
     if: |
       needs.changes.outputs.backend == 'true' ||
       github.ref == 'refs/heads/main' ||
-      github.event_name == 'workflow_dispatch'
+      github.event_name == 'workflow_call'
     env:
       JWT_SECRET: ${{ vars.JWT_SECRET }}
     steps:
