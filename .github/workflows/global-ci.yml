@@ -9,6 +9,12 @@ on:
   pull_request:
     branches: [ main ]
   workflow_dispatch:
+    inputs:
+      force_full_build:
+        description: 'Force rebuild of all components'
+        required: false
+        default: false
+        type: boolean
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -26,10 +32,11 @@ jobs:
   trigger-backend:
     name: Backend
     needs: [changes]
-    # if: |
-      # needs.changes.outputs.backend == 'true' ||
-      # github.ref == 'refs/heads/main' ||
-      # github.event_name == 'workflow_dispatch'
+    if: |
+      needs.changes.outputs.backend == 'true' ||
+      github.ref == 'refs/heads/main' ||
+      github.event_name == 'workflow_dispatch' ||
+      github.event.inputs.force_full_build == 'true'
     uses: ./.github/workflows/backend-ci.yml
     secrets:
       inherit
@@ -37,10 +44,11 @@ jobs:
   trigger-frontend:
     name: Frontend
     needs: [changes]
-    # if: |
-    #   needs.changes.outputs.frontend == 'true' ||
-    #   github.ref == 'refs/heads/main' ||
-    #   github.event_name == 'workflow_dispatch'
+    if: |
+      needs.changes.outputs.frontend == 'true' ||
+      github.ref == 'refs/heads/main' ||
+      github.event_name == 'workflow_dispatch' ||
+      github.event.inputs.force_full_build == 'true'
     uses: ./.github/workflows/frontend-ci.yml
     secrets:
       inherit
@@ -48,7 +56,7 @@ jobs:
   publish-artifacts:
     name: Publish Images and Tag
     runs-on: ubuntu-latest
-    needs: [trigger-backend, trigger-frontend]
+    needs: [changes, trigger-backend, trigger-frontend]
     if: |
       github.ref == 'refs/heads/main' &&
       github.event_name != 'pull_request' &&
@@ -71,30 +79,64 @@ jobs:
         with:
           push_tag: false
       
-      - name: Download frontend image
-        uses: actions/download-artifact@v4
-        with:
-          name: frontend-image
-          path: ./images
-      
-      - name: Download backend image
-        uses: actions/download-artifact@v4
-        with:
-          name: backend-image
-          path: ./images
-      
-      - name: Load Docker images
-        run: |
-          docker load < ./images/frontend-image.tar.gz
-          docker load < ./images/backend-image.tar.gz
-          docker images
-      
       - name: Login to Docker registries
         uses: docker/login-action@v3
         with:
           registry: https://registry.wielandseb.synology.me
           username: ${{ vars.DOCKER_USERNAME }}
           password: ${{ vars.DOCKER_PASSWORD }}
+      
+      - name: Download frontend image
+        if: needs.changes.outputs.frontend == 'true'
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-image
+          path: ./images
+      
+      - name: Download backend image
+        if: needs.changes.outputs.backend == 'true'
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-image
+          path: ./images
+      
+      - name: Prepare Docker images
+        run: |
+          mkdir -p ./images
+          
+          # Handle frontend image
+          if [[ "${{ needs.changes.outputs.frontend }}" == "true" || "${{ github.event.inputs.force_full_build }}" == "true" ]]; then
+            echo "Loading built frontend image from artifact..."
+            docker load < ./images/frontend-image.tar.gz
+          else
+            echo "Checking for existing frontend image in registry..."
+            if docker pull registry.wielandseb.synology.me/concertjournalfrontend:latest; then
+              echo "Using latest frontend image from registry"
+              docker tag registry.wielandseb.synology.me/concertjournalfrontend:latest concertjournalfrontend:build
+            else
+              echo "No existing frontend image found. This might be the first run."
+              echo "ERROR: Cannot proceed without a frontend image. Please run a full build first." >&2
+              exit 1
+            fi
+          fi
+          
+          # Handle backend image
+          if [[ "${{ needs.changes.outputs.backend }}" == "true" || "${{ github.event.inputs.force_full_build }}" == "true" ]]; then
+            echo "Loading built backend image from artifact..."
+            docker load < ./images/backend-image.tar.gz
+          else
+            echo "Checking for existing backend image in registry..."
+            if docker pull registry.wielandseb.synology.me/concertjournalbackend:latest; then
+              echo "Using latest backend image from registry"
+              docker tag registry.wielandseb.synology.me/concertjournalbackend:latest concertjournalbackend:build
+            else
+              echo "No existing backend image found. This might be the first run."
+              echo "ERROR: Cannot proceed without a backend image. Please run a full build first." >&2
+              exit 1
+            fi
+          fi
+          
+          docker images
       
       - name: Tag and push frontend image
         run: |
@@ -135,16 +177,20 @@ jobs:
           echo "## Components Processed" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
-          if [[ "${{ needs.changes.outputs.backend }}" == "true" ]]; then
-            echo "- ✅ Backend changes detected and processed" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "- ℹ️ No backend changes detected" >> $GITHUB_STEP_SUMMARY
+          if [[ "${{ github.event.inputs.force_full_build }}" == "true" ]]; then
+            echo "- 🔄 Full rebuild forced via workflow dispatch" >> $GITHUB_STEP_SUMMARY
           fi
           
-          if [[ "${{ needs.changes.outputs.frontend }}" == "true" ]]; then
-            echo "- ✅ Frontend changes detected and processed" >> $GITHUB_STEP_SUMMARY
+          if [[ "${{ needs.changes.outputs.backend }}" == "true" || "${{ github.event.inputs.force_full_build }}" == "true" ]]; then
+            echo "- ✅ Backend rebuilt" >> $GITHUB_STEP_SUMMARY
           else
-            echo "- ℹ️ No frontend changes detected" >> $GITHUB_STEP_SUMMARY
+            echo "- ℹ️ No backend changes detected (reused latest image)" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [[ "${{ needs.changes.outputs.frontend }}" == "true" || "${{ github.event.inputs.force_full_build }}" == "true" ]]; then
+            echo "- ✅ Frontend rebuilt" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- ℹ️ No frontend changes detected (reused latest image)" >> $GITHUB_STEP_SUMMARY
           fi
           
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -166,6 +212,7 @@ jobs:
           if [[ "${{ github.ref }}" == "refs/heads/main" && "${{ github.event_name }}" != "pull_request" ]]; then
             if [[ "${{ needs.publish-artifacts.result }}" == "success" ]]; then
               echo "- ✅ Version tag and images pushed: ${{ needs.publish-artifacts.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+              echo "  - Using optimized monorepo strategy (only changed components rebuilt)" >> $GITHUB_STEP_SUMMARY
             elif [[ "${{ needs.publish-artifacts.result }}" == "skipped" ]]; then
               echo "- ⚠️ Version tag and images not pushed (workflow skipped)" >> $GITHUB_STEP_SUMMARY
             else
