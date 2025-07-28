@@ -23,32 +23,78 @@ jobs:
     name: Detect Changes
     uses: ./.github/workflows/change-detection.yml
 
+  generate-version:
+    name: Generate Version
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    needs: changes
+    outputs:
+      version: ${{ steps.get-version.outputs.new_version }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Generate version
+        id: get-version
+        uses: ./.github/workflows/version-tagging.yml
+        with:
+          push_tag: false
+
   trigger-backend:
     name: Backend
-    needs: changes
+    needs: [changes, generate-version]
     # if: |
       # needs.changes.outputs.backend == 'true' ||
       # github.ref == 'refs/heads/main' ||
       # github.event_name == 'workflow_dispatch'
     uses: ./.github/workflows/backend-ci.yml
+    with:
+      version: ${{ needs.generate-version.outputs.version }}
     secrets:
       inherit
 
   trigger-frontend:
     name: Frontend
-    needs: changes
+    needs: [changes, generate-version]
     # if: |
     #   needs.changes.outputs.frontend == 'true' ||
     #   github.ref == 'refs/heads/main' ||
     #   github.event_name == 'workflow_dispatch'
     uses: ./.github/workflows/frontend-ci.yml
+    with:
+      version: ${{ needs.generate-version.outputs.version }}
     secrets:
       inherit
+
+  push-tag:
+    name: Push Version Tag
+    runs-on: ubuntu-latest
+    needs: [generate-version, trigger-backend, trigger-frontend]
+    if: |
+      github.ref == 'refs/heads/main' &&
+      github.event_name != 'pull_request' &&
+      needs.trigger-backend.result == 'success' &&
+      needs.trigger-frontend.result == 'success'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Push version tag
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git tag ${{ needs.generate-version.outputs.version }}
+          git push origin ${{ needs.generate-version.outputs.version }}
+          echo "Successfully pushed tag ${{ needs.generate-version.outputs.version }}"
 
   summary:
     name: CI Summary
     runs-on: ubuntu-latest
-    needs: [changes, trigger-backend, trigger-frontend]
+    needs: [changes, trigger-backend, trigger-frontend, push-tag]
     if: always()
     steps:
       - name: Checkout code
@@ -88,4 +134,14 @@ jobs:
             echo "- ✅ Frontend workflow: ${{ needs.trigger-frontend.result }}" >> $GITHUB_STEP_SUMMARY
           else
             echo "- ❌ Frontend workflow: ${{ needs.trigger-frontend.result }}" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [[ "${{ github.ref }}" == "refs/heads/main" && "${{ github.event_name }}" != "pull_request" ]]; then
+            if [[ "${{ needs.push-tag.result }}" == "success" ]]; then
+              echo "- ✅ Version tag pushed: ${{ needs.generate-version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+            elif [[ "${{ needs.push-tag.result }}" == "skipped" ]]; then
+              echo "- ⚠️ Version tag not pushed (workflow skipped)" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "- ❌ Version tag push failed" >> $GITHUB_STEP_SUMMARY
+            fi
           fi

@@ -1,22 +1,21 @@
-name: Version Tagging
+name: Version Generation
 
 on:
   workflow_call:
     inputs:
-      component:
-        required: true
-        type: string
-        description: "Component name (backend or frontend)"
+      push_tag:
+        required: false
+        type: boolean
+        default: false
+        description: "Whether to push the tag to the repository"
     outputs:
       new_version:
         description: "New version tag"
-        value: ${{ jobs.tag.outputs.new_version }}
-    permissions:
-      contents: write
+        value: ${{ jobs.generate.outputs.new_version }}
 
 jobs:
-  tag:
-    name: Determine Version and Tag
+  generate:
+    name: Generate Version
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -31,7 +30,7 @@ jobs:
       - name: Determine latest tag
         id: get_latest_tag
         run: |
-          latest_tag=$(git tag -l 'v*' | sort -rV | head -n 1 || echo "v0")
+          latest_tag=$(git tag -l 'v*' | grep -v 'rc' | sort -rV | head -n 1 || echo "v0")
           echo "Latest tag: $latest_tag"
           echo "latest_tag=$latest_tag" >> $GITHUB_ENV
 
@@ -50,6 +49,7 @@ jobs:
           echo "new_version=$new_version" >> $GITHUB_OUTPUT
 
       - name: Tag new version
+        if: ${{ inputs.push_tag }}
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
