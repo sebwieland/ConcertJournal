@@ -19,36 +19,32 @@ permissions:
   packages: write
 
 jobs:
-  # Reuse the change detection workflow
   changes:
     name: Detect Changes
     uses: ./.github/workflows/change-detection.yml
 
-  # Trigger backend workflow if backend changes detected
   trigger-backend:
-    name: Trigger Backend CI
+    name: Backend
     needs: changes
     # if: |
       # needs.changes.outputs.backend == 'true' ||
       # github.ref == 'refs/heads/main' ||
-      # github.event_name == 'workflow_dispatch' || true
+      # github.event_name == 'workflow_dispatch'
     uses: ./.github/workflows/backend-ci.yml
     secrets:
       inherit
 
-  # Trigger frontend workflow if frontend changes detected
   trigger-frontend:
-    name: Trigger Frontend CI
+    name: Frontend
     needs: changes
     # if: |
     #   needs.changes.outputs.frontend == 'true' ||
     #   github.ref == 'refs/heads/main' ||
-    #   github.event_name == 'workflow_dispatch' || true
+    #   github.event_name == 'workflow_dispatch'
     uses: ./.github/workflows/frontend-ci.yml
     secrets:
       inherit
 
-  # Summary job that runs after all component workflows
   summary:
     name: CI Summary
     runs-on: ubuntu-latest

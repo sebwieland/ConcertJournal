@@ -14,6 +14,9 @@ jobs:
   backend-test:
     name: Test
     runs-on: ubuntu-latest
+    env:
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -30,7 +33,6 @@ jobs:
           cd backend
           mvn --version
 
-      # Run tests in parallel
       - name: Build and run unit tests
         run: |
           cd backend
@@ -74,7 +76,6 @@ jobs:
           cd backend
           mvn --version
 
-      # Build with parallel execution
       - name: Build project
         run: |
           cd backend
@@ -83,12 +84,10 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
         with:
-          # Use more powerful builder instance
           driver-opts: |
             image=moby/buildkit:latest
             network=host
 
-      # Optimize Docker build with improved caching
       - name: Build Docker image
         uses: docker/build-push-action@v6
         with:
@@ -98,12 +97,10 @@ jobs:
           tags: concertjournalbackend:test
           platforms: linux/amd64
           cache-from: type=registry,ref=registry.wielandseb.synology.me/concertjournalbackend:cache
-          # Add BuildKit optimizations
           build-args: |
             BUILDKIT_INLINE_CACHE=1
 
-      # For main branch: Login, tag, and push
-      - name: Login to Docker Hub (main branch)
+      - name: Login to Docker Hub (only on main branch)
         if: github.ref == 'refs/heads/main'
         uses: docker/login-action@v2
         with:
@@ -111,15 +108,13 @@ jobs:
           username: ${{ vars.DOCKER_USERNAME }}
           password: ${{ vars.DOCKER_PASSWORD }}
 
-      # Use the shared version tagging workflow for main branch
-      - name: Get version tag (main branch)
+      - name: Get version tag (only on main branch)
         if: github.ref == 'refs/heads/main'
         id: version
         uses: ./.github/workflows/version-tagging.yml
         with:
           component: 'backend'
 
-      # Optimize multi-platform build with improved caching
       - name: Build and push Docker image (main branch)
         if: github.ref == 'refs/heads/main'
         uses: docker/build-push-action@v6
@@ -132,7 +127,6 @@ jobs:
           platforms: linux/amd64,linux/arm64
           cache-from: type=registry,ref=registry.wielandseb.synology.me/concertjournalbackend:cache
           cache-to: type=registry,ref=registry.wielandseb.synology.me/concertjournalbackend:cache,mode=max
-          # Add BuildKit optimizations
           build-args: |
             BUILDKIT_INLINE_CACHE=1
 

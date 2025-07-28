@@ -21,11 +21,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-          # Specify the correct path to the package-lock.json file
           cache: 'npm'
           cache-dependency-path: 'frontend/package-lock.json'
 
-      # Improved caching strategy
       - name: Cache dependencies
         uses: actions/cache@v4
         with:
@@ -38,7 +36,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-
 
-      # Use npm install instead of npm ci to update the lock file with terser
       - name: Install dependencies
         run: |
           cd frontend
@@ -54,13 +51,11 @@ jobs:
           cd frontend
           npm audit --production || echo "Security issues found, but continuing"
 
-      # Run tests without specifying maxWorkers to avoid conflicts
       - name: Run tests
         run: |
           cd frontend
           npm test -- --run
 
-      # Build with optimized settings
       - name: Build React app
         run: |
           cd frontend
@@ -88,16 +83,13 @@ jobs:
         with:
           fetch-depth: 0
 
-      # Set up Docker Buildx with optimizations
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
         with:
-          # Use more powerful builder instance
           driver-opts: |
             image=moby/buildkit:latest
             network=host
 
-      # Build the React app again for Docker
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
@@ -115,7 +107,6 @@ jobs:
           cd frontend
           NODE_ENV=production VITE_ENSURE_COMPONENTS=true npm run build
 
-      # Optimize Docker build with improved caching
       - name: Build Docker image
         uses: docker/build-push-action@v6
         with:
@@ -129,8 +120,7 @@ jobs:
           build-args: |
             BUILDKIT_INLINE_CACHE=1
 
-      # For main branch: Login, tag, and push
-      - name: Login to Docker Hub (main branch)
+      - name: Login to Docker Hub (only on main branch)
         if: github.ref == 'refs/heads/main'
         uses: docker/login-action@v3
         with:
@@ -138,15 +128,13 @@ jobs:
           username: ${{ vars.DOCKER_USERNAME }}
           password: ${{ vars.DOCKER_PASSWORD }}
 
-      # Use the shared version tagging workflow for main branch
-      - name: Get version tag (main branch)
+      - name: Get version tag (only on main branch)
         if: github.ref == 'refs/heads/main'
         id: version
         uses: ./.github/workflows/version-tagging.yml
         with:
           component: 'frontend'
 
-      # Optimize multi-platform build with improved caching
       - name: Build and push Docker image (main branch)
         if: github.ref == 'refs/heads/main'
         uses: docker/build-push-action@v6
@@ -159,7 +147,6 @@ jobs:
           platforms: linux/amd64,linux/arm64
           cache-from: type=registry,ref=registry.wielandseb.synology.me/concertjournalfrontend:cache
           cache-to: type=registry,ref=registry.wielandseb.synology.me/concertjournalfrontend:cache,mode=max
-          # Add BuildKit optimizations
           build-args: |
             BUILDKIT_INLINE_CACHE=1
 
