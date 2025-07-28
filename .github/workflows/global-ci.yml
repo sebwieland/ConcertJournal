@@ -75,7 +75,7 @@ jobs:
       
       - name: Generate version
         id: generate-version
-        uses: ./.github/workflows/version-tagging.yml
+        uses: ./.github/workflows/reusable/version-tagging.yml@main
         with:
           push_tag: false
       
