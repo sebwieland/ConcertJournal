@@ -23,78 +23,112 @@ jobs:
     name: Detect Changes
     uses: ./.github/workflows/change-detection.yml
 
-  generate-version:
-    name: Generate Version
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
-    needs: changes
-    outputs:
-      version: ${{ steps.get-version.outputs.new_version }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      
-      - name: Generate version
-        id: get-version
-        uses: ./.github/workflows/version-tagging.yml
-        with:
-          push_tag: false
-
   trigger-backend:
     name: Backend
-    needs: [changes, generate-version]
+    needs: [changes]
     # if: |
       # needs.changes.outputs.backend == 'true' ||
       # github.ref == 'refs/heads/main' ||
       # github.event_name == 'workflow_dispatch'
     uses: ./.github/workflows/backend-ci.yml
-    with:
-      version: ${{ needs.generate-version.outputs.version }}
     secrets:
       inherit
 
   trigger-frontend:
     name: Frontend
-    needs: [changes, generate-version]
+    needs: [changes]
     # if: |
     #   needs.changes.outputs.frontend == 'true' ||
     #   github.ref == 'refs/heads/main' ||
     #   github.event_name == 'workflow_dispatch'
     uses: ./.github/workflows/frontend-ci.yml
-    with:
-      version: ${{ needs.generate-version.outputs.version }}
     secrets:
       inherit
 
-  push-tag:
-    name: Push Version Tag
+  publish-artifacts:
+    name: Publish Images and Tag
     runs-on: ubuntu-latest
-    needs: [generate-version, trigger-backend, trigger-frontend]
+    needs: [trigger-backend, trigger-frontend]
     if: |
       github.ref == 'refs/heads/main' &&
       github.event_name != 'pull_request' &&
       needs.trigger-backend.result == 'success' &&
       needs.trigger-frontend.result == 'success'
+    permissions:
+      contents: write
+      packages: write
+    outputs:
+      version: ${{ steps.generate-version.outputs.new_version }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
       
+      # Generate version
+      - name: Generate version
+        id: generate-version
+        uses: ./.github/workflows/version-tagging.yml
+        with:
+          push_tag: false
+      
+      # Download image artifacts
+      - name: Download frontend image
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-image
+          path: ./images
+      
+      - name: Download backend image
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-image
+          path: ./images
+      
+      # Load images into Docker
+      - name: Load Docker images
+        run: |
+          docker load < ./images/frontend-image.tar.gz
+          docker load < ./images/backend-image.tar.gz
+          docker images
+      
+      # Login to Docker registry
+      - name: Login to Docker registries
+        uses: docker/login-action@v3
+        with:
+          registry: https://registry.wielandseb.synology.me
+          username: ${{ vars.DOCKER_USERNAME }}
+          password: ${{ vars.DOCKER_PASSWORD }}
+      
+      # Push frontend image
+      - name: Tag and push frontend image
+        run: |
+          docker tag concertjournalfrontend:build registry.wielandseb.synology.me/concertjournalfrontend:${{ steps.generate-version.outputs.new_version }}
+          docker tag concertjournalfrontend:build registry.wielandseb.synology.me/concertjournalfrontend:latest
+          docker push registry.wielandseb.synology.me/concertjournalfrontend:${{ steps.generate-version.outputs.new_version }}
+          docker push registry.wielandseb.synology.me/concertjournalfrontend:latest
+      
+      # Push backend image
+      - name: Tag and push backend image
+        run: |
+          docker tag concertjournalbackend:build registry.wielandseb.synology.me/concertjournalbackend:${{ steps.generate-version.outputs.new_version }}
+          docker tag concertjournalbackend:build registry.wielandseb.synology.me/concertjournalbackend:latest
+          docker push registry.wielandseb.synology.me/concertjournalbackend:${{ steps.generate-version.outputs.new_version }}
+          docker push registry.wielandseb.synology.me/concertjournalbackend:latest
+      
+      # Push Git tag
       - name: Push version tag
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
-          git tag ${{ needs.generate-version.outputs.version }}
-          git push origin ${{ needs.generate-version.outputs.version }}
-          echo "Successfully pushed tag ${{ needs.generate-version.outputs.version }}"
+          git tag ${{ steps.generate-version.outputs.new_version }}
+          git push origin ${{ steps.generate-version.outputs.new_version }}
+          echo "Successfully pushed tag ${{ steps.generate-version.outputs.new_version }}"
 
   summary:
     name: CI Summary
     runs-on: ubuntu-latest
-    needs: [changes, trigger-backend, trigger-frontend, push-tag]
+    needs: [changes, trigger-backend, trigger-frontend, publish-artifacts]
     if: always()
     steps:
       - name: Checkout code
@@ -137,11 +171,11 @@ jobs:
           fi
           
           if [[ "${{ github.ref }}" == "refs/heads/main" && "${{ github.event_name }}" != "pull_request" ]]; then
-            if [[ "${{ needs.push-tag.result }}" == "success" ]]; then
-              echo "- ✅ Version tag pushed: ${{ needs.generate-version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
-            elif [[ "${{ needs.push-tag.result }}" == "skipped" ]]; then
-              echo "- ⚠️ Version tag not pushed (workflow skipped)" >> $GITHUB_STEP_SUMMARY
+            if [[ "${{ needs.publish-artifacts.result }}" == "success" ]]; then
+              echo "- ✅ Version tag and images pushed: ${{ needs.publish-artifacts.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+            elif [[ "${{ needs.publish-artifacts.result }}" == "skipped" ]]; then
+              echo "- ⚠️ Version tag and images not pushed (workflow skipped)" >> $GITHUB_STEP_SUMMARY
             else
-              echo "- ❌ Version tag push failed" >> $GITHUB_STEP_SUMMARY
+              echo "- ❌ Version tag and images push failed" >> $GITHUB_STEP_SUMMARY
             fi
           fi

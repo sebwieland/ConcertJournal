@@ -2,11 +2,6 @@ name: Backend CI/CD
 
 on:
   workflow_call:
-    inputs:
-      version:
-        required: false
-        type: string
-        description: "Version tag to use for Docker images"
 
 env:
   # Enable BuildKit for faster Docker builds
@@ -55,13 +50,15 @@ jobs:
           retention-days: 7
 
   backend-build:
-    name: Build and Publish
+    name: Build Image
     runs-on: ubuntu-latest
     needs: [backend-test]
     if: github.event_name != 'pull_request'
+    outputs:
+      image_built: ${{ steps.build_image.outputs.success }}
     permissions:
-      contents: write
-      packages: write
+      contents: read
+      packages: read
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -93,45 +90,40 @@ jobs:
             network=host
 
       - name: Build Docker image
+        id: build_image
         uses: docker/build-push-action@v6
         with:
           context: backend
           push: false
           load: true
-          tags: concertjournalbackend:test
+          tags: |
+            concertjournalbackend:build
+            concertjournalbackend:latest
           platforms: linux/amd64
           cache-from: type=registry,ref=registry.wielandseb.synology.me/concertjournalbackend:cache
           build-args: |
             BUILDKIT_INLINE_CACHE=1
-
-      - name: Login to Docker Hub (only on main branch)
+            
+      - name: Save Docker image
         if: github.ref == 'refs/heads/main'
-        uses: docker/login-action@v2
-        with:
-          registry: https://registry.wielandseb.synology.me/concertjournalbackend
-          username: ${{ vars.DOCKER_USERNAME }}
-          password: ${{ vars.DOCKER_PASSWORD }}
-
-      - name: Build and push Docker image (main branch)
+        run: |
+          docker save concertjournalbackend:build | gzip > backend-image.tar.gz
+          echo "Image saved as backend-image.tar.gz"
+          echo "success=true" >> $GITHUB_OUTPUT
+          
+      - name: Upload image artifact
         if: github.ref == 'refs/heads/main'
-        uses: docker/build-push-action@v6
+        uses: actions/upload-artifact@v4
         with:
-          context: backend
-          push: true
-          tags: |
-            registry.wielandseb.synology.me/concertjournalbackend:${{ inputs.version }}
-            registry.wielandseb.synology.me/concertjournalbackend:latest
-          platforms: linux/amd64,linux/arm64
-          cache-from: type=registry,ref=registry.wielandseb.synology.me/concertjournalbackend:cache
-          cache-to: type=registry,ref=registry.wielandseb.synology.me/concertjournalbackend:cache,mode=max
-          build-args: |
-            BUILDKIT_INLINE_CACHE=1
+          name: backend-image
+          path: backend-image.tar.gz
+          retention-days: 1
 
       - name: Scan Docker image
         if: github.ref == 'refs/heads/main'
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: registry.wielandseb.synology.me/concertjournalbackend:${{ inputs.version }}
+          image-ref: concertjournalbackend:build
           format: 'table'
           exit-code: '0'
           ignore-unfixed: true

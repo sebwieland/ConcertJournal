@@ -2,11 +2,6 @@ name: Frontend CI/CD
 
 on:
   workflow_call:
-    inputs:
-      version:
-        required: false
-        type: string
-        description: "Version tag to use for Docker images"
 
 env:
   # Enable BuildKit for faster Docker builds
@@ -74,13 +69,15 @@ jobs:
           fi
 
   frontend-publish:
-    name: Publish
+    name: Build Image
     runs-on: ubuntu-latest
     needs: [frontend-build]
     if: github.event_name != 'pull_request'
+    outputs:
+      image_built: ${{ steps.build_image.outputs.success }}
     permissions:
-      contents: write
-      packages: write
+      contents: read
+      packages: read
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -112,46 +109,41 @@ jobs:
           NODE_ENV=production VITE_ENSURE_COMPONENTS=true npm run build
 
       - name: Build Docker image
+        id: build_image
         uses: docker/build-push-action@v6
         with:
           context: frontend
           push: false
           load: true
-          tags: concertjournalfrontend:test
+          tags: |
+            concertjournalfrontend:build
+            concertjournalfrontend:latest
           platforms: linux/amd64
           cache-from: type=registry,ref=registry.wielandseb.synology.me/concertjournalfrontend:cache
           # Add BuildKit optimizations
           build-args: |
             BUILDKIT_INLINE_CACHE=1
-
-      - name: Login to Docker Hub (only on main branch)
+            
+      - name: Save Docker image
         if: github.ref == 'refs/heads/main'
-        uses: docker/login-action@v3
-        with:
-          registry: https://registry.wielandseb.synology.me/concertjournalfrontend
-          username: ${{ vars.DOCKER_USERNAME }}
-          password: ${{ vars.DOCKER_PASSWORD }}
-
-      - name: Build and push Docker image (main branch)
+        run: |
+          docker save concertjournalfrontend:build | gzip > frontend-image.tar.gz
+          echo "Image saved as frontend-image.tar.gz"
+          echo "success=true" >> $GITHUB_OUTPUT
+          
+      - name: Upload image artifact
         if: github.ref == 'refs/heads/main'
-        uses: docker/build-push-action@v6
+        uses: actions/upload-artifact@v4
         with:
-          context: frontend
-          push: true
-          tags: |
-            registry.wielandseb.synology.me/concertjournalfrontend:${{ inputs.version }}
-            registry.wielandseb.synology.me/concertjournalfrontend:latest
-          platforms: linux/amd64,linux/arm64
-          cache-from: type=registry,ref=registry.wielandseb.synology.me/concertjournalfrontend:cache
-          cache-to: type=registry,ref=registry.wielandseb.synology.me/concertjournalfrontend:cache,mode=max
-          build-args: |
-            BUILDKIT_INLINE_CACHE=1
+          name: frontend-image
+          path: frontend-image.tar.gz
+          retention-days: 1
 
       - name: Scan Docker image
         if: github.ref == 'refs/heads/main'
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: registry.wielandseb.synology.me/concertjournalfrontend:${{ inputs.version }}
+          image-ref: concertjournalfrontend:build
           format: 'table'
           exit-code: '0'
           ignore-unfixed: true
