@@ -98,7 +98,6 @@ jobs:
           load: true
           tags: |
             concertjournalbackend:build
-            concertjournalbackend:latest
           platforms: linux/amd64
           cache-from: type=registry,ref=registry.wielandseb.synology.me/concertjournalbackend:cache
           build-args: |

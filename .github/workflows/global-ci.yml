@@ -65,14 +65,12 @@ jobs:
         with:
           fetch-depth: 0
       
-      # Generate version
       - name: Generate version
         id: generate-version
         uses: ./.github/workflows/version-tagging.yml
         with:
           push_tag: false
       
-      # Download image artifacts
       - name: Download frontend image
         uses: actions/download-artifact@v4
         with:
@@ -85,14 +83,12 @@ jobs:
           name: backend-image
           path: ./images
       
-      # Load images into Docker
       - name: Load Docker images
         run: |
           docker load < ./images/frontend-image.tar.gz
           docker load < ./images/backend-image.tar.gz
           docker images
       
-      # Login to Docker registry
       - name: Login to Docker registries
         uses: docker/login-action@v3
         with:
@@ -100,7 +96,6 @@ jobs:
           username: ${{ vars.DOCKER_USERNAME }}
           password: ${{ vars.DOCKER_PASSWORD }}
       
-      # Push frontend image
       - name: Tag and push frontend image
         run: |
           docker tag concertjournalfrontend:build registry.wielandseb.synology.me/concertjournalfrontend:${{ steps.generate-version.outputs.new_version }}
@@ -108,7 +103,6 @@ jobs:
           docker push registry.wielandseb.synology.me/concertjournalfrontend:${{ steps.generate-version.outputs.new_version }}
           docker push registry.wielandseb.synology.me/concertjournalfrontend:latest
       
-      # Push backend image
       - name: Tag and push backend image
         run: |
           docker tag concertjournalbackend:build registry.wielandseb.synology.me/concertjournalbackend:${{ steps.generate-version.outputs.new_version }}
@@ -116,7 +110,6 @@ jobs:
           docker push registry.wielandseb.synology.me/concertjournalbackend:${{ steps.generate-version.outputs.new_version }}
           docker push registry.wielandseb.synology.me/concertjournalbackend:latest
       
-      # Push Git tag
       - name: Push version tag
         run: |
           git config user.name "github-actions"
