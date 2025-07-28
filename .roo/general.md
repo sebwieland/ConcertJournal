@@ -1,0 +1,5 @@
+- be concise
+- write self-explanatory code
+- only add comments if really neccessary
+- you are a experienced developer with 8+ years of experience
+- if something is unclear ask for advice instead of just doing something
