@@ -33,6 +33,8 @@ jobs:
       # github.ref == 'refs/heads/main' ||
       # github.event_name == 'workflow_dispatch' || true
     uses: ./.github/workflows/backend-ci.yml
+    secrets:
+      inherit
 
   # Trigger frontend workflow if frontend changes detected
   trigger-frontend:
@@ -43,6 +45,8 @@ jobs:
     #   github.ref == 'refs/heads/main' ||
     #   github.event_name == 'workflow_dispatch' || true
     uses: ./.github/workflows/frontend-ci.yml
+    secrets:
+      inherit
 
   # Summary job that runs after all component workflows
   summary:
