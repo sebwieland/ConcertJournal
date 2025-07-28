@@ -31,7 +31,7 @@ jobs:
     if: |
       needs.changes.outputs.backend == 'true' ||
       github.ref == 'refs/heads/main' ||
-      github.event_name == 'workflow_dispatch'
+      github.event_name == 'workflow_dispatch' || true
     uses: ./.github/workflows/backend-ci.yml
 
   # Trigger frontend workflow if frontend changes detected
@@ -41,7 +41,7 @@ jobs:
     if: |
       needs.changes.outputs.frontend == 'true' ||
       github.ref == 'refs/heads/main' ||
-      github.event_name == 'workflow_dispatch'
+      github.event_name == 'workflow_dispatch' || true
     uses: ./.github/workflows/frontend-ci.yml
 
   # Summary job that runs after all component workflows
