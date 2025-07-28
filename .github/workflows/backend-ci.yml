@@ -8,13 +8,12 @@ env:
   # Enable BuildKit for faster Docker builds
   DOCKER_BUILDKIT: 1
   COMPOSE_DOCKER_CLI_BUILD: 1
+  JWT_SECRET: ${{ secrets.JWT_SECRET }}
 
 jobs:
   backend-test:
     name: Test
     runs-on: ubuntu-latest
-    env:
-      JWT_SECRET: ${{ secrets.JWT_SECRET }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
