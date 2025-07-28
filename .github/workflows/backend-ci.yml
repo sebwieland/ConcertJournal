@@ -1,17 +1,6 @@
 name: Backend CI/CD
 
 on:
-  push:
-    paths:
-      - 'backend/**'
-      - '.github/workflows/backend-ci.yml'
-      - '.github/workflows/change-detection.yml'
-      - '.github/workflows/version-tagging.yml'
-  pull_request:
-    branches: [ main ]
-    paths:
-      - 'backend/**'
-  workflow_dispatch:
   workflow_call:
 
 

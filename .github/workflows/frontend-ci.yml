@@ -1,17 +1,6 @@
 name: Frontend CI/CD
 
 on:
-  push:
-    paths:
-      - 'frontend/**'
-      - '.github/workflows/frontend-ci.yml'
-      - '.github/workflows/change-detection.yml'
-      - '.github/workflows/version-tagging.yml'
-  pull_request:
-    branches: [ main ]
-    paths:
-      - 'frontend/**'
-  workflow_dispatch:
   workflow_call:
 
 
