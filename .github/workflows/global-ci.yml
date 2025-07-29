@@ -97,14 +97,14 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
       
       - name: Download frontend image
-        if: needs.changes.outputs.frontend == 'true'
+        if: needs.changes.outputs.frontend == 'true' || github.event.inputs.force_full_build == 'true'
         uses: actions/download-artifact@v4
         with:
           name: frontend-image
           path: ./images
       
       - name: Download backend image
-        if: needs.changes.outputs.backend == 'true'
+        if: needs.changes.outputs.backend == 'true' || github.event.inputs.force_full_build == 'true'
         uses: actions/download-artifact@v4
         with:
           name: backend-image
