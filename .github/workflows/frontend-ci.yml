@@ -22,6 +22,12 @@ jobs:
           node-version: '22'
           cache: 'npm'
           cache-dependency-path: 'frontend/package-lock.json'
+          
+      - name: Clean npm cache on failure
+        if: failure()
+        run: |
+          cd frontend
+          npm cache clean --force
 
       - name: Cache dependencies
         uses: actions/cache@v4
@@ -67,6 +73,12 @@ jobs:
             echo "Build directory is empty or does not exist!"
             exit 1
           fi
+          
+      - name: Cache build artifact
+        uses: actions/cache/save@v4
+        with:
+          path: frontend/dist
+          key: ${{ runner.os }}-build-${{ hashFiles('frontend/dist/**') }}
 
   frontend-publish:
     name: Build Image
@@ -105,7 +117,15 @@ jobs:
           cd frontend
           npm install --prefer-offline --no-audit
 
+      - name: Restore build artifact
+        id: restore
+        uses: actions/cache/restore@v4
+        with:
+          path: frontend/dist
+          key: ${{ runner.os }}-build-${{ hashFiles('frontend/dist/**') }}
+          
       - name: Build React app
+        if: ${{ !steps.restore.outputs.cache-hit }}
         run: |
           cd frontend
           NODE_ENV=production VITE_ENSURE_COMPONENTS=true npm run build
@@ -141,7 +161,7 @@ jobs:
           retention-days: 1
 
       - name: Scan Docker image
-        if: github.ref == 'refs/heads/main'
+        if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: concertjournalfrontend:build
@@ -150,3 +170,13 @@ jobs:
           ignore-unfixed: true
           vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH'
+          
+      - name: Cleanup Docker images
+        if: success() || failure()
+        run: |
+          docker image prune -a --force --filter "until=24h"
+          
+      - name: Cleanup Docker images
+        if: success() || failure()
+        run: |
+          docker image prune -a --force --filter "until=24h"

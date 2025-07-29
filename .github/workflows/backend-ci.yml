@@ -27,6 +27,11 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
+      - name: Clean Maven local repository on failure
+        if: failure()
+        run: |
+          rm -rf ~/.m2/repository
+          
       - name: Print Java version
         run: |
           cd backend
@@ -47,6 +52,13 @@ jobs:
         with:
           name: backend-coverage
           path: backend/target/site/jacoco/*
+          retention-days: 7
+          
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-test-results
+          path: backend/target/surefire-reports/*
           retention-days: 7
 
   backend-build:
