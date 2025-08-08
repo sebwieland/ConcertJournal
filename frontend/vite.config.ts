@@ -12,43 +12,27 @@ const dynamicRoutes = [
     // Add other paths here
 ]
 
+// Get environment variables with defaults
+const isDev = process.env.NODE_ENV === 'development';
+const isLocal = process.env.MODE === 'dev-local';
+const hmrHost = process.env.HMR_HOST || (isLocal ? 'localhost' : '0.0.0.0');
+const hmrPort = parseInt(process.env.HMR_PORT || '24678', 10);
+
 export default defineConfig({
     base: '/',
-    // Disable esbuild for both development and production
-    esbuild: false,
+    // Simplified esbuild configuration
+    esbuild: {
+        jsxFactory: 'React.createElement',
+        jsxFragment: 'React.Fragment',
+        target: 'es2015'
+    },
     build: {
         outDir: 'dist',
-        // Enhanced build optimization settings
-        minify: 'terser', // Use terser for more reliable builds in Docker
-        sourcemap: process.env.NODE_ENV === 'development',
-        // Improve chunk splitting for better caching
-        rollupOptions: {
-            output: {
-                // Disable manual chunks to prevent dynamic import issues
-                manualChunks: undefined,
-                // Limit chunk size to improve loading performance
-                chunkFileNames: 'assets/[name]-[hash].js',
-                entryFileNames: 'assets/[name]-[hash].js',
-                assetFileNames: 'assets/[name]-[hash].[ext]',
-            },
-        },
-        // Improve build performance
-        target: 'es2015',
-        cssCodeSplit: true,
-        assetsInlineLimit: 4096,
-        // Reduce build size
-        emptyOutDir: true,
-        // Improve build speed
-        reportCompressedSize: false,
+        minify: 'terser',
+        sourcemap: process.env.NODE_ENV === 'development'
     },
     plugins: [
-        react({
-            // Use simple configuration without custom babel presets
-            babel: {
-                babelrc: false,
-                configFile: false
-            }
-        }),
+        react(),
         tsconfigPaths(),
         Sitemap({
             hostname: 'https://concertjournal.de',
@@ -56,21 +40,25 @@ export default defineConfig({
             exclude: ['/secret-page']
         })
     ],
-    define: {
-        // Make environment variables available to the client
-        'process.env.VITE_ENSURE_COMPONENTS': JSON.stringify(process.env.VITE_ENSURE_COMPONENTS || 'false')
-    },
+    // Essential server configuration for HMR
     server: {
         port: 3000,
         host: '0.0.0.0',
         open: false,
-        hmr: false,
+        hmr: {
+            // Essential HMR settings
+            port: hmrPort,
+            host: hmrHost,
+            clientPort: isLocal ? undefined : hmrPort
+        },
         watch: {
-            usePolling: true,
-            interval: 1000
+            // Use polling only in Docker, native file system events for local development
+            usePolling: !isLocal,
+            interval: 200,
+            binaryInterval: 200  // Interval for binary files
         }
     },
-    // Enhanced dependency optimization
+    // Basic dependency optimization
     optimizeDeps: {
         include: [
             'react',
@@ -78,14 +66,11 @@ export default defineConfig({
             'react-router-dom',
             '@mui/material',
             '@mui/icons-material',
-            '@mui/x-data-grid',
-            '@mui/x-date-pickers',
-            'axios',
-            'dayjs',
-            'react-query',
-            'material-ui-confirm'
-        ],
-        // Force dependency pre-bundling
-        force: true
+            '@mui/x-date-pickers'
+        ]
+    },
+    // Simple environment variable definitions
+    define: {
+        '__DEV__': isDev
     }
 })
