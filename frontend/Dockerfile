@@ -15,7 +15,7 @@ RUN apk add --no-cache --virtual .build-deps \
     python3 \
     make \
     g++ && \
-    npm ci --only=production && \
+    npm ci && \
     # Create a directory for dev dependencies that will be removed in production
     mkdir -p /app/node_modules/.cache && \
     # Set proper permissions
@@ -35,7 +35,8 @@ ENV NODE_OPTIONS="--max-old-space-size=4096" \
 COPY --chown=nodeuser:nodejs . .
 
 # Build the application with explicit environment variables and cache optimization
-RUN NODE_ENV=production \
+RUN npm ci && \
+    NODE_ENV=production \
     VITE_ENSURE_COMPONENTS=true \
     npm run build && \
     # Remove source maps in production for security and size
@@ -92,4 +93,4 @@ HEALTHCHECK --interval=10s --timeout=5s --start-period=15s --retries=3 \
     CMD wget -q --spider http://localhost:3000/ || exit 1
 
 # Start development server
-CMD ["npm", "run", "start:docker"]
+CMD ["npm", "run", "start:dev"]

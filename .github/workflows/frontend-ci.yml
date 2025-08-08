@@ -141,6 +141,7 @@ jobs:
             concertjournalfrontend:build
           platforms: linux/amd64
           cache-from: type=registry,ref=registry.wielandseb.synology.me/concertjournalfrontend:cache
+          target: production
           # Add BuildKit optimizations
           build-args: |
             BUILDKIT_INLINE_CACHE=1
