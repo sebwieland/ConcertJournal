@@ -30,11 +30,8 @@ RUN mvn package -DskipTests -T 1C \
     -Dmaven.source.skip=true && \
     # Verify the JAR exists
     test -f target/ConcertJournalAPI-0.0.1-SNAPSHOT.jar && \
-    # Slim down the JAR by removing unnecessary files
-    mkdir -p /app/slim && \
-    java -Djarmode=layertools -jar target/ConcertJournalAPI-0.0.1-SNAPSHOT.jar extract --destination /app/slim && \
     # Set proper permissions
-    chown -R appuser:appgroup /app/slim
+    chown -R appuser:appgroup /app/target
 
 # Development stage - for hot reloading
 FROM maven:3.9-eclipse-temurin-21-alpine AS development
@@ -83,14 +80,8 @@ RUN addgroup -g 1001 -S appgroup && \
     # Add curl for health check
     apk add --no-cache curl
 
-# Create directory structure for layered JAR
-RUN mkdir -p /app/dependencies /app/spring-boot-loader /app/snapshot-dependencies /app/application
-
-# Copy layered JAR contents from build stage
-COPY --from=build --chown=appuser:appgroup /app/slim/dependencies/ /app/dependencies/
-COPY --from=build --chown=appuser:appgroup /app/slim/spring-boot-loader/ /app/spring-boot-loader/
-COPY --from=build --chown=appuser:appgroup /app/slim/snapshot-dependencies/ /app/snapshot-dependencies/
-COPY --from=build --chown=appuser:appgroup /app/slim/application/ /app/application/
+# Copy the entire JAR file from build stage
+COPY --from=build --chown=appuser:appgroup /app/target/ConcertJournalAPI-0.0.1-SNAPSHOT.jar /app/app.jar
 
 # Switch to non-root user
 USER appuser
@@ -110,4 +101,4 @@ ENTRYPOINT ["java", \
     "-XX:+UseStringDeduplication", \
     "-XX:+ExitOnOutOfMemoryError", \
     "-Djava.security.egd=file:/dev/./urandom", \
-    "org.springframework.boot.loader.JarLauncher"]
+    "-jar", "/app/app.jar"]

@@ -92,4 +92,4 @@ HEALTHCHECK --interval=10s --timeout=5s --start-period=15s --retries=3 \
     CMD wget -q --spider http://localhost:3000/ || exit 1
 
 # Start development server
-CMD ["npm", "run", "start:docker"]
+CMD ["npm", "run", "start:dev"]
