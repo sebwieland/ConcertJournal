@@ -1,4 +1,6 @@
 # Root .gitignore for Concert Journal Monorepo
+*.ser
+
 
 # Maven
 target/

@@ -75,6 +75,10 @@ services:
       # Enable HMR and Fast Refresh
       VITE_HMR: "true"
       VITE_FAST_REFRESH: "true"
+      # Disable native dependencies
+      ROLLUP_NATIVE_DISABLE: "true"
+      VITE_DISABLE_NATIVE: "true"
+      NODE_OPTIONS: "--max-old-space-size=4096"
     ports:
       - "3000:3000"
       - "24678:24678" # Vite HMR websocket port

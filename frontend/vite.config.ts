@@ -14,19 +14,18 @@ const dynamicRoutes = [
 
 export default defineConfig({
     base: '/',
+    // Disable esbuild for both development and production
+    esbuild: false,
     build: {
         outDir: 'dist',
         // Enhanced build optimization settings
-        minify: 'esbuild', // Use esbuild instead of terser for faster builds
+        minify: 'terser', // Use terser for more reliable builds in Docker
         sourcemap: process.env.NODE_ENV === 'development',
         // Improve chunk splitting for better caching
         rollupOptions: {
             output: {
-                manualChunks: {
-                    vendor: ['react', 'react-dom', 'react-router-dom'],
-                    mui: ['@mui/material', '@mui/icons-material', '@mui/x-data-grid', '@mui/x-date-pickers'],
-                    utils: ['axios', 'dayjs', 'react-query'],
-                },
+                // Disable manual chunks to prevent dynamic import issues
+                manualChunks: undefined,
                 // Limit chunk size to improve loading performance
                 chunkFileNames: 'assets/[name]-[hash].js',
                 entryFileNames: 'assets/[name]-[hash].js',
@@ -43,7 +42,13 @@ export default defineConfig({
         reportCompressedSize: false,
     },
     plugins: [
-        react(),
+        react({
+            // Use simple configuration without custom babel presets
+            babel: {
+                babelrc: false,
+                configFile: false
+            }
+        }),
         tsconfigPaths(),
         Sitemap({
             hostname: 'https://concertjournal.de',
@@ -56,12 +61,12 @@ export default defineConfig({
         'process.env.VITE_ENSURE_COMPONENTS': JSON.stringify(process.env.VITE_ENSURE_COMPONENTS || 'false')
     },
     server: {
-        port: 3010,
-        open: true,
+        port: 3000,
+        open: false,
         hmr: {
             overlay: true,
             timeout: 30000,
-            clientPort: 3010
+            clientPort: 24678
         },
         watch: {
             usePolling: true,
@@ -71,8 +76,8 @@ export default defineConfig({
     // Enhanced dependency optimization
     optimizeDeps: {
         include: [
-            'react', 
-            'react-dom', 
+            'react',
+            'react-dom',
             'react-router-dom',
             '@mui/material',
             '@mui/icons-material',
@@ -84,23 +89,6 @@ export default defineConfig({
             'material-ui-confirm'
         ],
         // Force dependency pre-bundling
-        force: true,
-        // Optimize esbuild options
-        esbuildOptions: {
-            target: 'es2020',
-            // Improve tree-shaking
-            treeShaking: true,
-            // Improve build performance
-            legalComments: 'none',
-            // Minify during dependency optimization
-            minify: true,
-        }
-    },
-    // Esbuild optimizations
-    esbuild: {
-        logOverride: { 'this-is-undefined-in-esm': 'silent' },
-        target: 'es2020',
-        // Improve tree-shaking
-        treeShaking: true,
+        force: true
     }
 })

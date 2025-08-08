@@ -11,11 +11,14 @@ RUN echo "Node version: $(node -v)" && \
     # Install dependencies with npm install to update lock file
     npm install && \
     # Skip Rollup native dependencies on Alpine (musl) - they're optional
-    echo "Skipping Rollup native dependencies on Alpine Linux"
+    echo "Skipping Rollup native dependencies on Alpine Linux" && \
+    # Install additional packages needed for esbuild
+    apk add --no-cache libc6-compat
 
 # We'll mount the source code as a volume
 EXPOSE 3000
 EXPOSE 24678
+
 # The command will be provided by docker-compose.yml
 
 # Build stage
@@ -26,7 +29,14 @@ RUN echo "Node version: $(node -v)" && \
     # Install dependencies with npm install to update lock file
     npm install && \
     # Skip Rollup native dependencies on Alpine (musl) - they're optional
-    echo "Skipping Rollup native dependencies on Alpine Linux"
+    echo "Skipping Rollup native dependencies on Alpine Linux" && \
+    # Install additional packages needed for esbuild
+    apk add --no-cache libc6-compat
+
+# Set environment variables to help with native dependencies
+ENV ROLLUP_NATIVE_DISABLE=true
+ENV VITE_DISABLE_NATIVE=true
+ENV NODE_OPTIONS="--max-old-space-size=4096"
 
 # Copy source files after dependency installation to leverage caching
 COPY . .
