@@ -62,12 +62,9 @@ export default defineConfig({
     },
     server: {
         port: 3000,
+        host: '0.0.0.0',
         open: false,
-        hmr: {
-            overlay: true,
-            timeout: 30000,
-            clientPort: 24678
-        },
+        hmr: false,
         watch: {
             usePolling: true,
             interval: 1000
