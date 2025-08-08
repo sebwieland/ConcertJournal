@@ -1,55 +1,81 @@
 # Base stage for shared dependencies
-FROM node:20-slim AS base
+FROM node:20-alpine AS base
 WORKDIR /app
+
+# Create non-root user for better security
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S -u 1001 -G nodejs nodeuser && \
+    chown -R nodeuser:nodejs /app
+
 # Copy package files first for better caching
-COPY package*.json ./
-# Install dependencies with npm install to update lock file
-RUN npm install && \
-    # Install additional packages needed for development
-    apt-get update && \
-    apt-get install -y --no-install-recommends \
-        python3 \
-        make \
-        g++ \
-        && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+COPY --chown=nodeuser:nodejs package*.json ./
+
+# Install dependencies with specific versions and cleanup in a single layer
+RUN apk add --no-cache --virtual .build-deps \
+    python3=~3.11 \
+    make=~4.4 \
+    g++=~12.2 && \
+    npm ci --only=production && \
+    # Create a directory for dev dependencies that will be removed in production
+    mkdir -p /app/node_modules/.cache && \
+    # Set proper permissions
+    chown -R nodeuser:nodejs /app && \
+    # Remove build dependencies to reduce image size
+    apk del .build-deps
 
 # Build stage
 FROM base AS build
-# Copy source files after dependency installation to leverage caching
-COPY . .
+USER nodeuser
 
 # Set environment variables
-ENV NODE_OPTIONS="--max-old-space-size=4096"
-ENV NODE_ENV="production"
+ENV NODE_OPTIONS="--max-old-space-size=4096" \
+    NODE_ENV="production"
 
-# Copy source files after dependency installation to leverage caching
-COPY . .
+# Copy source files with proper ownership
+COPY --chown=nodeuser:nodejs . .
 
-# Build the application with explicit environment variables
+# Build the application with explicit environment variables and cache optimization
 RUN NODE_ENV=production \
     VITE_ENSURE_COMPONENTS=true \
-    npm run build
+    npm run build && \
+    # Remove source maps in production for security and size
+    find dist -name "*.map" -delete
 
-# Development stage - serve static files
-FROM node:20-slim
+# Production stage - serve static files
+FROM node:20-alpine AS production
 WORKDIR /app
-# Copy built files from build stage
-COPY --from=build /app/dist ./dist
-# Install serve globally for production mode
-RUN npm install -g serve
 
-# Expose ports
+# Create and use non-root user
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S -u 1001 -G nodejs nodeuser && \
+    chown -R nodeuser:nodejs /app
+
+# Install serve with specific version
+RUN npm install -g serve@14.2.1
+
+# Copy built files from build stage with proper ownership
+COPY --from=build --chown=nodeuser:nodejs /app/dist ./dist
+
+# Switch to non-root user
+USER nodeuser
+
+# Expose port
 EXPOSE 3000
-EXPOSE 24678
 
-# Use environment variable to determine startup command - this is only used for the build stage
+# Add health check
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
+    CMD wget -q --spider http://localhost:3000/ || exit 1
+
+# Use environment variable to determine startup command
 CMD ["serve", "-s", "dist", "-p", "3000", "--single"]
 
 # Development stage for local development with HMR
 FROM base AS development
-# No need to copy source files as they will be mounted as volumes
+USER nodeuser
+
+# Copy only necessary development files
+COPY --chown=nodeuser:nodejs .eslintrc* .prettierrc* vite.config.* tsconfig.* ./
+
 # Set environment variables for development
 ENV NODE_ENV=development \
     VITE_HMR=true \
@@ -60,6 +86,10 @@ ENV NODE_ENV=development \
 # Expose ports for development
 EXPOSE 3000
 EXPOSE 24678
+
+# Add health check for development
+HEALTHCHECK --interval=10s --timeout=5s --start-period=15s --retries=3 \
+    CMD wget -q --spider http://localhost:3000/ || exit 1
 
 # Start development server
 CMD ["npm", "run", "start:docker"]
