@@ -12,9 +12,9 @@ COPY --chown=nodeuser:nodejs package*.json ./
 
 # Install dependencies with specific versions and cleanup in a single layer
 RUN apk add --no-cache --virtual .build-deps \
-    python3=~3.11 \
-    make=~4.4 \
-    g++=~12.2 && \
+    python3 \
+    make \
+    g++ && \
     npm ci --only=production && \
     # Create a directory for dev dependencies that will be removed in production
     mkdir -p /app/node_modules/.cache && \
