@@ -45,24 +45,28 @@ const ConfigProvider = ({ children }: { children: ReactNode }) => {
                 if (process.env.NODE_ENV === 'development') {
                     console.log("Fetching config.json...");
                 }
+                
+                // Use environment variable if available (preferred method)
+                const apiUrl = process.env.VITE_API_URL;
+                if (apiUrl) {
+                    console.log("Using API URL from environment:", apiUrl);
+                    setConfig({ backendURL: apiUrl });
+                    setLoading(false);
+                    localStorage.setItem('app_config', JSON.stringify({ backendURL: apiUrl }));
+                    return;
+                }
+                
+                // Try to fetch from the standard location
                 const response = await fetch('/config.json');
                 
                 if (!response.ok) {
-                    if (process.env.NODE_ENV === 'development') {
-                        console.error(`HTTP error loading config! status: ${response.status}`);
-                    }
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                    throw new Error(`HTTP error loading config: ${response.status}`);
                 }
                 
                 // Parse the response
-                const text = await response.text();
-                if (process.env.NODE_ENV === 'development') {
-                    console.log("Config.json content:", text);
-                }
-                const data = JSON.parse(text);
+                const data = await response.json();
                 
                 if (process.env.NODE_ENV === 'development') {
-                    console.log("Parsed config:", data);
                     console.log("Using backend URL:", data.backendURL);
                 }
                 

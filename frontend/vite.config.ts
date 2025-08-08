@@ -12,35 +12,24 @@ const dynamicRoutes = [
     // Add other paths here
 ]
 
+// Get environment variables with defaults
+const isDev = process.env.NODE_ENV === 'development';
+const isLocal = process.env.MODE === 'dev-local';
+const hmrHost = process.env.HMR_HOST || (isLocal ? 'localhost' : '0.0.0.0');
+const hmrPort = parseInt(process.env.HMR_PORT || '24678', 10);
+
 export default defineConfig({
     base: '/',
+    // Simplified esbuild configuration
+    esbuild: {
+        jsxFactory: 'React.createElement',
+        jsxFragment: 'React.Fragment',
+        target: 'es2015'
+    },
     build: {
         outDir: 'dist',
-        // Enhanced build optimization settings
-        minify: 'esbuild', // Use esbuild instead of terser for faster builds
-        sourcemap: process.env.NODE_ENV === 'development',
-        // Improve chunk splitting for better caching
-        rollupOptions: {
-            output: {
-                manualChunks: {
-                    vendor: ['react', 'react-dom', 'react-router-dom'],
-                    mui: ['@mui/material', '@mui/icons-material', '@mui/x-data-grid', '@mui/x-date-pickers'],
-                    utils: ['axios', 'dayjs', 'react-query'],
-                },
-                // Limit chunk size to improve loading performance
-                chunkFileNames: 'assets/[name]-[hash].js',
-                entryFileNames: 'assets/[name]-[hash].js',
-                assetFileNames: 'assets/[name]-[hash].[ext]',
-            },
-        },
-        // Improve build performance
-        target: 'es2015',
-        cssCodeSplit: true,
-        assetsInlineLimit: 4096,
-        // Reduce build size
-        emptyOutDir: true,
-        // Improve build speed
-        reportCompressedSize: false,
+        minify: 'terser',
+        sourcemap: process.env.NODE_ENV === 'development'
     },
     plugins: [
         react(),
@@ -51,56 +40,37 @@ export default defineConfig({
             exclude: ['/secret-page']
         })
     ],
-    define: {
-        // Make environment variables available to the client
-        'process.env.VITE_ENSURE_COMPONENTS': JSON.stringify(process.env.VITE_ENSURE_COMPONENTS || 'false')
-    },
+    // Essential server configuration for HMR
     server: {
-        port: 3010,
-        open: true,
+        port: 3000,
+        host: '0.0.0.0',
+        open: false,
         hmr: {
-            overlay: true,
-            timeout: 30000,
-            clientPort: 3010
+            // Essential HMR settings
+            port: hmrPort,
+            host: hmrHost,
+            clientPort: isLocal ? undefined : hmrPort
         },
         watch: {
-            usePolling: true,
-            interval: 1000
+            // Use polling only in Docker, native file system events for local development
+            usePolling: !isLocal,
+            interval: 200,
+            binaryInterval: 200  // Interval for binary files
         }
     },
-    // Enhanced dependency optimization
+    // Basic dependency optimization
     optimizeDeps: {
         include: [
-            'react', 
-            'react-dom', 
+            'react',
+            'react-dom',
             'react-router-dom',
             '@mui/material',
             '@mui/icons-material',
-            '@mui/x-data-grid',
-            '@mui/x-date-pickers',
-            'axios',
-            'dayjs',
-            'react-query',
-            'material-ui-confirm'
-        ],
-        // Force dependency pre-bundling
-        force: true,
-        // Optimize esbuild options
-        esbuildOptions: {
-            target: 'es2020',
-            // Improve tree-shaking
-            treeShaking: true,
-            // Improve build performance
-            legalComments: 'none',
-            // Minify during dependency optimization
-            minify: true,
-        }
+            '@mui/x-date-pickers'
+        ]
     },
-    // Esbuild optimizations
-    esbuild: {
-        logOverride: { 'this-is-undefined-in-esm': 'silent' },
-        target: 'es2020',
-        // Improve tree-shaking
-        treeShaking: true,
+    // Simple environment variable definitions
+    define: {
+        '__DEV__': isDev
     }
 })
