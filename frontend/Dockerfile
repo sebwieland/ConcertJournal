@@ -38,7 +38,7 @@ COPY --chown=nodeuser:nodejs . .
 RUN npm ci && \
     NODE_ENV=production \
     VITE_ENSURE_COMPONENTS=true \
-    npm run build:prod && \
+    npm run build && \
     # Remove source maps in production for security and size
     find dist -name "*.map" -delete
 
