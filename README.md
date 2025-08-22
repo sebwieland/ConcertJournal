@@ -1,4 +1,4 @@
-# Concert Journal Monorepo
+# Concert Journal
 
 This repository contains both the frontend and backend components of the Concert Journal application, a web app to track where you've seen which bands.
 
@@ -8,7 +8,6 @@ This repository contains both the frontend and backend components of the Concert
 .
 ├── backend/           # Spring Boot backend API
 │   ├── src/           # Java source code
-│   ├── DB/            # Database files
 │   └── ...
 ├── frontend/          # React frontend application
 │   ├── src/           # TypeScript/JavaScript source code
@@ -22,11 +21,70 @@ This repository contains both the frontend and backend components of the Concert
 - Java 21 (for local backend development)
 - Node.js 20 (for local frontend development)
 
+## Development Approaches
+
+This project supports two development approaches:
+
+1. **Hybrid Approach (Strongly Recommended)**: Run the frontend locally and the backend in Docker
+2. **Full Docker Approach**: Run both frontend and backend in Docker
+
+The hybrid approach is strongly recommended for frontend development as it provides a significantly better developer experience with faster hot reloading and immediate feedback.
+
+### Why Hybrid Development?
+
+Running the frontend locally while keeping the backend in Docker provides several advantages:
+
+- **Much faster hot reloading** - Changes are detected instantly via native file system events
+- **Better developer experience** - Immediate feedback loop improves productivity
+- **Simpler frontend setup** - Fewer configuration files and environment variables to manage
+- **Consistent backend environment** - Backend services still run in Docker for consistency
+
 ## Getting Started
 
-### Using Docker Compose (Recommended)
+### Hybrid Approach (Recommended)
 
-The easiest way to run the entire application stack is using Docker Compose:
+We've provided a helper script (`local-dev.sh`) in the root of the repository that sets up everything for you:
+
+```bash
+# Make the script executable (if needed)
+chmod +x local-dev.sh
+
+# Run the script
+./local-dev.sh
+```
+
+This script will:
+1. Start the backend services in Docker
+2. Wait for them to be ready
+3. Start the frontend locally with the correct configuration
+
+This is the recommended way to start development on this project.
+
+#### Manual Setup for Hybrid Approach
+
+If you prefer to set up manually:
+
+1. **Start the backend services in Docker:**
+   ```bash
+   # Start only the backend and database
+   docker-compose up backend mysql
+   ```
+
+2. **Install frontend dependencies locally:**
+   ```bash
+   cd frontend
+   npm install
+   ```
+
+3. **Run the frontend locally:**
+   ```bash
+   # From the frontend directory
+   npm run start:local
+   ```
+
+### Full Docker Approach
+
+If you need to run everything in Docker (e.g., for full-stack testing or CI/CD), you can use the Docker setup:
 
 ```bash
 # Start all services
@@ -39,70 +97,67 @@ docker-compose up -d
 docker-compose down
 ```
 
+Note that this approach will result in significantly slower hot reloading due to Docker volume mounting overhead and the use of polling instead of native file system events.
+
 The services will be available at:
 - Frontend: http://localhost:3000
 - Backend API: http://localhost:8080
 
-#### Hot Reload Development Workflow
+## Backend Architecture
 
-The Docker Compose setup is configured for a seamless development experience with hot reloading for both frontend and backend:
+The backend is a RESTful API built with:
 
-**Frontend Hot Reload:**
-- The frontend uses Vite's Hot Module Replacement (HMR)
-- Any changes to React components, CSS, or other frontend files will be automatically reflected in the browser
-- No manual refresh needed - changes appear almost instantly
+- **Spring Boot**: Framework for building Java applications
+- **Spring Security**: Authentication and authorization
+- **Spring Data JPA**: Database access
+- **H2 Database**: Default embedded database (configurable to use MySQL in development)
+- **JWT**: JSON Web Tokens for stateless authentication
 
-**Backend Hot Reload:**
-- The backend uses Spring Boot DevTools for automatic restarts
-- When you modify Java files, the application will automatically rebuild and restart
-- Configuration changes are also detected and applied
+### API Endpoints
 
-**How to Use:**
-1. Start the services with `docker-compose up`
-2. Make changes to any frontend or backend file
-3. Save the file
-4. See your changes automatically applied
+The API provides the following endpoints:
 
-**Example Workflow:**
-```bash
-# Start the development environment
-docker-compose up
+- `/api/events`: Band event operations
+- `/api/users`: User operations
+- `/api/auth`: Authentication operations
 
-# In another terminal, make changes to files
-# For example, edit a React component or Java controller
+For detailed API documentation, access the Swagger UI when the application is running:
 
-# Changes are automatically detected and applied
-# No need to rebuild or restart containers manually
+```
+http://localhost:8080/swagger-ui.html
 ```
 
-### Local Development
+### Backend Configuration
 
-#### Backend
+The application uses different property files for different environments:
+
+- `application.properties`: Default configuration (H2 database)
+- `application-dev.properties`: Development configuration (MySQL database)
+
+To use the development configuration when running locally:
 
 ```bash
 cd backend
-./mvnw spring-boot:run
+./mvnw spring-boot:run -Dspring.profiles.active=dev
 ```
 
-The backend API will be available at http://localhost:8080.
+## Frontend Configuration
 
-#### Frontend
+Key configuration files:
 
-```bash
-cd frontend
-npm install
-npm run dev
-```
+- **vite.config.ts**: Contains the HMR configuration
+- **docker-compose.yml**: Configures the Docker environment
+- **.env.dev-local**: Sets environment variables for local development
+- **package.json**: Contains npm scripts for development
 
-The frontend development server will be available at http://localhost:3000.
+Available scripts:
 
-## Development Workflow
+- `npm run start:local`: Start the development server locally (outside Docker)
+- `npm run start:dev`: Start the development server with HMR in Docker
+- `npm run start:prod`: Serve the production build
+- `npm run build`: Build for production
+- `npm run test`: Run tests
 
-1. Clone the repository
-2. Start the services using Docker Compose or run them individually
-3. Make changes to the code
-4. Test your changes locally
-5. Commit and push your changes
 ## Test Data Management
 
 The Concert Journal application generates test data automatically when starting up, ensuring a consistent development experience across all environments.
@@ -114,26 +169,10 @@ Test data is created by the `DataLoader` component in `backend/src/main/java/com
 - 10 test concert events are created if no events exist in the database
 - Works with both H2 (local development) and MySQL (Docker) databases
 - Data is generated on every application startup when the database is empty
-- This approach ensures test data is available regardless of environment or restarts
-
-### Usage
-
-**For Local Development:**
-```bash
-cd backend
-./mvnw spring-boot:run
-```
-Test data will be automatically generated if no events exist.
-
-**For Docker Development:**
-```bash
-docker-compose up
-```
-Test data will be automatically generated if no events exist.
 
 ### Customizing Test Data
 
-To modify the test data, update the `createDummyBandEvent` method in `DataLoader.java`. The same test data generation logic is used for both H2 and MySQL databases.
+To modify the test data, update the `createDummyBandEvent` method in `DataLoader.java`.
 
 To reset test data, remove the database volume:
 ```bash
@@ -141,6 +180,22 @@ To reset test data, remove the database volume:
 docker-compose down -v
 docker-compose up
 ```
+
+## Troubleshooting
+
+### Frontend Issues
+
+- **CORS issues**: Ensure the backend's CORS configuration includes `http://localhost:3000`
+- **Cannot connect to backend**: Check that the backend container is running and accessible
+- **Hot reloading not working**: 
+  - In hybrid mode: Ensure you're using the `start:local` script which disables polling
+  - In Docker mode: Check browser console for WebSocket connection errors and verify Docker container logs
+
+### Backend Issues
+
+- **Database connection issues**: Verify MySQL container is running if using the dev profile
+- **API not accessible**: Check that the backend is running on port 8080
+- **Authentication problems**: Ensure JWT configuration is correct in application properties
 
 ## Building for Production
 
@@ -170,8 +225,6 @@ The monorepo uses GitHub Actions for CI/CD with path-based triggers to optimize 
   - Docker image building and publishing
   - Code testing and quality checks
   - Cross-platform Docker image support (amd64, arm64)
-
-The workflow is defined in `.github/workflows/ci.yml` and maintains the independent build processes from the previous separate repositories while consolidating them into a single configuration.
 
 ## License
 
