@@ -57,6 +57,7 @@ compose/
 *.sql
 *.sqlite
 *.sqlite3
+/backend/DB
 /backend/DB/*.mv.db
 /backend/DB/*.trace.db
 /backend/DB/*.lock.db
