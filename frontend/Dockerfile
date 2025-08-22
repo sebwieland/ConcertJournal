@@ -35,7 +35,7 @@ ENV NODE_OPTIONS="--max-old-space-size=4096" \
 COPY --chown=nodeuser:nodejs . .
 
 # Build the application with explicit environment variables and cache optimization
-RUN npm ci && \
+RUN npm ci --include=dev && \
     NODE_ENV=production \
     VITE_ENSURE_COMPONENTS=true \
     npm run build && \
