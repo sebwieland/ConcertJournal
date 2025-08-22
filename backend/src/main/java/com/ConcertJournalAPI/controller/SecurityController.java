@@ -19,12 +19,17 @@ import java.util.Collections;
 
 @RestController
 public class SecurityController {
+    
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(SecurityController.class);
 
     @Value("${auth.cookie.secure}")
     private boolean secureCookie;
 
     @Value("${auth.cookie.httpOnly}")
     private boolean httpOnlyCookie;
+    
+    @Value("${server.servlet.session.cookie.same-site:None}")
+    private String sameSiteCookie;
 
     @PostMapping("/refresh-token")
     public ResponseEntity<?> refreshAccessToken(HttpServletRequest request, HttpServletResponse response) {
@@ -51,12 +56,25 @@ public class SecurityController {
             // Set the new refresh token in a secure cookie
             Cookie newRefreshTokenCookie = new Cookie("refreshToken", newRefreshToken);
             newRefreshTokenCookie.setHttpOnly(false);
-            newRefreshTokenCookie.setSecure(secureCookie); // Must be true for SameSite=None
+            
+            // Ensure secure=true when SameSite=None (required by browsers)
+            boolean effectiveSecure = secureCookie;
+            if ("None".equals(sameSiteCookie)) {
+                effectiveSecure = true;
+                if (!secureCookie) {
+                    log.warn("Forcing secure=true for refreshToken cookie because SameSite=None requires it. Original setting was secure=false.");
+                }
+            }
+            
+            newRefreshTokenCookie.setSecure(effectiveSecure);
             newRefreshTokenCookie.setMaxAge(86400 * 30); // 30 days
             newRefreshTokenCookie.setValue(newRefreshToken);
-            newRefreshTokenCookie.setAttribute("SameSite", "None");
+            newRefreshTokenCookie.setAttribute("SameSite", sameSiteCookie);
             newRefreshTokenCookie.setDomain("concertjournal.de"); // Set domain to parent domain
             newRefreshTokenCookie.setPath("/");
+            
+            log.info("Setting refreshToken cookie - secure: {}, sameSite: {}",
+                    effectiveSecure, sameSiteCookie);
             
             return ResponseEntity.ok().body("{\"accessToken\":\"" + newAccessToken + "\"}");
         } catch (JwtException e) {
@@ -70,11 +88,21 @@ public class SecurityController {
         // Set the CSRF token as a cookie
         Cookie csrfCookie = new Cookie("XSRF-TOKEN", token.getToken());
         csrfCookie.setHttpOnly(false); // Required for JavaScript to access the cookie
-        csrfCookie.setSecure(true); // Must be true for SameSite=None
+        
+        // Always use secure=true for CSRF token when SameSite=None
+        boolean effectiveSecure = true; // Default to true for CSRF token
+        if ("None".equals(sameSiteCookie) && !effectiveSecure) {
+            log.warn("Forcing secure=true for XSRF-TOKEN cookie because SameSite=None requires it.");
+        }
+        
+        csrfCookie.setSecure(effectiveSecure);
         csrfCookie.setPath("/");
-        csrfCookie.setAttribute("SameSite", "None");
+        csrfCookie.setAttribute("SameSite", sameSiteCookie);
         csrfCookie.setDomain("concertjournal.de"); // Set domain to parent domain
         csrfCookie.setMaxAge(2592000); // 30 days in seconds
+        
+        log.info("Setting XSRF-TOKEN cookie - secure: {}, sameSite: {}", effectiveSecure, sameSiteCookie);
+        
         response.addCookie(csrfCookie);
         return ResponseEntity.ok().build();
     }

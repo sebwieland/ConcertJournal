@@ -29,6 +29,8 @@ import java.util.function.Supplier;
 @EnableWebSecurity
 public class SecurityConfiguration {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(SecurityConfiguration.class);
+
     @Autowired
     private CorsConfig corsConfig;
 
@@ -37,9 +39,15 @@ public class SecurityConfiguration {
 
     @Value("${auth.cookie.httpOnly}")
     private boolean httpOnlyCookie;
+    
+    @Value("${server.servlet.session.cookie.same-site:None}")
+    private String sameSiteCookie;
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
+        // Log cookie settings to help debug issues
+        log.info("Cookie settings - secure: {}, httpOnly: {}, sameSite: {}",
+                secureCookie, httpOnlyCookie, sameSiteCookie);
         return authConfig.getAuthenticationManager();
     }
 
@@ -60,8 +68,18 @@ public class SecurityConfiguration {
     CookieCsrfTokenRepository csrfTokenRepository() {
         CookieCsrfTokenRepository repository = new CookieCsrfTokenRepository();
         repository.setCookieCustomizer(cookieBuilder -> {
-            cookieBuilder.sameSite("None"); // Required for cross-subdomain usage
-            cookieBuilder.secure(secureCookie);     // Must be true for SameSite=None
+            cookieBuilder.sameSite(sameSiteCookie); // Use configured sameSite value
+            
+            // Ensure secure=true when SameSite=None (required by browsers)
+            boolean effectiveSecure = secureCookie;
+            if ("None".equals(sameSiteCookie)) {
+                effectiveSecure = true;
+                if (!secureCookie) {
+                    log.warn("Forcing secure=true because SameSite=None requires it. Original setting was secure=false.");
+                }
+            }
+            
+            cookieBuilder.secure(effectiveSecure);
             cookieBuilder.domain("concertjournal.de"); // Set domain to parent domain
         });
         repository.setCookieHttpOnly(httpOnlyCookie);
