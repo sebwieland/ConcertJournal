@@ -70,7 +70,7 @@ public class SecurityController {
         csrfCookie.setHttpOnly(false); // Required for JavaScript to access the cookie
         csrfCookie.setSecure(secureCookie); // Set to true if using HTTPS
         csrfCookie.setPath("/");
-        csrfCookie.setAttribute("SameSite", "Lax");
+        csrfCookie.setAttribute("SameSite", "None");
         csrfCookie.setMaxAge(2592000); // 30 days in seconds, or omit for session cookie
         response.addCookie(csrfCookie);
         return ResponseEntity.ok().build();
