@@ -1,10 +1,12 @@
-import React from 'react';
-import { vi } from 'vitest';
+import React from "react";
+import { vi } from "vitest";
 
 // Mock the DefaultLayout component
-export const MockDefaultLayout = ({ children }: { children: React.ReactNode }) => (
-  <div data-testid="default-layout">{children}</div>
-);
+export const MockDefaultLayout = ({
+  children,
+}: {
+  children: React.ReactNode;
+}) => <div data-testid="default-layout">{children}</div>;
 
 // Mock the RatingStars component
 export const MockRatingStars = ({ rating }: { rating: number }) => (
@@ -15,11 +17,11 @@ export const MockRatingStars = ({ rating }: { rating: number }) => (
 
 // Setup JSX mocks
 export const setupJsxMocks = () => {
-  vi.mock('../../theme/DefaultLayout', () => ({
-    default: MockDefaultLayout
+  vi.mock("../../theme/DefaultLayout", () => ({
+    default: MockDefaultLayout,
   }));
 
-  vi.mock('../../components/utilities/RatingStars', () => ({
-    default: MockRatingStars
+  vi.mock("../../components/utilities/RatingStars", () => ({
+    default: MockRatingStars,
   }));
 };

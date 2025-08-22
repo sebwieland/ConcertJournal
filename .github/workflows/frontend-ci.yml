@@ -49,7 +49,7 @@ jobs:
       - name: Lint code
         run: |
           cd frontend
-          npx eslint . --ext .js,.jsx,.ts,.tsx --cache || echo "Linting issues found, but continuing"
+          npm run lint || echo "Linting issues found, but continuing"
 
       - name: Run security scan
         run: |
