@@ -51,11 +51,13 @@ public class SecurityController {
             // Set the new refresh token in a secure cookie
             Cookie newRefreshTokenCookie = new Cookie("refreshToken", newRefreshToken);
             newRefreshTokenCookie.setHttpOnly(false);
-            newRefreshTokenCookie.setSecure(secureCookie); // Set to true if using HTTPS
+            newRefreshTokenCookie.setSecure(secureCookie); // Must be true for SameSite=None
             newRefreshTokenCookie.setMaxAge(86400 * 30); // 30 days
             newRefreshTokenCookie.setValue(newRefreshToken);
-            newRefreshTokenCookie.setAttribute("SameSite", "Lax");
-
+            newRefreshTokenCookie.setAttribute("SameSite", "None");
+            newRefreshTokenCookie.setDomain(".concertjournal.de"); // Set domain to parent domain
+            newRefreshTokenCookie.setPath("/");
+            
             return ResponseEntity.ok().body("{\"accessToken\":\"" + newAccessToken + "\"}");
         } catch (JwtException e) {
             // Handle invalid refresh token
@@ -68,10 +70,11 @@ public class SecurityController {
         // Set the CSRF token as a cookie
         Cookie csrfCookie = new Cookie("XSRF-TOKEN", token.getToken());
         csrfCookie.setHttpOnly(false); // Required for JavaScript to access the cookie
-        csrfCookie.setSecure(secureCookie); // Set to true if using HTTPS
+        csrfCookie.setSecure(true); // Must be true for SameSite=None
         csrfCookie.setPath("/");
         csrfCookie.setAttribute("SameSite", "None");
-        csrfCookie.setMaxAge(2592000); // 30 days in seconds, or omit for session cookie
+        csrfCookie.setDomain(".concertjournal.de"); // Set domain to parent domain
+        csrfCookie.setMaxAge(2592000); // 30 days in seconds
         response.addCookie(csrfCookie);
         return ResponseEntity.ok().build();
     }

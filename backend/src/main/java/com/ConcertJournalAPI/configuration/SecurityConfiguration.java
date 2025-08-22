@@ -60,8 +60,9 @@ public class SecurityConfiguration {
     CookieCsrfTokenRepository csrfTokenRepository() {
         CookieCsrfTokenRepository repository = new CookieCsrfTokenRepository();
         repository.setCookieCustomizer(cookieBuilder -> {
-            cookieBuilder.sameSite("None"); // or "Strict" or "None"
-            cookieBuilder.secure(secureCookie);
+            cookieBuilder.sameSite("None"); // Required for cross-subdomain usage
+            cookieBuilder.secure(secureCookie);     // Must be true for SameSite=None
+            cookieBuilder.domain(".concertjournal.de"); // Set domain to parent domain
         });
         repository.setCookieHttpOnly(httpOnlyCookie);
         return repository;
