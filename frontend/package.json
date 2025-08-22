@@ -47,6 +47,7 @@
     "start:dev": "cross-env NODE_ENV=development HMR_HOST=0.0.0.0 HMR_PORT=24678 vite --host 0.0.0.0 --port 3000",
     "start:prod": "serve -s dist -p 3000 --single",
     "build": "tsc && vite build",
+    "build:prod": "tsc --project tsconfig.prod.json && vite build",
     "preview": "vite preview",
     "test": "vitest",
     "test:coverage": "vitest run --coverage"
