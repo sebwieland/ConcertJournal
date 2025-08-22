@@ -152,15 +152,7 @@ jobs:
           docker save concertjournalfrontend:build | gzip > frontend-image.tar.gz
           echo "Image saved as frontend-image.tar.gz"
           echo "success=true" >> $GITHUB_OUTPUT
-          
-      - name: Upload image artifact
-        if: github.ref == 'refs/heads/main'
-        uses: actions/upload-artifact@v4
-        with:
-          name: frontend-image
-          path: frontend-image.tar.gz
-          retention-days: 1
-
+    
       - name: Scan Docker image
         if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
         uses: aquasecurity/trivy-action@master
@@ -171,6 +163,14 @@ jobs:
           ignore-unfixed: true
           vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH'
+          
+      - name: Upload image artifact
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-image
+          path: frontend-image.tar.gz
+          retention-days: 1
           
       - name: Cleanup Docker images
         if: success() || failure()
