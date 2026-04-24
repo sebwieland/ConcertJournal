@@ -62,6 +62,13 @@ out/
 .cache/
 parcel-bundle-report/
 
+# Compiled JavaScript (should not be in src/)
+src/**/*.js
+src/**/*.js.map
+!src/**/*.test.js
+!src/**/*.spec.js
+!src/**/*.config.js
+
 # ================
 # Environment variables
 # ================
