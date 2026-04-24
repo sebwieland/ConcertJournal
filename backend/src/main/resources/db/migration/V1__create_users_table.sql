@@ -9,5 +9,3 @@ CREATE TABLE IF NOT EXISTS users (
     creation_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     modification_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-
-CREATE INDEX idx_email ON users(email);

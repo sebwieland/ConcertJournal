@@ -9,9 +9,8 @@ CREATE TABLE IF NOT EXISTS band_events (
     users_id BIGINT NOT NULL,
     creation_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     modification_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_band_events_user FOREIGN KEY (users_id) REFERENCES users(id) ON DELETE CASCADE
+    CONSTRAINT fk_band_events_user FOREIGN KEY (users_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_users_id (users_id),
+    INDEX idx_date (date),
+    INDEX idx_rating (rating)
 );
-
-CREATE INDEX idx_users_id ON band_events(users_id);
-CREATE INDEX idx_date ON band_events(date);
-CREATE INDEX idx_rating ON band_events(rating);
