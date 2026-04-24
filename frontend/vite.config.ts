@@ -45,6 +45,13 @@ export default defineConfig({
         port: 3000,
         host: '0.0.0.0',
         open: false,
+        proxy: {
+            '/api': {
+                target: 'http://localhost:8080',
+                changeOrigin: true,
+                secure: false
+            }
+        },
         hmr: {
             // Essential HMR settings
             port: hmrPort,

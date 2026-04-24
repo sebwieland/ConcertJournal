@@ -3,7 +3,6 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { AuthProvider } from "./contexts/AuthContext";
-import { ConfigProvider } from "./contexts/ConfigContext";
 import LoadingIndicator from "./components/utilities/LoadingIndicator";
 import DefaultLayout from "./theme/DefaultLayout";
 import { Alert } from "@mui/material";
@@ -31,40 +30,38 @@ class App extends React.Component<{}, {}> {
 
   render() {
     return (
-      <ConfigProvider>
-        <AuthProvider>
-          <LocalizationProvider dateAdapter={AdapterDayjs}>
-            <BrowserRouter>
-              <Suspense fallback={<LoadingIndicator />}>
-                <Routes>
-                  <Route
-                    path="/"
-                    element={<AuthenticatedPage element={<LandingPage />} />}
-                  />
-                  <Route
-                    path="/new-entry"
-                    element={
-                      <AuthenticatedPage element={<NewDataEntryFormPage />} />
-                    }
-                  />
-                  <Route
-                    path="/your-journal"
-                    element={<AuthenticatedPage element={<Journal />} />}
-                  />
-                  <Route
-                    path="/edit-entry/:id"
-                    element={
-                      <AuthenticatedPage element={<EditEntryFormPage />} />
-                    }
-                  />
-                  <Route path="/sign-up" element={<SignUpSide />} />
-                  <Route path="/sign-in" element={<SignInSide />} />
-                </Routes>
-              </Suspense>
-            </BrowserRouter>
-          </LocalizationProvider>
-        </AuthProvider>
-      </ConfigProvider>
+      <AuthProvider>
+        <LocalizationProvider dateAdapter={AdapterDayjs}>
+          <BrowserRouter>
+            <Suspense fallback={<LoadingIndicator />}>
+              <Routes>
+                <Route
+                  path="/"
+                  element={<AuthenticatedPage element={<LandingPage />} />}
+                />
+                <Route
+                  path="/new-entry"
+                  element={
+                    <AuthenticatedPage element={<NewDataEntryFormPage />} />
+                  }
+                />
+                <Route
+                  path="/your-journal"
+                  element={<AuthenticatedPage element={<Journal />} />}
+                />
+                <Route
+                  path="/edit-entry/:id"
+                  element={
+                    <AuthenticatedPage element={<EditEntryFormPage />} />
+                  }
+                />
+                <Route path="/sign-up" element={<SignUpSide />} />
+                <Route path="/sign-in" element={<SignInSide />} />
+              </Routes>
+            </Suspense>
+          </BrowserRouter>
+        </LocalizationProvider>
+      </AuthProvider>
     );
   }
 }
