@@ -129,3 +129,8 @@ sessionTmp/
 # ================
 .springbeans
 .springlivebeans
+
+# ================
+# IDE - Jami
+# ================
+.jami/
