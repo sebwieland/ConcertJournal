@@ -44,6 +44,9 @@ public class SecurityConfiguration {
     @Value("${server.servlet.session.cookie.same-site:None}")
     private String sameSiteCookie;
 
+    @Value("${auth.cookie.domain:}")
+    private String cookieDomain;
+
     @Value("${security.headers.hsts.enabled:true}")
     private boolean hstsEnabled;
     @Value("${security.headers.hsts.max-age-seconds:31536000}")
@@ -113,7 +116,9 @@ public class SecurityConfiguration {
             }
             
             cookieBuilder.secure(effectiveSecure);
-            cookieBuilder.domain("concertjournal.de"); // Set domain to parent domain
+            if (cookieDomain != null && !cookieDomain.isEmpty()) {
+                cookieBuilder.domain(cookieDomain);
+            }
         });
         repository.setCookieHttpOnly(httpOnlyCookie);
         return repository;
@@ -154,7 +159,7 @@ public class SecurityConfiguration {
                                 "geolocation=(), microphone=(), camera=(), payment=(), usb=(), magnetometer=(), gyroscope=()")))
 
                 .logout(logout -> logout
-                        .logoutUrl("/logout")
+                        .logoutUrl("/api/logout")
                         .logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler(HttpStatus.OK))
                         .invalidateHttpSession(true)
                         .deleteCookies("JSESSIONID")
@@ -164,13 +169,14 @@ public class SecurityConfiguration {
                         .usernameParameter("email")
                         .successHandler(authSuccessHandler())
                         .failureHandler(new AuthFailureHandler())
-                        .loginPage("/login")
+                        .loginProcessingUrl("/api/login")
+                        .loginPage("/sign-in")
                 )
 
                 // Authorize requests
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/", "/index.html", "/assets/**", "*.js", "*.css", "*.ico", "*.png", "*.svg", "*.woff", "*.woff2").permitAll()
-                        .requestMatchers("/error", "/register", "/login", "/actuator/prometheus", "/api/get-xsrf-cookie").permitAll()
+                        .requestMatchers("/error", "/api/register", "/api/login", "/api/logout", "/actuator/prometheus", "/api/get-xsrf-cookie").permitAll()
                         .requestMatchers("/api/**").authenticated()
                         .requestMatchers(HttpMethod.OPTIONS).permitAll()
                         .anyRequest().permitAll()
@@ -179,7 +185,7 @@ public class SecurityConfiguration {
                 //.httpBasic(withDefaults())
 
                 .exceptionHandling(exceptionHandling -> exceptionHandling
-                        .authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/login"))
+                        .authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/sign-in"))
                 )
 
                 .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)

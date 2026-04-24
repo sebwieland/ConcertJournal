@@ -30,7 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(controllers = BandEventController.class)
 @AutoConfigureMockMvc
-@Import({PasswordConfig.class, SecurityConfiguration.class, CorsConfig.class})
+@Import({PasswordConfig.class, SecurityConfiguration.class})
 public class SecurityConfigurationTest {
 
     private static final String TEST_USERNAME = "admin@example.com";
@@ -52,7 +52,7 @@ public class SecurityConfigurationTest {
     @Test
     @WithMockUser(username = TEST_USERNAME, roles = TEST_ROLE)
     public void testAuthorizedAccessToEventEndpoint() throws Exception {
-        mockMvc.perform(get("/allEvents"))
+        mockMvc.perform(get("/api/allEvents"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON));
     }
@@ -60,14 +60,14 @@ public class SecurityConfigurationTest {
     @Test
     @WithAnonymousUser
     public void testUnauthorizedAccessToEventsEndpoint() throws Exception {
-        mockMvc.perform(get("/allEvents"))
+        mockMvc.perform(get("/api/allEvents"))
                 .andExpect(status().isFound())
-                .andExpect(redirectedUrlPattern("**/login"));
+                .andExpect(redirectedUrlPattern("**/sign-in"));
     }
 
     @Test
     public void testCsrfProtection() throws Exception {
-        mockMvc.perform(post("/allEvents")
+        mockMvc.perform(post("/api/allEvents")
                         .with(csrf().useInvalidToken()))
                 .andExpect(status().isForbidden());
     }

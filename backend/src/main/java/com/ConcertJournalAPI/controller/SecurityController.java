@@ -33,6 +33,9 @@ public class SecurityController {
     @Value("${server.servlet.session.cookie.same-site:None}")
     private String sameSiteCookie;
 
+    @Value("${auth.cookie.domain:}")
+    private String cookieDomain;
+
     @PostMapping("/refresh-token")
     public ResponseEntity<?> refreshAccessToken(HttpServletRequest request, HttpServletResponse response) {
         Cookie[] cookies = request.getCookies();
@@ -72,7 +75,9 @@ public class SecurityController {
             newRefreshTokenCookie.setMaxAge(86400 * 30); // 30 days
             newRefreshTokenCookie.setValue(newRefreshToken);
             newRefreshTokenCookie.setAttribute("SameSite", sameSiteCookie);
-            newRefreshTokenCookie.setDomain("concertjournal.de"); // Set domain to parent domain
+            if (cookieDomain != null && !cookieDomain.isEmpty()) {
+                newRefreshTokenCookie.setDomain(cookieDomain);
+            }
             newRefreshTokenCookie.setPath("/");
             
             log.info("Setting refreshToken cookie - secure: {}, sameSite: {}",
@@ -91,16 +96,17 @@ public class SecurityController {
         Cookie csrfCookie = new Cookie("XSRF-TOKEN", token.getToken());
         csrfCookie.setHttpOnly(false); // Required for JavaScript to access the cookie
         
-        // Always use secure=true for CSRF token when SameSite=None
-        boolean effectiveSecure = true; // Default to true for CSRF token
-        if ("None".equals(sameSiteCookie) && !effectiveSecure) {
-            log.warn("Forcing secure=true for XSRF-TOKEN cookie because SameSite=None requires it.");
+        boolean effectiveSecure = secureCookie;
+        if ("None".equals(sameSiteCookie)) {
+            effectiveSecure = true;
         }
         
         csrfCookie.setSecure(effectiveSecure);
         csrfCookie.setPath("/");
         csrfCookie.setAttribute("SameSite", sameSiteCookie);
-        csrfCookie.setDomain("concertjournal.de"); // Set domain to parent domain
+        if (cookieDomain != null && !cookieDomain.isEmpty()) {
+            csrfCookie.setDomain(cookieDomain);
+        }
         csrfCookie.setMaxAge(2592000); // 30 days in seconds
         
         log.info("Setting XSRF-TOKEN cookie - secure: {}, sameSite: {}", effectiveSecure, sameSiteCookie);

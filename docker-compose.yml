@@ -34,11 +34,9 @@ services:
 
   # Backend API (development only - with hot reload)
   backend:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: backend-build
+    image: maven:3.9-eclipse-temurin-21-alpine
     container_name: concert-journal-backend
+    working_dir: /app
     restart: unless-stopped
     profiles: ["dev"]
     depends_on:

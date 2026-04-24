@@ -23,7 +23,7 @@ public class HomeControllerTest {
     private SecurityContext securityContext;
 
     @Test
-    public void testHomeAuthenticated() {
+    public void testCurrentUserAuthenticated() {
         // Arrange
         String expectedUsername = "testUser";
         Authentication authentication = new TestingAuthenticationToken(expectedUsername, null);
@@ -31,27 +31,27 @@ public class HomeControllerTest {
         SecurityContextHolder.setContext(securityContext);
 
         // Act
-        String result = homeController.home();
+        String result = homeController.currentUser();
 
         // Assert
-        assertEquals("Welcome back, " + expectedUsername + "!", result);
+        assertEquals(expectedUsername, result);
     }
 
     @Test
-    public void testHomeNotAuthenticated() {
+    public void testCurrentUserNotAuthenticated() {
         // Arrange
         when(securityContext.getAuthentication()).thenReturn(null);
         SecurityContextHolder.setContext(securityContext);
 
         // Act
-        String result = homeController.home();
+        String result = homeController.currentUser();
 
         // Assert
-        assertEquals("You are not logged in. Please go to /login to authenticate.", result);
+        assertEquals("anonymous", result);
     }
 
     @Test
-    public void testHomeAnonymousUser() {
+    public void testCurrentUserAnonymous() {
         // Arrange
         String anonymousUsername = "anonymousUser";
         Authentication authentication = new TestingAuthenticationToken(anonymousUsername, null);
@@ -59,9 +59,9 @@ public class HomeControllerTest {
         SecurityContextHolder.setContext(securityContext);
 
         // Act
-        String result = homeController.home();
+        String result = homeController.currentUser();
 
         // Assert
-        assertEquals("You are not logged in. Please go to /login to authenticate.", result);
+        assertEquals("anonymous", result);
     }
 }
