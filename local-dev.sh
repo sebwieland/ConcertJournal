@@ -19,7 +19,7 @@ fi
 
 # Start the backend services
 echo -e "${YELLOW}Starting backend services in Docker...${NC}"
-docker-compose up -d mysql backend
+docker-compose --profile dev up -d mysql backend
 
 # Wait for backend to be ready
 echo -e "${YELLOW}Waiting for backend services to be ready...${NC}"
