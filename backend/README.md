@@ -1,25 +1,13 @@
-# Concert Journal Backend API
+# Concert Journal Backend
 
-This is the backend API for the Concert Journal application, built with Spring Boot.
+Spring Boot REST API (Java 21).
 
-## Documentation
+See [main README](../README.md) for setup and development instructions.
 
-For comprehensive documentation, including setup instructions, development approaches, and troubleshooting, please refer to the [main README](../README.md) in the root of the repository.
+## Quick Reference
 
-## Key Points
-
-- **Architecture**: Spring Boot, Spring Security, Spring Data JPA, H2/MySQL, JWT
-- **API Endpoints**:
-  - `/api/events`: Band event operations
-  - `/api/users`: User operations
-  - `/api/auth`: Authentication operations
-- **Configuration**:
-  - `application.properties`: Default configuration (H2 database)
-  - `application-dev.properties`: Development configuration (MySQL database)
-- **Local Development**:
-  ```bash
-  ./mvnw spring-boot:run -Dspring.profiles.active=dev
-  ```
-- **Testing**:
-  ```bash
-  ./mvnw test
+```bash
+./mvnw spring-boot:run -Dspring.profiles.active=dev   # Run with MySQL
+./mvnw test                                            # Tests + coverage
+./mvnw clean package -Dmaven.test.skip=true            # Build JAR
+```
