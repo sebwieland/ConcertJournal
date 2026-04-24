@@ -1,5 +1,6 @@
 package com.ConcertJournalAPI.configuration;
 
+import com.ConcertJournalAPI.filter.RateLimitFilter;
 import com.ConcertJournalAPI.security.AuthFailureHandler;
 import com.ConcertJournalAPI.security.AuthSuccessHandler;
 import com.ConcertJournalAPI.security.JwtAuthenticationFilter;
@@ -32,7 +33,7 @@ public class SecurityConfiguration {
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(SecurityConfiguration.class);
 
     @Autowired
-    private CorsConfig corsConfig;
+    private RateLimitFilter rateLimitFilter;
 
     @Value("${auth.cookie.secure}")
     private boolean secureCookie;
@@ -42,6 +43,38 @@ public class SecurityConfiguration {
     
     @Value("${server.servlet.session.cookie.same-site:None}")
     private String sameSiteCookie;
+
+    @Value("${security.headers.hsts.enabled:true}")
+    private boolean hstsEnabled;
+    @Value("${security.headers.hsts.max-age-seconds:31536000}")
+    private int hstsMaxAgeSeconds;
+    @Value("${security.headers.hsts.include-sub-domains:true}")
+    private boolean hstsIncludeSubDomains;
+    @Value("${security.headers.hsts.preload:true}")
+    private boolean hstsPreload;
+
+    @Value("${security.headers.csp.enabled:true}")
+    private boolean cspEnabled;
+    @Value("${security.headers.csp.policy:default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'self';}")
+    private String cspPolicy;
+
+    @Value("${security.headers.x-frame-options.enabled:true}")
+    private boolean frameOptionsEnabled;
+    @Value("${security.headers.x-frame-options.policy:SAMEORIGIN}")
+    private String frameOptionsPolicy;
+
+    @Value("${security.headers.referrer-policy.enabled:true}")
+    private boolean referrerPolicyEnabled;
+    @Value("${security.headers.referrer-policy.policy:STRICT_ORIGIN_WHEN_CROSS_ORIGIN}")
+    private String referrerPolicyPolicy;
+
+    @Value("${security.headers.permissions-policy.enabled:true}")
+    private boolean permissionsPolicyEnabled;
+    @Value("${security.headers.permissions-policy.policy:geolocation=(), microphone=(), camera=(), payment=(), usb=(), magnetometer=(), gyroscope=()}")
+    private String permissionsPolicyPolicy;
+
+    @Value("${cors.enabled:true}")
+    private boolean corsEnabled;
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
@@ -89,14 +122,36 @@ public class SecurityConfiguration {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // Enable CORS
-                .cors(cors -> cors.configurationSource(corsConfig.corsConfigurationSource()))
+                .cors(cors -> cors.disable())
 
                 // Enable CSRF protection
                 .csrf((csrf) -> csrf
                         .csrfTokenRepository(csrfTokenRepository())
                         .csrfTokenRequestHandler(new CookieCsrfTokenRequestHandler())
                 )
+
+                // OWASP Security Headers
+                .headers(headers -> headers
+                        .frameOptions(frameOptions -> frameOptions.sameOrigin()))
+                .headers(headers -> {
+                    if (hstsEnabled) {
+                        headers.httpStrictTransportSecurity(hsts -> hsts
+                                .includeSubDomains(true)
+                                .preload(true)
+                                .maxAgeInSeconds(31536000));
+                    }
+                })
+                .headers(headers -> {
+                    if (cspEnabled) {
+                        headers.contentSecurityPolicy(csp -> csp
+                                .policyDirectives("default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'self';"));
+                    }
+                })
+                .headers(headers -> headers
+                        .referrerPolicy(org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
+                .headers(headers -> headers
+                        .addHeaderWriter(new org.springframework.security.web.header.writers.PermissionsPolicyHeaderWriter(
+                                "geolocation=(), microphone=(), camera=(), payment=(), usb=(), magnetometer=(), gyroscope=()")))
 
                 .logout(logout -> logout
                         .logoutUrl("/logout")
@@ -114,9 +169,11 @@ public class SecurityConfiguration {
 
                 // Authorize requests
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/error", "/auth/**", "/register", "/login", "/actuator/prometheus", "/get-xsrf-cookie").permitAll()
+                        .requestMatchers("/", "/index.html", "/assets/**", "*.js", "*.css", "*.ico", "*.png", "*.svg", "*.woff", "*.woff2").permitAll()
+                        .requestMatchers("/error", "/register", "/login", "/actuator/prometheus", "/api/get-xsrf-cookie").permitAll()
+                        .requestMatchers("/api/**").authenticated()
                         .requestMatchers(HttpMethod.OPTIONS).permitAll()
-                        .anyRequest().authenticated()
+                        .anyRequest().permitAll()
                 )
                 // Use HTTP Basic Authentication (for simplicity)
                 //.httpBasic(withDefaults())
@@ -125,6 +182,7 @@ public class SecurityConfiguration {
                         .authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/login"))
                 )
 
+                .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(new JwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
