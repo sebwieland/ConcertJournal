@@ -12,6 +12,16 @@ docker-compose --profile dev up -d mysql backend
 cd frontend && npm run start:local
 ```
 
+**Native backend (faster, needs Java 21):**
+```bash
+./local-dev.sh native
+# OR manually:
+docker-compose up -d mysql
+cd backend && JWT_SECRET=dev-secret ./mvnw spring-boot:run -Dspring.profiles.active=dev
+# In another terminal:
+cd frontend && npm run start:local
+```
+
 Access: Frontend http://localhost:3000 (proxies `/api` to backend), Backend http://localhost:8080, Swagger http://localhost:8080/swagger-ui.html
 
 **No CORS needed:** Vite proxy in dev, same-origin in prod.
@@ -26,11 +36,12 @@ Access: Frontend http://localhost:3000 (proxies `/api` to backend), Backend http
 - `npm run build` - Production build (tsc + vite)
 
 **Backend** (from `backend/`):
-- `./mvnw spring-boot:run -Dspring.profiles.active=dev` - Run with MySQL
+- `JWT_SECRET=dev-secret ./mvnw spring-boot:run -Dspring.profiles.active=dev` - Run with MySQL
 - `./mvnw test` - Tests + JaCoCo coverage
 - `./mvnw clean package -Dmaven.test.skip=true` - Build JAR
 
 **Docker:**
+- `docker-compose up -d mysql` - Start MySQL only (for native backend)
 - `docker-compose --profile dev up -d` - Start dev backend + MySQL
 - `docker-compose --profile production up --build` - Test production locally
 - `docker-compose down` - Stop all services
@@ -51,8 +62,8 @@ Access: Frontend http://localhost:3000 (proxies `/api` to backend), Backend http
   - BandEventController: `/api/allEvents`, `/api/event/{id}`
   - HomeController: `/api/me`
   - SecurityController: `/api/refresh-token`, `/api/get-xsrf-cookie`
-- Auth endpoints: `/login`, `/register`, `/logout` (**root**, no /api prefix - Spring Security convention)
-- Migrations: `src/main/resources/db/migration/` (Flyway, `V{N}__{description}.sql`)
+- Auth endpoints: `/api/login`, `/api/register`, `/api/logout` (Spring Security, under /api)
+- Migrations: `src/main/resources/db/migration/` (Flyway, `V{N}__{description}.sql`, MySQL syntax)
 - Static files: Served from `/app/static/` in prod (`SpaController.java`)
 
 ## Conventions

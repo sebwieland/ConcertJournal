@@ -1,49 +1,68 @@
 #!/bin/bash
 
 # Local development script for Concert Journal
-# This script helps run the frontend locally while using containerized backend services
+#
+# Usage:
+#   ./local-dev.sh          # Backend in Docker (default)
+#   ./local-dev.sh native   # Backend via Maven (faster, needs Java 21)
 
-# Colors for output
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
+RED='\033[0;31m'
+NC='\033[0m'
 
-echo -e "${YELLOW}Starting Concert Journal in hybrid mode...${NC}"
-echo -e "${YELLOW}This will run the frontend locally and the backend in Docker${NC}"
+MODE="${1:-docker}"
 
-# Check if Docker is running
+# Check if Docker is running (needed for MySQL in both modes)
 if ! docker info > /dev/null 2>&1; then
-  echo "Docker is not running. Please start Docker and try again."
+  echo -e "${RED}Docker is not running. Please start Docker and try again.${NC}"
   exit 1
 fi
 
-# Start the backend services
-echo -e "${YELLOW}Starting backend services in Docker...${NC}"
-docker-compose --profile dev up -d mysql backend
+if [ "$MODE" = "native" ]; then
+  echo -e "${YELLOW}Starting Concert Journal (native backend)...${NC}"
 
-# Wait for backend to be ready
-echo -e "${YELLOW}Waiting for backend services to be ready...${NC}"
-echo -e "${YELLOW}This may take a few moments...${NC}"
-sleep 10
+  # Start only MySQL
+  docker-compose up -d mysql
+  echo -e "${YELLOW}Waiting for MySQL...${NC}"
+  until docker exec concert-journal-mysql mysqladmin ping -h localhost -u user -ppassword --silent 2>/dev/null; do
+    sleep 2
+  done
+  echo -e "${GREEN}MySQL is ready!${NC}"
 
-# Check if backend is accessible
-echo -e "${YELLOW}Checking if backend is accessible...${NC}"
-if curl -s http://localhost:8080/actuator/health > /dev/null; then
-  echo -e "${GREEN}Backend is up and running!${NC}"
+  # Start backend in background
+  echo -e "${YELLOW}Starting backend via Maven...${NC}"
+  cd backend
+  JWT_SECRET=dev-secret ./mvnw spring-boot:run -Dspring.profiles.active=dev &
+  BACKEND_PID=$!
+  cd ..
+
+  # Wait for backend
+  echo -e "${YELLOW}Waiting for backend...${NC}"
+  until curl -s http://localhost:8080/actuator/health > /dev/null 2>&1; do
+    sleep 2
+  done
+  echo -e "${GREEN}Backend is up!${NC}"
+
 else
-  echo -e "${YELLOW}Backend may not be fully initialized yet. Check docker logs for details:${NC}"
-  echo -e "docker-compose logs backend"
+  echo -e "${YELLOW}Starting Concert Journal (Docker backend)...${NC}"
+
+  docker-compose --profile dev up -d mysql backend
+
+  echo -e "${YELLOW}Waiting for backend...${NC}"
+  until curl -s http://localhost:8080/actuator/health > /dev/null 2>&1; do
+    sleep 2
+  done
+  echo -e "${GREEN}Backend is up!${NC}"
 fi
 
-# Start the frontend locally
-echo -e "${YELLOW}Starting frontend locally...${NC}"
+# Start frontend
+echo -e "${YELLOW}Starting frontend...${NC}"
 cd frontend
+npm run start:local
 
-# Run vite directly with environment variables instead of using cross-env
-echo -e "${YELLOW}Running vite directly with NODE_ENV=development...${NC}"
-NODE_ENV=development npx vite --port 3000 --mode dev-local
-
-# Note: The script will stay with the frontend process
-# To stop everything when done:
-# 1. Stop the frontend with Ctrl+C
-# 2. Run: docker-compose down
+# Cleanup on exit
+if [ -n "$BACKEND_PID" ]; then
+  echo -e "${YELLOW}Stopping backend...${NC}"
+  kill $BACKEND_PID 2>/dev/null
+fi

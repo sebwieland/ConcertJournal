@@ -4,24 +4,28 @@ A web app to track where you've seen which bands.
 
 ## Prerequisites
 
-- Docker and Docker Compose
-- Node.js 22 (for local frontend development)
+- Docker and Docker Compose (for MySQL, optionally backend)
+- Node.js 22 (for frontend)
+- Java 21 (optional, for native backend — faster)
 
 ## Getting Started
 
 ```bash
-./local-dev.sh
+./local-dev.sh          # Backend in Docker (default)
+./local-dev.sh native   # Backend via Maven (faster, needs Java 21)
 ```
 
-This starts MySQL + backend in Docker, then runs the frontend locally with fast hot reload.
-
-**Manual setup:**
+**Manual setup (native backend):**
 
 ```bash
-# Terminal 1: Start backend + database
-docker-compose --profile dev up -d mysql backend
+# Terminal 1: Start MySQL
+docker-compose up -d mysql
 
-# Terminal 2: Start frontend
+# Terminal 2: Start backend
+cd backend
+JWT_SECRET=dev-secret ./mvnw spring-boot:run -Dspring.profiles.active=dev
+
+# Terminal 3: Start frontend
 cd frontend
 npm install
 npm run start:local
