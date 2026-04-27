@@ -1,5 +1,7 @@
 package com.ConcertJournalAPI.service;
 
+import com.ConcertJournalAPI.exception.ResourceNotFoundException;
+import com.ConcertJournalAPI.exception.UnauthorizedException;
 import com.ConcertJournalAPI.model.AppUser;
 import com.ConcertJournalAPI.model.BandEvent;
 import com.ConcertJournalAPI.repository.BandEventRepository;
@@ -21,31 +23,19 @@ public class BandEventService {
     private AppUserRepository appUserRepository;
 
     public List<BandEvent> getAllEvents() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null) {
-            throw new RuntimeException("User is not authenticated");
-        }
-        String username = authentication.getName();
-        AppUser appUser = appUserRepository.findByEmail(username);
+        AppUser appUser = getAuthenticatedUser();
         return bandEventRepository.findAllByAppUser(appUser);
     }
 
     public BandEvent getEventById(Long id) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null) {
-            throw new RuntimeException("User is not authenticated");
-        }
-        String username = authentication.getName();
-        AppUser appUser = appUserRepository.findByEmail(username);
-        return bandEventRepository.findByIdAndAppUser(id,appUser).orElse(null);
+        AppUser appUser = getAuthenticatedUser();
+        return bandEventRepository.findByIdAndAppUser(id, appUser)
+                .orElseThrow(() -> new ResourceNotFoundException("Event not found"));
     }
 
     @Transactional
     public BandEvent updateEvent(Long id, BandEvent updatedBandEvent) {
         BandEvent existingBandEvent = getEventById(id);
-        if (existingBandEvent == null) {
-            throw new RuntimeException("Event not found");
-        }
         existingBandEvent.setBandName(updatedBandEvent.getBandName());
         existingBandEvent.setDate(updatedBandEvent.getDate());
         existingBandEvent.setPlace(updatedBandEvent.getPlace());
@@ -56,25 +46,27 @@ public class BandEventService {
 
     @Transactional
     public void deleteEventById(Long id) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null) {
-            throw new RuntimeException("User is not authenticated");
-        }
-        String username = authentication.getName();
-        AppUser appUser = appUserRepository.findByEmail(username);
+        AppUser appUser = getAuthenticatedUser();
         bandEventRepository.deleteByIdAndAppUser(id, appUser);
     }
 
     @Transactional
     public BandEvent saveEvent(BandEvent bandEvent) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null) {
-            throw new RuntimeException("User is not authenticated");
-        }
-        String username = authentication.getName();
-        AppUser appUser = appUserRepository.findByEmail(username);
+        AppUser appUser = getAuthenticatedUser();
         bandEvent.setAppUser(appUser);
         return bandEventRepository.save(bandEvent);
     }
 
+    private AppUser getAuthenticatedUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || "anonymousUser".equals(authentication.getName())) {
+            throw new UnauthorizedException("User is not authenticated");
+        }
+        String username = authentication.getName();
+        AppUser appUser = appUserRepository.findByEmail(username);
+        if (appUser == null) {
+            throw new UnauthorizedException("User not found");
+        }
+        return appUser;
+    }
 }
