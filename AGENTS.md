@@ -17,7 +17,7 @@ cd frontend && npm run start:local
 ./local-dev.sh native
 # OR manually:
 docker-compose up -d mysql
-cd backend && JWT_SECRET=dev-secret ./mvnw spring-boot:run -Dspring.profiles.active=dev
+cd backend && 'JWT_SECRET=dev-secret-change-in-production!' ./mvnw spring-boot:run -Dspring.profiles.active=dev
 # In another terminal:
 cd frontend && npm run start:local
 ```
@@ -36,7 +36,7 @@ Access: Frontend http://localhost:3000 (proxies `/api` to backend), Backend http
 - `npm run build` - Production build (tsc + vite)
 
 **Backend** (from `backend/`):
-- `JWT_SECRET=dev-secret ./mvnw spring-boot:run -Dspring.profiles.active=dev` - Run with MySQL
+- `JWT_SECRET=dev-secret-change-in-production! ./mvnw spring-boot:run -Dspring.profiles.active=dev` - Run with MySQL
 - `./mvnw test` - Tests + JaCoCo coverage
 - `./mvnw clean package -Dmaven.test.skip=true` - Build JAR
 

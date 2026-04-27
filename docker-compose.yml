@@ -48,7 +48,7 @@ services:
       SPRING_DATASOURCE_USERNAME: ${DATABASE_USER:-user}
       SPRING_DATASOURCE_PASSWORD: ${DATABASE_PASSWORD:-password}
       SERVER_ADDRESS: 0.0.0.0
-      JWT_SECRET: ${JWT_SECRET:-dev-secret-change-in-production}
+      JWT_SECRET: ${JWT_SECRET:-dev-secret-change-in-production!}
       SPRING_FLYWAY_ENABLED: "true"
       SPRING_FLYWAY_LOCATIONS: "classpath:db/migration"
       SPRING_FLYWAY_BASELINE_ON_MIGRATE: "true"
@@ -81,7 +81,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/concertjournal?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_USERNAME: ${DATABASE_USER:-user}
       SPRING_DATASOURCE_PASSWORD: ${DATABASE_PASSWORD:-password}
-      JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production!!!!!!!!}
     ports:
       - "8080:8080"
     networks:

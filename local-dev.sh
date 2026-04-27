@@ -33,7 +33,7 @@ if [ "$MODE" = "native" ]; then
   # Start backend in background
   echo -e "${YELLOW}Starting backend via Maven...${NC}"
   cd backend
-  JWT_SECRET=dev-secret ./mvnw spring-boot:run -Dspring.profiles.active=dev &
+  JWT_SECRET='dev-secret-change-in-production!' ./mvnw spring-boot:run -Dspring.profiles.active=dev &
   BACKEND_PID=$!
   cd ..
 
