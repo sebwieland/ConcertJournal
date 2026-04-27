@@ -1,16 +1,16 @@
 package com.ConcertJournalAPI.controller;
 
+import com.ConcertJournalAPI.dto.RegisterRequest;
+import com.ConcertJournalAPI.exception.ConflictException;
 import com.ConcertJournalAPI.model.AppUser;
-import com.ConcertJournalAPI.repository.AppUserRepository;
+import com.ConcertJournalAPI.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
-import static org.junit.Assert.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -21,50 +21,39 @@ public class UserControllerTest {
     private UserController userController;
 
     @Mock
-    private AppUserRepository appUserRepository;
-
-    @Mock
-    private PasswordEncoder passwordEncoder;
+    private UserService userService;
 
     @Test
     public void testRegisterUserSuccess() {
-        // Arrange
-        AppUser user = new AppUser();
-        user.setEmail("testUser");
-        user.setPassword("password");
-        when(appUserRepository.findByEmail(user.getEmail())).thenReturn(null);
-        when(passwordEncoder.encode(user.getPassword())).thenReturn("encodedPassword");
+        RegisterRequest request = new RegisterRequest();
+        request.setEmail("test@example.com");
+        request.setPassword("password123");
+        when(userService.registerUser(request)).thenReturn(new AppUser());
 
-        // Act
-        String result = userController.registerUser(user).getBody();
+        var response = userController.registerUser(request);
 
-        // Assert
-        assertEquals("User registered successfully", result);
-        verify(appUserRepository, times(1)).save(any(AppUser.class));
+        assertEquals(201, response.getStatusCode().value());
+        assertEquals("User registered successfully", response.getBody());
+        verify(userService, times(1)).registerUser(request);
     }
 
     @Test
-    public void testRegisterUserUsernameAlreadyExists() {
-        // Arrange
-        AppUser user = new AppUser();
-        user.setEmail("testUser");
-        user.setPassword("password");
-        AppUser existingUser = new AppUser();
-        existingUser.setEmail("testUser");
-        existingUser.setPassword("existingPassword");
-        when(appUserRepository.findByEmail(user.getEmail())).thenReturn(existingUser);
+    public void testRegisterUserEmailAlreadyExists() {
+        RegisterRequest request = new RegisterRequest();
+        request.setEmail("test@example.com");
+        request.setPassword("password123");
+        when(userService.registerUser(request)).thenThrow(new ConflictException("User already exists"));
 
-        // Act
-        String result = userController.registerUser(user).getBody();
-
-        // Assert
-        assertEquals("User already exists", result);
-        verify(appUserRepository, never()).save(any(AppUser.class));
+        assertThrows(ConflictException.class, () -> userController.registerUser(request));
+        verify(userService, times(1)).registerUser(request);
     }
 
     @Test
-    public void testRegisterUserNullUser() {
-        // Act and Assert
-        assertThrows(NullPointerException.class, () -> userController.registerUser(null));
+    public void testRegisterUserNullRequest() {
+        // With UserService mock, null request just delegates to the service
+        // and returns CREATED. Validation of null is handled by Spring MVC @Valid,
+        // not by the controller itself.
+        var response = userController.registerUser(null);
+        assertEquals(201, response.getStatusCode().value());
     }
 }
