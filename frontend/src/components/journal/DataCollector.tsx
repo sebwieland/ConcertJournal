@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import useEvents from "../../hooks/useEvents";
 import { useConfirm } from "material-ui-confirm";
 import { deleteEvent } from "../../api/apiEvents";
@@ -21,14 +21,6 @@ const DataCollector = ({ children }: DataCollectorProps) => {
   const { data, refetch } = useEvents();
   const confirm = useConfirm();
   const navigate = useNavigate();
-
-  // Component lifecycle hooks
-  useEffect(() => {
-    // Component mounted
-    return () => {
-      // Component unmounted
-    };
-  }, []);
 
   const handleEdit = (id: number) => {
     navigate(`/edit-entry/${id}`);

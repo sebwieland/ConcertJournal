@@ -93,7 +93,9 @@ const SearchComponent: React.FC<SearchComponentProps> = ({
         setSearchResults(sortedResults);
         setHasSearched(true);
       } catch (error) {
-        console.error("Error during search:", error);
+        if (process.env.NODE_ENV === "development") {
+          console.error("Error during search:", error);
+        }
         setSearchResults([]);
         setHasSearched(true);
       }

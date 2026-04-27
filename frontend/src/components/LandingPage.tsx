@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import DefaultLayout from "../theme/DefaultLayout";
 import DataCollector from "./journal/DataCollector";
 import calculateStatistics from "../utils/calculateStatistics";
@@ -19,13 +19,6 @@ import SearchComponent from "./journal/SearchComponent";
 
 export default function LandingPage() {
   const { data, error, isLoading, refetch } = useEvents();
-
-  useEffect(() => {
-    // Component mount logic
-    return () => {
-      // Component cleanup
-    };
-  }, []);
 
   if (isLoading) {
     return (

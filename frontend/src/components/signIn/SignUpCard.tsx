@@ -167,12 +167,6 @@ export default function SignUpCard({
         <FormControl>
           <FormLabel htmlFor="firstName">First Name</FormLabel>
           <TextField
-            error={firstName.length > 0 && firstName.length < 1}
-            helperText={
-              firstName.length > 0 && firstName.length < 1
-                ? "Please enter your first name."
-                : ""
-            }
             id="firstName"
             type="text"
             name="firstName"
@@ -181,9 +175,6 @@ export default function SignUpCard({
             required
             fullWidth
             variant="outlined"
-            color={
-              firstName.length > 0 && firstName.length < 1 ? "error" : "primary"
-            }
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)}
           />
@@ -191,12 +182,6 @@ export default function SignUpCard({
         <FormControl>
           <FormLabel htmlFor="lastName">Last Name</FormLabel>
           <TextField
-            error={lastName.length > 0 && lastName.length < 1}
-            helperText={
-              lastName.length > 0 && lastName.length < 1
-                ? "Please enter your last name."
-                : ""
-            }
             id="lastName"
             type="text"
             name="lastName"
@@ -205,9 +190,6 @@ export default function SignUpCard({
             required
             fullWidth
             variant="outlined"
-            color={
-              lastName.length > 0 && lastName.length < 1 ? "error" : "primary"
-            }
             value={lastName}
             onChange={(e) => setLastName(e.target.value)}
           />

@@ -1,12 +1,4 @@
 import { parseEventDate } from "./dateUtils";
-
-interface Statistics {
-    totalCount: number;
-    mostSeenArtist: string;
-    mostArtistsOnASingleDay: number;
-    mostVisitedLocation: string;
-}
-
 import { ConcertEvent } from '../types/events';
 
 interface Statistics {
