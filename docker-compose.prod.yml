@@ -1,0 +1,76 @@
+# Concert Journal - Production
+#
+# Usage:
+#   1. Create a .env file with required secrets (see below)
+#   2. docker compose -f docker-compose.prod.yml up -d
+#
+# Required environment variables (set in .env or export):
+#   JWT_SECRET          - At least 32 characters, random and unique per deployment
+#   DATABASE_PASSWORD   - MySQL user password
+#   DATABASE_ROOT_PASSWORD - MySQL root password
+#
+# Optional:
+#   DATABASE_USER       - MySQL username (default: concertjournal)
+#   CONCERTJOURNAL_IMAGE - Image to pull (default: registry.wielandseb.synology.me/concertjournal:latest)
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: concert-journal-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: concertjournal
+      MYSQL_USER: ${DATABASE_USER:-concertjournal}
+      MYSQL_PASSWORD: ${DATABASE_PASSWORD:?DATABASE_PASSWORD must be set}
+      MYSQL_ROOT_PASSWORD: ${DATABASE_ROOT_PASSWORD:?DATABASE_ROOT_PASSWORD must be set}
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - concert-journal-network
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u $${MYSQL_USER} -p$${MYSQL_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  app:
+    image: ${CONCERTJOURNAL_IMAGE:-registry.wielandseb.synology.me/concertjournal:latest}
+    container_name: concert-journal-app
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/concertjournal?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: ${DATABASE_USER:-concertjournal}
+      SPRING_DATASOURCE_PASSWORD: ${DATABASE_PASSWORD:?DATABASE_PASSWORD must be set}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set (min 32 characters)}
+    ports:
+      - "8080:8080"
+    networks:
+      - concert-journal-network
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  concert-journal-network:
+    driver: bridge
+
+volumes:
+  mysql-data:

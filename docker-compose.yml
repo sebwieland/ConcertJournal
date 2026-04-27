@@ -1,14 +1,15 @@
-# Concert Journal Docker Compose
+# Concert Journal - Development
 #
-# Development (hybrid - recommended):
-#   docker-compose up -d mysql backend
+# Hybrid mode (recommended):
+#   docker-compose up -d mysql
+#   cd backend && JWT_SECRET='dev-secret-change-in-production!' ./mvnw spring-boot:run -Dspring.profiles.active=dev
 #   cd frontend && npm run start:local
 #
-# Production (local test):
-#   docker-compose --profile production up --build
+# Docker backend mode:
+#   docker-compose --profile dev up -d
+#   cd frontend && npm run start:local
 
 services:
-  # MySQL Database (shared by dev and prod)
   mysql:
     image: mysql:8.0
     container_name: concert-journal-mysql
@@ -30,7 +31,6 @@ services:
       timeout: 5s
       retries: 5
 
-  # Backend API (development only - with hot reload)
   backend:
     image: maven:3.9-eclipse-temurin-21-alpine
     container_name: concert-journal-backend
@@ -61,29 +61,6 @@ services:
     networks:
       - concert-journal-network
     command: "./mvnw spring-boot:run"
-
-  # Production app (frontend + backend unified)
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: production
-    container_name: concert-journal-app
-    restart: unless-stopped
-    profiles: ["production"]
-    depends_on:
-      mysql:
-        condition: service_healthy
-    environment:
-      SPRING_PROFILES_ACTIVE: production
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/concertjournal?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
-      SPRING_DATASOURCE_USERNAME: ${DATABASE_USER:-user}
-      SPRING_DATASOURCE_PASSWORD: ${DATABASE_PASSWORD:-password}
-      JWT_SECRET: ${JWT_SECRET:-change-me-in-production!!!!!!!!!}
-    ports:
-      - "8080:8080"
-    networks:
-      - concert-journal-network
 
 networks:
   concert-journal-network:
