@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import useEvents from "../../hooks/useEvents";
 import { useConfirm } from "material-ui-confirm";
 import { deleteEvent } from "../../api/apiEvents";
@@ -48,46 +48,8 @@ const DataCollector = ({ children }: DataCollectorProps) => {
     }
   };
 
-  // Process and validate data before passing to children
-  const processedData = (data || []).map((item) => {
-    // Create a copy to avoid mutating the original
-    const processedItem = { ...item };
-
-    // Ensure date is valid
-    if (processedItem.date === undefined || processedItem.date === null) {
-      // Use current date as default
-      const today = new Date();
-      processedItem.date = [
-        today.getFullYear(),
-        today.getMonth() + 1,
-        today.getDate(),
-      ];
-    }
-
-    // Convert string array representation to actual array
-    if (
-      typeof processedItem.date === "string" &&
-      processedItem.date.startsWith("[") &&
-      processedItem.date.endsWith("]")
-    ) {
-      try {
-        processedItem.date = JSON.parse(processedItem.date);
-      } catch (error) {
-        // Use current date as fallback
-        const today = new Date();
-        processedItem.date = [
-          today.getFullYear(),
-          today.getMonth() + 1,
-          today.getDate(),
-        ];
-      }
-    }
-
-    return processedItem;
-  });
-
   return children({
-    data: processedData,
+    data: data || [],
     onEdit: handleEdit,
     onDelete: handleDelete,
   });

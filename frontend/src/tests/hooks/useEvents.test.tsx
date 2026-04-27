@@ -73,8 +73,15 @@ describe("useEvents", () => {
       // Check if getAllEvents was called with the token
       expect(mockGetAllEvents).toHaveBeenCalled();
 
-      // Check if data is set correctly
-      expect(result.current.data).toEqual(mockEventData);
+      // Check if data is set correctly (dates are normalized to YYYY-MM-DD strings)
+      expect(result.current.data).toEqual(
+        mockEventData.map((item) => ({
+          ...item,
+          date: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
+        })),
+      );
+      expect(result.current.data?.[0].date).toBe("2023-05-15");
+      expect(result.current.data?.[1].date).toBe("2023-06-20");
     });
 
     it("should handle API errors when fetching events", async () => {
@@ -135,10 +142,12 @@ describe("useEvents", () => {
         expect(result.current.isLoading).toBe(false);
       });
 
-      // Check if dates are processed correctly
-      expect(Array.isArray(result.current.data?.[0].date)).toBe(true);
-      expect(Array.isArray(result.current.data?.[1].date)).toBe(true);
-      expect(Array.isArray(result.current.data?.[2].date)).toBe(true);
+      // Check if dates are normalized to YYYY-MM-DD strings
+      expect(result.current.data?.[0].date).toBe("2023-05-15");
+      expect(result.current.data?.[1].date).toBe("2023-06-20");
+      // Null date defaults to today's date
+      expect(typeof result.current.data?.[2].date).toBe("string");
+      expect(result.current.data?.[2].date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     });
   });
 

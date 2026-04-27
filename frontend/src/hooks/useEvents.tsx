@@ -7,6 +7,7 @@ import {
   UpdateEventData,
 } from "../types/events";
 import { ApiError, handleApiError } from "../api/apiErrors";
+import { formatEventDate } from "../utils/dateUtils";
 
 interface UseEvents {
   data: ConcertEvent[] | undefined;
@@ -46,40 +47,12 @@ const useEvents = (): UseEvents => {
       try {
         const response = await getAllEvents();
 
-        // Process the response to ensure dates are in the correct format
+        // Normalize dates to ISO strings (YYYY-MM-DD)
         const processedResponse = Array.isArray(response)
-          ? response.map((item) => {
-              const processedItem = { ...item };
-
-              if (
-                processedItem.date === undefined ||
-                processedItem.date === null
-              ) {
-                const today = new Date();
-                processedItem.date = [
-                  today.getFullYear(),
-                  today.getMonth() + 1,
-                  today.getDate(),
-                ];
-              } else if (
-                typeof processedItem.date === "string" &&
-                processedItem.date.startsWith("[") &&
-                processedItem.date.endsWith("]")
-              ) {
-                try {
-                  processedItem.date = JSON.parse(processedItem.date);
-                } catch (error) {
-                  const today = new Date();
-                  processedItem.date = [
-                    today.getFullYear(),
-                    today.getMonth() + 1,
-                    today.getDate(),
-                  ];
-                }
-              }
-
-              return processedItem;
-            })
+          ? response.map((item) => ({
+              ...item,
+              date: formatEventDate(item.date, "YYYY-MM-DD"),
+            }))
           : response;
 
         return processedResponse;
