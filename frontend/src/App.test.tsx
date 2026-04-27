@@ -1,12 +1,12 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
-import { AuthProvider } from "./contexts/AuthContext";
+import { AllProviders } from "./tests/utils/test-utils";
 
-test("renders learn react link", () => {
+test("renders app content within providers", () => {
   render(
-    <AuthProvider>
+    <AllProviders>
       <div data-testid="app-content">Learn React</div>
-    </AuthProvider>,
+    </AllProviders>,
   );
 
   const linkElement = screen.getByTestId("app-content");
