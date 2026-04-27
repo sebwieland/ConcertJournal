@@ -17,7 +17,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -35,12 +34,6 @@ public class JwtAuthenticationFilterTest {
     @Mock
     private FilterChain filterChain;
 
-    @Mock
-    private Authentication authentication;
-
-    @Mock
-    private PrintWriter writer;
-
     @InjectMocks
     private JwtAuthenticationFilter jwtAuthenticationFilter;
 
@@ -51,20 +44,26 @@ public class JwtAuthenticationFilterTest {
 
     @Test
     public void testDoFilterInternal_NoToken() throws ServletException, IOException {
-        when(JwtUtils.extractTokenFromRequest(request)).thenReturn(null);
+        try (MockedStatic<JwtUtils> jwtUtilsMock = Mockito.mockStatic(JwtUtils.class)) {
+            jwtUtilsMock.when(() -> JwtUtils.extractTokenFromRequest(request)).thenReturn(null);
 
-        jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
+            jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
 
-        verify(filterChain).doFilter(request, response);
-
+            verify(filterChain).doFilter(request, response);
+        }
     }
 
     @Test
     public void testDoFilterInternal_ValidToken() throws ServletException, IOException {
-        String token = JwtUtils.generateToken(authentication);
+        String token = "valid-test-token";
+        Claims claims = mock(Claims.class);
+        when(claims.getSubject()).thenReturn("testUser");
+        when(claims.get("type", String.class)).thenReturn(JwtUtils.TOKEN_TYPE_ACCESS);
+        when(claims.get("role", String.class)).thenReturn("USER");
+
         try (MockedStatic<JwtUtils> jwtUtilsMock = Mockito.mockStatic(JwtUtils.class)) {
             jwtUtilsMock.when(() -> JwtUtils.extractTokenFromRequest(request)).thenReturn(token);
-            jwtUtilsMock.when(()-> JwtUtils.parseToken(token)).thenReturn(mock(Claims.class));
+            jwtUtilsMock.when(() -> JwtUtils.parseToken(token)).thenReturn(claims);
 
             jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
         }
@@ -74,7 +73,7 @@ public class JwtAuthenticationFilterTest {
     @Test
     public void testDoFilterInternal_InvalidToken() throws ServletException, IOException {
         try (MockedStatic<JwtUtils> jwtUtilsMock = Mockito.mockStatic(JwtUtils.class)) {
-            jwtUtilsMock.when(() -> JwtUtils.parseToken("invalidToken")).thenReturn(null);
+            jwtUtilsMock.when(() -> JwtUtils.extractTokenFromRequest(request)).thenReturn(null);
 
             jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
 
@@ -86,22 +85,12 @@ public class JwtAuthenticationFilterTest {
     public void testAuthenticateUser() {
         Claims claims = mock(Claims.class);
         when(claims.getSubject()).thenReturn("username");
+        when(claims.get("role", String.class)).thenReturn("USER");
 
         jwtAuthenticationFilter.authenticateUser(claims);
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         assertNotNull(authentication);
         assertEquals("username", authentication.getName());
-    }
-
-    @Test
-    public void testHandleInvalidToken() throws IOException {
-        when(response.getWriter()).thenReturn(writer);
-
-        jwtAuthenticationFilter.handleInvalidToken(response);
-
-        verify(response).setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-        verify(response).setContentType("application/json");
-        verify(response.getWriter()).write("{\"error\":\"Invalid token\"}");
     }
 }

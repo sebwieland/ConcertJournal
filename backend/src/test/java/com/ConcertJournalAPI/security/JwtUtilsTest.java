@@ -9,7 +9,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.core.Authentication;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
@@ -23,9 +22,6 @@ class JwtUtilsTest {
 
     @Mock
     private HttpServletRequest request;
-
-    @Mock
-    private Authentication authentication;
 
     @Test
     void testGetSigningKey() {
@@ -93,17 +89,14 @@ class JwtUtilsTest {
 
     @Test
     void testGenerateToken() {
-        when(authentication.getName()).thenReturn("testUser");
-        String token = JwtUtils.generateToken(authentication);
+        String token = JwtUtils.generateToken("testUser", "USER");
         assertNotNull(token);
         assertNotEquals("", token);
     }
 
     @Test
     void testGeneratedTokenCanBeParsed() throws JwtException {
-        when(authentication.getName()).thenReturn("testUser");
-
-        String token = JwtUtils.generateToken(authentication);
+        String token = JwtUtils.generateToken("testUser", "USER");
         Claims claims = JwtUtils.parseToken(token);
 
         assertNotNull(claims);
@@ -115,10 +108,9 @@ class JwtUtilsTest {
 
     @Test
     void testGeneratedTokenHasCorrectExpiration() throws JwtException {
-        when(authentication.getName()).thenReturn("testUser");
         long now = new Date().getTime();
 
-        String token = JwtUtils.generateToken(authentication);
+        String token = JwtUtils.generateToken("testUser", "USER");
         Claims claims = JwtUtils.parseToken(token);
 
         long expiration = claims.getExpiration().getTime();
