@@ -37,28 +37,9 @@ const Navbar = () => {
   };
 
   const handleLogout = () => {
-    // Call setLoggedOut directly from AuthContext first to ensure immediate client-side logout
     setLoggedOut();
-
-    // Then call the logout function which handles the API call
-    try {
-      logout();
-    } catch (error) {
-      if (process.env.NODE_ENV === "development") {
-        console.warn(
-          "Error during logout API call, but client-side logout already completed:",
-          error,
-        );
-      }
-    }
-
-    // Force navigation to sign-in page immediately
+    logout();
     navigate("/sign-in");
-
-    // Force a page reload to clear any lingering state
-    setTimeout(() => {
-      window.location.href = "/sign-in";
-    }, 100);
   };
   const DesktopView = () => (
     <>
