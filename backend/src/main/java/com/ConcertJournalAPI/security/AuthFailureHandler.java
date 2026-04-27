@@ -13,6 +13,6 @@ public class AuthFailureHandler implements AuthenticationFailureHandler {
     public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response, AuthenticationException exception) throws IOException {
         response.setStatus(HttpStatus.UNAUTHORIZED.value());
         response.setContentType("application/json");
-        response.getWriter().write("{\"error\":\"" + exception.getMessage() + "\"}");
+        response.getWriter().write("{\"error\":\"Invalid email or password\"}");
     }
 }

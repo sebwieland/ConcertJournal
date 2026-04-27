@@ -79,9 +79,9 @@ export default function SignUpCard({
       isValid = false;
     }
 
-    if (!password || password.length < 6) {
+    if (!password || password.length < 8) {
       if (process.env.NODE_ENV === "development") {
-        console.error("Password must be at least 6 characters long.");
+        console.error("Password must be at least 8 characters long.");
       }
       isValid = false;
     }
@@ -241,10 +241,10 @@ export default function SignUpCard({
         <FormControl>
           <FormLabel htmlFor="password">Password</FormLabel>
           <TextField
-            error={password.length > 0 && password.length < 6}
+            error={password.length > 0 && password.length < 8}
             helperText={
-              password.length > 0 && password.length < 6
-                ? "Password must be at least 6 characters long."
+              password.length > 0 && password.length < 8
+                ? "Password must be at least 8 characters long."
                 : ""
             }
             name="password"
@@ -256,7 +256,7 @@ export default function SignUpCard({
             fullWidth
             variant="outlined"
             color={
-              password.length > 0 && password.length < 6 ? "error" : "primary"
+              password.length > 0 && password.length < 8 ? "error" : "primary"
             }
             value={password}
             onChange={(e) => setPassword(e.target.value)}
