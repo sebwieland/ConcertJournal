@@ -114,6 +114,8 @@ class BandEventServiceTest {
     void testDeleteEvent() {
         setAuthentication("testUser");
         BandEvent sampleEvent = getSampleBandEvent();
+        when(bandEventRepository.findByIdAndAppUser(sampleEvent.getId(), appUser))
+                .thenReturn(java.util.Optional.of(sampleEvent));
 
         bandEventService.deleteEventById(sampleEvent.getId());
 

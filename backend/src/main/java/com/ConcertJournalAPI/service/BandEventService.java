@@ -46,6 +46,8 @@ public class BandEventService {
 
     @Transactional
     public void deleteEventById(Long id) {
+        // Verify the event exists and belongs to the user (throws 404 if not)
+        getEventById(id);
         AppUser appUser = getAuthenticatedUser();
         bandEventRepository.deleteByIdAndAppUser(id, appUser);
     }
