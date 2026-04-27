@@ -1,5 +1,5 @@
 import { useQuery, useMutation } from "react-query";
-import EventsApi from "../api/apiEvents";
+import { getAllEvents, createEvent as apiCreateEvent, updateEvent as apiUpdateEvent, deleteEvent as apiDeleteEvent } from "../api/apiEvents";
 import useAuth from "./useAuth";
 import {
   ConcertEvent,
@@ -38,39 +38,30 @@ interface UseEvents {
 }
 
 const useEvents = (): UseEvents => {
-  const eventsApi = EventsApi();
   const { token } = useAuth();
 
   const { data, error, isLoading, refetch } = useQuery(
     "allEvents",
     async () => {
-      if (!token) {
-        throw handleApiError(new Error("No authentication token found"));
-      }
       try {
-        const response = await eventsApi.getAllEvents(token);
+        const response = await getAllEvents();
 
         // Process the response to ensure dates are in the correct format
         const processedResponse = Array.isArray(response)
           ? response.map((item) => {
-              // Make a copy of the item to avoid mutating the original
               const processedItem = { ...item };
 
-              // Handle undefined or null dates by providing a default date
               if (
                 processedItem.date === undefined ||
                 processedItem.date === null
               ) {
-                // Use current date as default
                 const today = new Date();
                 processedItem.date = [
                   today.getFullYear(),
                   today.getMonth() + 1,
                   today.getDate(),
                 ];
-              }
-              // If date is a string that looks like an array, convert it to an actual array
-              else if (
+              } else if (
                 typeof processedItem.date === "string" &&
                 processedItem.date.startsWith("[") &&
                 processedItem.date.endsWith("]")
@@ -78,7 +69,6 @@ const useEvents = (): UseEvents => {
                 try {
                   processedItem.date = JSON.parse(processedItem.date);
                 } catch (error) {
-                  // Provide a default date if parsing fails
                   const today = new Date();
                   processedItem.date = [
                     today.getFullYear(),
@@ -103,12 +93,8 @@ const useEvents = (): UseEvents => {
   );
 
   const createEventMutation = useMutation(async (data: CreateEventData) => {
-    if (!token) {
-      throw handleApiError(new Error("No authentication token found"));
-    }
     try {
-      const response = await eventsApi.createEvent(data, token);
-      return response;
+      return await apiCreateEvent(data);
     } catch (error) {
       throw handleApiError(error);
     }
@@ -116,12 +102,8 @@ const useEvents = (): UseEvents => {
 
   const updateEventMutation = useMutation(
     async ({ id, data }: { id: number; data: UpdateEventData }) => {
-      if (!token) {
-        throw handleApiError(new Error("No authentication token found"));
-      }
       try {
-        const response = await eventsApi.updateEvent(id, data, token);
-        return response;
+        return await apiUpdateEvent(id, data);
       } catch (error) {
         throw handleApiError(error);
       }
@@ -129,12 +111,8 @@ const useEvents = (): UseEvents => {
   );
 
   const deleteEventMutation = useMutation(async (id: number) => {
-    if (!token) {
-      throw handleApiError(new Error("No authentication token found"));
-    }
     try {
-      const response = await eventsApi.deleteEvent(id, token);
-      return response;
+      return await apiDeleteEvent(id);
     } catch (error) {
       throw handleApiError(error);
     }

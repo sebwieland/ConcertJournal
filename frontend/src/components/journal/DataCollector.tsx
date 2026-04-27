@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
 import useEvents from "../../hooks/useEvents";
 import { useConfirm } from "material-ui-confirm";
-import EventsApi from "../../api/apiEvents";
-import useAuth from "../../hooks/useAuth";
+import { deleteEvent } from "../../api/apiEvents";
 import { useNavigate } from "react-router-dom";
 import { JSX } from "react";
 import { ConcertEvent } from "../../types/events";
@@ -19,10 +18,8 @@ export interface DataCollectorState {
 }
 
 const DataCollector = ({ children }: DataCollectorProps) => {
-  const eventsApi = EventsApi();
   const { data, refetch } = useEvents();
   const confirm = useConfirm();
-  const { token } = useAuth();
   const navigate = useNavigate();
 
   // Component lifecycle hooks
@@ -40,7 +37,7 @@ const DataCollector = ({ children }: DataCollectorProps) => {
   const handleDelete = async (id: number) => {
     try {
       await confirm({ description: "This action is permanent!" });
-      await eventsApi.deleteEvent(id, token);
+      await deleteEvent(id);
       refetch();
       // Event successfully deleted
     } catch (error) {

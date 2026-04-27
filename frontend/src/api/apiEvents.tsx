@@ -1,4 +1,4 @@
-import useApiClient from "./apiClient";
+import apiClient from "./apiClient";
 import {
   ConcertEvent,
   CreateEventData,
@@ -6,71 +6,48 @@ import {
 } from "../types/events";
 import { handleApiError } from "./apiErrors";
 
-const EventsApi = () => {
-  const apiClient = useApiClient().apiClient;
-
-  const getAllEvents = async (token: string): Promise<ConcertEvent[]> => {
-    try {
-      const response = await apiClient.get("/allEvents", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      return response.data;
-    } catch (error) {
-      throw handleApiError(error);
-    }
-  };
-
-  const createEvent = async (
-    data: CreateEventData,
-    token: string,
-  ): Promise<ConcertEvent> => {
-    try {
-      const response = await apiClient.post("/event", data, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-      return response.data;
-    } catch (error) {
-      throw handleApiError(error);
-    }
-  };
-
-  const updateEvent = async (
-    id: number,
-    data: UpdateEventData,
-    token: string,
-  ): Promise<ConcertEvent> => {
-    try {
-      const response = await apiClient.put(`/event/${id}`, data, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-      return response.data;
-    } catch (error) {
-      throw handleApiError(error);
-    }
-  };
-
-  const deleteEvent = async (id: number, token: string): Promise<void> => {
-    try {
-      await apiClient.delete(`/event/${id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-    } catch (error) {
-      throw handleApiError(error);
-    }
-  };
-
-  return { getAllEvents, createEvent, updateEvent, deleteEvent };
+export const getAllEvents = async (): Promise<ConcertEvent[]> => {
+  try {
+    const response = await apiClient.get("/allEvents");
+    return response.data;
+  } catch (error) {
+    throw handleApiError(error);
+  }
 };
 
-export default EventsApi;
+export const createEvent = async (
+  data: CreateEventData,
+): Promise<ConcertEvent> => {
+  try {
+    const response = await apiClient.post("/event", data, {
+      headers: { "Content-Type": "application/json" },
+    });
+    return response.data;
+  } catch (error) {
+    throw handleApiError(error);
+  }
+};
+
+export const updateEvent = async (
+  id: number,
+  data: UpdateEventData,
+): Promise<ConcertEvent> => {
+  try {
+    const response = await apiClient.put(`/event/${id}`, data, {
+      headers: { "Content-Type": "application/json" },
+    });
+    return response.data;
+  } catch (error) {
+    throw handleApiError(error);
+  }
+};
+
+export const deleteEvent = async (id: number): Promise<void> => {
+  try {
+    await apiClient.delete(`/event/${id}`, {
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (error) {
+    throw handleApiError(error);
+  }
+};

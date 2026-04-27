@@ -7,16 +7,16 @@ import { mockLoginData, mockRegistrationData } from "../utils/test-fixtures";
 import { ApiErrorType } from "../../types/api";
 
 // Mock the apiAuth module
-const mockLogin = vi.fn();
-const mockRegister = vi.fn();
-const mockLogout = vi.fn();
+const { mockLogin, mockRegister, mockLogout } = vi.hoisted(() => ({
+  mockLogin: vi.fn(),
+  mockRegister: vi.fn(),
+  mockLogout: vi.fn(),
+}));
 
 vi.mock("../../api/apiAuth", () => ({
-  default: () => ({
-    login: mockLogin,
-    register: mockRegister,
-    logout: mockLogout,
-  }),
+  login: mockLogin,
+  register: mockRegister,
+  logout: mockLogout,
 }));
 
 // Mock the apiErrors module

@@ -7,18 +7,18 @@ import { mockEventData } from "../utils/test-fixtures";
 import { ApiErrorType } from "../../types/api";
 
 // Mock the apiEvents module
-const mockGetAllEvents = vi.fn();
-const mockCreateEvent = vi.fn();
-const mockUpdateEvent = vi.fn();
-const mockDeleteEvent = vi.fn();
+const { mockGetAllEvents, mockCreateEvent, mockUpdateEvent, mockDeleteEvent } = vi.hoisted(() => ({
+  mockGetAllEvents: vi.fn(),
+  mockCreateEvent: vi.fn(),
+  mockUpdateEvent: vi.fn(),
+  mockDeleteEvent: vi.fn(),
+}));
 
 vi.mock("../../api/apiEvents", () => ({
-  default: () => ({
-    getAllEvents: mockGetAllEvents,
-    createEvent: mockCreateEvent,
-    updateEvent: mockUpdateEvent,
-    deleteEvent: mockDeleteEvent,
-  }),
+  getAllEvents: mockGetAllEvents,
+  createEvent: mockCreateEvent,
+  updateEvent: mockUpdateEvent,
+  deleteEvent: mockDeleteEvent,
 }));
 
 // Mock the useAuth hook
@@ -71,7 +71,7 @@ describe("useEvents", () => {
       });
 
       // Check if getAllEvents was called with the token
-      expect(mockGetAllEvents).toHaveBeenCalledWith("test-token");
+      expect(mockGetAllEvents).toHaveBeenCalled();
 
       // Check if data is set correctly
       expect(result.current.data).toEqual(mockEventData);
@@ -176,7 +176,7 @@ describe("useEvents", () => {
       });
 
       // Check if apiEvents.createEvent was called with correct parameters
-      expect(mockCreateEvent).toHaveBeenCalledWith(newEvent, "test-token");
+      expect(mockCreateEvent).toHaveBeenCalledWith(newEvent);
 
       // Check if onSuccess callback was called with the created event
       expect(onSuccessMock).toHaveBeenCalledWith(createdEvent);
@@ -261,7 +261,6 @@ describe("useEvents", () => {
       expect(mockUpdateEvent).toHaveBeenCalledWith(
         eventId,
         updateData,
-        "test-token",
       );
 
       // Check if onSuccess callback was called with the updated event
@@ -326,7 +325,7 @@ describe("useEvents", () => {
       });
 
       // Check if apiEvents.deleteEvent was called with correct parameters
-      expect(mockDeleteEvent).toHaveBeenCalledWith(eventId, "test-token");
+      expect(mockDeleteEvent).toHaveBeenCalledWith(eventId);
 
       // Check if onSuccess callback was called
       expect(onSuccessMock).toHaveBeenCalled();

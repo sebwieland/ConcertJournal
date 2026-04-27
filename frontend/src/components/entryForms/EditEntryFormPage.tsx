@@ -1,18 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import useEvents from "../../hooks/useEvents";
-import EventsApi from "../../api/apiEvents";
-import useAuth from "../../hooks/useAuth";
+import { updateEvent } from "../../api/apiEvents";
 import dayjs from "dayjs";
 import EntryForm from "./EntryForm";
 import { ConcertEvent, UpdateEventData } from "../../types/events";
 import { ApiError, handleApiError } from "../../api/apiErrors";
 
 const EditEntryFormPage = () => {
-  const eventsApi = EventsApi();
   const { id } = useParams<{ id: string }>();
   const { data, refetch } = useEvents();
-  const { token } = useAuth();
   const [bandName, setBandName] = useState("");
   const [place, setPlace] = useState("");
   const [date, setDate] = useState<string | number[]>("");
@@ -68,7 +65,7 @@ const EditEntryFormPage = () => {
       comment: formData.comment || "",
     };
     try {
-      await eventsApi.updateEvent(parseInt(id!, 10), formattedData, token);
+      await updateEvent(parseInt(id!, 10), formattedData);
       refetch();
       setMessage("Entry updated successfully!");
       setIsSuccess(true);
