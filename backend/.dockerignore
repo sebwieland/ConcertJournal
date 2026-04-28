@@ -1,0 +1,30 @@
+# Build artifacts
+target/
+!target/ConcertJournalAPI-0.0.1-SNAPSHOT.jar
+*.class
+*.jar
+!maven-wrapper.jar
+
+# Development/Environment
+.git
+.github
+.vscode
+.idea
+*.iml
+.settings
+.classpath
+.project
+.factorypath
+
+# Logs
+logs/
+*.log
+
+# Test reports
+surefire-reports/
+test-output/
+
+# Misc
+.DS_Store
+*.swp
+*.bak

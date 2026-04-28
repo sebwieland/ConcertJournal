@@ -12,9 +12,16 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+
+import org.springframework.stereotype.Component;
+
 import java.io.IOException;
 import java.util.Collections;
+import java.util.List;
 
+@Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain) throws ServletException, IOException {
@@ -22,9 +29,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (token != null) {
             try {
                 Claims claims = JwtUtils.parseToken(token);
-                authenticateUser(claims);
+                // Only accept access tokens, not refresh tokens
+                String tokenType = claims.get("type", String.class);
+                if (JwtUtils.TOKEN_TYPE_ACCESS.equals(tokenType)) {
+                    authenticateUser(claims);
+                }
             } catch (JwtException e) {
-                // Handle invalid token
+                logger.debug("Invalid JWT token");
             }
         }
         filterChain.doFilter(request, response);
@@ -32,19 +43,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     void authenticateUser(Claims claims) {
         String username = claims.getSubject();
-        Authentication authentication = new UsernamePasswordAuthenticationToken(username, null, Collections.emptyList());
+        String role = claims.get("role", String.class);
+        List<GrantedAuthority> authorities = (role != null)
+                ? List.of(new SimpleGrantedAuthority("ROLE_" + role))
+                : Collections.emptyList();
+        Authentication authentication = new UsernamePasswordAuthenticationToken(username, null, authorities);
         SecurityContextHolder.getContext().setAuthentication(authentication);
-    }
-
-    void handleInvalidToken(HttpServletResponse response) {
-        logger.error("Invalid token: {}");
-        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-        response.setContentType("application/json");
-        try {
-            response.getWriter().write("{\"error\":\"Invalid token\"}");
-        } catch (IOException ex) {
-            logger.error("Error writing response: {}");
-        }
     }
 }
 

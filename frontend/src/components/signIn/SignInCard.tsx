@@ -116,10 +116,10 @@ export default function SignInCard({
             <FormLabel htmlFor="password">Password</FormLabel>
           </Box>
           <TextField
-            error={password.length > 0 && password.length < 6}
+            error={password.length > 0 && password.length < 8}
             helperText={
-              password.length > 0 && password.length < 6
-                ? "Password must be at least 6 characters long."
+              password.length > 0 && password.length < 8
+                ? "Password must be at least 8 characters long."
                 : ""
             }
             name="password"
@@ -131,7 +131,7 @@ export default function SignInCard({
             fullWidth
             variant="outlined"
             color={
-              password.length > 0 && password.length < 6 ? "error" : "primary"
+              password.length > 0 && password.length < 8 ? "error" : "primary"
             }
             value={password}
             onChange={(e) => setPassword(e.target.value)}

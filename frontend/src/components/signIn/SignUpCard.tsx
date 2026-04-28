@@ -79,9 +79,9 @@ export default function SignUpCard({
       isValid = false;
     }
 
-    if (!password || password.length < 6) {
+    if (!password || password.length < 8) {
       if (process.env.NODE_ENV === "development") {
-        console.error("Password must be at least 6 characters long.");
+        console.error("Password must be at least 8 characters long.");
       }
       isValid = false;
     }
@@ -167,12 +167,6 @@ export default function SignUpCard({
         <FormControl>
           <FormLabel htmlFor="firstName">First Name</FormLabel>
           <TextField
-            error={firstName.length > 0 && firstName.length < 1}
-            helperText={
-              firstName.length > 0 && firstName.length < 1
-                ? "Please enter your first name."
-                : ""
-            }
             id="firstName"
             type="text"
             name="firstName"
@@ -181,9 +175,6 @@ export default function SignUpCard({
             required
             fullWidth
             variant="outlined"
-            color={
-              firstName.length > 0 && firstName.length < 1 ? "error" : "primary"
-            }
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)}
           />
@@ -191,12 +182,6 @@ export default function SignUpCard({
         <FormControl>
           <FormLabel htmlFor="lastName">Last Name</FormLabel>
           <TextField
-            error={lastName.length > 0 && lastName.length < 1}
-            helperText={
-              lastName.length > 0 && lastName.length < 1
-                ? "Please enter your last name."
-                : ""
-            }
             id="lastName"
             type="text"
             name="lastName"
@@ -205,9 +190,6 @@ export default function SignUpCard({
             required
             fullWidth
             variant="outlined"
-            color={
-              lastName.length > 0 && lastName.length < 1 ? "error" : "primary"
-            }
             value={lastName}
             onChange={(e) => setLastName(e.target.value)}
           />
@@ -241,10 +223,10 @@ export default function SignUpCard({
         <FormControl>
           <FormLabel htmlFor="password">Password</FormLabel>
           <TextField
-            error={password.length > 0 && password.length < 6}
+            error={password.length > 0 && password.length < 8}
             helperText={
-              password.length > 0 && password.length < 6
-                ? "Password must be at least 6 characters long."
+              password.length > 0 && password.length < 8
+                ? "Password must be at least 8 characters long."
                 : ""
             }
             name="password"
@@ -256,7 +238,7 @@ export default function SignUpCard({
             fullWidth
             variant="outlined"
             color={
-              password.length > 0 && password.length < 6 ? "error" : "primary"
+              password.length > 0 && password.length < 8 ? "error" : "primary"
             }
             value={password}
             onChange={(e) => setPassword(e.target.value)}

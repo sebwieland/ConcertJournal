@@ -5,30 +5,48 @@ import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.security.core.Authentication;
 
 import javax.crypto.SecretKey;
 
 import java.util.Date;
+import java.util.Optional;
 
 import static com.ConcertJournalAPI.configuration.SecurityConstants.*;
 
 public class JwtUtils {
-    private static final String jwtSecret = System.getenv("JWT_SECRET");
+    private static final String jwtSecret;
 
+    static {
+        String secret = System.getenv("JWT_SECRET");
+        if (secret == null || secret.isBlank()) {
+            throw new IllegalStateException("JWT_SECRET environment variable must be set");
+        }
+        if (secret.getBytes().length < 32) {
+            throw new IllegalStateException(
+                "JWT_SECRET must be at least 32 characters (256 bits) for HMAC-SHA256. Current length: " + secret.length());
+        }
+        jwtSecret = secret;
+    }
 
-    public static String generateToken(Authentication authentication) {
+    public static final String TOKEN_TYPE_ACCESS = "access";
+    public static final String TOKEN_TYPE_REFRESH = "refresh";
+
+    public static String generateToken(String subject, String role) {
         return Jwts.builder()
-                .subject(authentication.getName())
+                .subject(subject)
+                .claim("type", TOKEN_TYPE_ACCESS)
+                .claim("role", role)
                 .issuedAt(new Date())
                 .expiration(new Date((new Date()).getTime() + 180000)) // 3 Minutes
                 .signWith(getSigningKey())
                 .compact();
     }
 
-    public static String generateRefreshToken(Authentication authentication) {
+    public static String generateRefreshToken(String subject, String role) {
         return Jwts.builder()
-                .subject(authentication.getName())
+                .subject(subject)
+                .claim("type", TOKEN_TYPE_REFRESH)
+                .claim("role", role)
                 .issuedAt(new Date())
                 .expiration(new Date((new Date()).getTime() + 2592000000L)) // 30 days
                 .signWith(getSigningKey())
@@ -58,5 +76,4 @@ public class JwtUtils {
             throw new JwtException("Invalid token", e);
         }
     }
-
 }

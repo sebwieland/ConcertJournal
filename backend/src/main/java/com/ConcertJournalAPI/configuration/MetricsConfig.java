@@ -7,9 +7,6 @@ import io.micrometer.core.instrument.Gauge;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.Set;
-import java.util.stream.Collectors;
-
 @Component
 public class MetricsConfig {
 
@@ -37,10 +34,6 @@ public class MetricsConfig {
     }
 
     private double countUniqueBandEvents() {
-        Set<String> uniqueBandEvents = bandEventRepository.findAll()
-                .stream()
-                .map(event -> event.getBandName() + "-" + event.getDate().toString())
-                .collect(Collectors.toSet());
-        return uniqueBandEvents.size();
+        return bandEventRepository.countUniqueBandEvents();
     }
 }

@@ -38,7 +38,6 @@ public class AuthFailureHandlerTest {
     void testOnAuthenticationFailure() throws IOException {
         // Arrange
         when(response.getWriter()).thenReturn(writer);
-        when(exception.getMessage()).thenReturn("Test error message");
 
         // Act
         authFailureHandler.onAuthenticationFailure(request, response, exception);
@@ -46,7 +45,7 @@ public class AuthFailureHandlerTest {
         // Assert
         verify(response).setStatus(401);
         verify(response).setContentType("application/json");
-        verify(response.getWriter()).write("{\"error\":\"Test error message\"}");
+        verify(response.getWriter()).write("{\"error\":\"Invalid email or password\"}");
     }
 
     @Test

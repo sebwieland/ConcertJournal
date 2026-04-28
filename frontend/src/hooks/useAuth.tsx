@@ -1,14 +1,8 @@
 import { useContext, useState } from "react";
 import { AuthContext } from "../contexts/AuthContext";
 import { useMutation } from "react-query";
-import useAuthApi from "../api/apiAuth";
+import { login as apiLogin, register as apiRegister, logout as apiLogout, LoginResponse } from "../api/apiAuth";
 import { ApiError, handleApiError } from "../api/apiErrors";
-
-// Define the login response type
-interface LoginResponse {
-  accessToken: string;
-  // Add other fields that might be in the response
-}
 
 interface UseAuth {
   token: string;
@@ -29,7 +23,6 @@ interface UseAuth {
 }
 
 const useAuth = (): UseAuth => {
-  const authApi = useAuthApi();
   const authContext = useContext(AuthContext);
   if (!authContext) {
     throw new Error("AuthContext is not provided");
@@ -39,12 +32,11 @@ const useAuth = (): UseAuth => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<ApiError | null>(null);
 
-  const { mutateAsync: loginMutation } = useMutation(authApi.login, {
+  const { mutateAsync: loginMutation } = useMutation(apiLogin, {
     onSuccess: (data) => {
       setAccessToken(data.accessToken);
       setIsLoggedIn(true);
       fetchCsrfToken();
-      // Development logging removed
     },
     onError: (error: unknown) => {
       setError(handleApiError(error));
@@ -57,10 +49,9 @@ const useAuth = (): UseAuth => {
     },
   });
 
-  const { mutateAsync: signUpMutation } = useMutation(authApi.register, {
+  const { mutateAsync: signUpMutation } = useMutation(apiRegister, {
     onSuccess: () => {
       fetchCsrfToken();
-      // Development logging removed
     },
     onError: (error: unknown) => {
       setError(handleApiError(error));
@@ -73,7 +64,7 @@ const useAuth = (): UseAuth => {
     },
   });
 
-  const { mutateAsync: logoutMutation } = useMutation(authApi.logout, {
+  const { mutateAsync: logoutMutation } = useMutation(apiLogout, {
     onSuccess: () => {
       authContext.setIsLoggedIn(false);
       authContext.setAccessToken("");
@@ -94,12 +85,10 @@ const useAuth = (): UseAuth => {
 
   const login = async (data: { email: string; password: string }) => {
     try {
-      // Return the result of the mutation so we can await it
       const result = await loginMutation(data);
       return result;
     } catch (error) {
-      // Development logging removed
-      throw error; // Re-throw the error so the caller can handle it
+      throw error;
     }
   };
 
@@ -110,8 +99,6 @@ const useAuth = (): UseAuth => {
     firstName: string;
     lastName: string;
   }): Promise<void> => {
-    // We need to let the error propagate for the test to catch it
-    // But we need to return void to match the function signature
     await signUpMutation(data);
   };
 

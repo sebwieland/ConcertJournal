@@ -7,18 +7,18 @@ import { mockEventData } from "../utils/test-fixtures";
 import { ApiErrorType } from "../../types/api";
 
 // Mock the apiEvents module
-const mockGetAllEvents = vi.fn();
-const mockCreateEvent = vi.fn();
-const mockUpdateEvent = vi.fn();
-const mockDeleteEvent = vi.fn();
+const { mockGetAllEvents, mockCreateEvent, mockUpdateEvent, mockDeleteEvent } = vi.hoisted(() => ({
+  mockGetAllEvents: vi.fn(),
+  mockCreateEvent: vi.fn(),
+  mockUpdateEvent: vi.fn(),
+  mockDeleteEvent: vi.fn(),
+}));
 
 vi.mock("../../api/apiEvents", () => ({
-  default: () => ({
-    getAllEvents: mockGetAllEvents,
-    createEvent: mockCreateEvent,
-    updateEvent: mockUpdateEvent,
-    deleteEvent: mockDeleteEvent,
-  }),
+  getAllEvents: mockGetAllEvents,
+  createEvent: mockCreateEvent,
+  updateEvent: mockUpdateEvent,
+  deleteEvent: mockDeleteEvent,
 }));
 
 // Mock the useAuth hook
@@ -71,10 +71,17 @@ describe("useEvents", () => {
       });
 
       // Check if getAllEvents was called with the token
-      expect(mockGetAllEvents).toHaveBeenCalledWith("test-token");
+      expect(mockGetAllEvents).toHaveBeenCalled();
 
-      // Check if data is set correctly
-      expect(result.current.data).toEqual(mockEventData);
+      // Check if data is set correctly (dates are normalized to YYYY-MM-DD strings)
+      expect(result.current.data).toEqual(
+        mockEventData.map((item) => ({
+          ...item,
+          date: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
+        })),
+      );
+      expect(result.current.data?.[0].date).toBe("2023-05-15");
+      expect(result.current.data?.[1].date).toBe("2023-06-20");
     });
 
     it("should handle API errors when fetching events", async () => {
@@ -135,10 +142,12 @@ describe("useEvents", () => {
         expect(result.current.isLoading).toBe(false);
       });
 
-      // Check if dates are processed correctly
-      expect(Array.isArray(result.current.data?.[0].date)).toBe(true);
-      expect(Array.isArray(result.current.data?.[1].date)).toBe(true);
-      expect(Array.isArray(result.current.data?.[2].date)).toBe(true);
+      // Check if dates are normalized to YYYY-MM-DD strings
+      expect(result.current.data?.[0].date).toBe("2023-05-15");
+      expect(result.current.data?.[1].date).toBe("2023-06-20");
+      // Null date defaults to today's date
+      expect(typeof result.current.data?.[2].date).toBe("string");
+      expect(result.current.data?.[2].date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     });
   });
 
@@ -176,7 +185,7 @@ describe("useEvents", () => {
       });
 
       // Check if apiEvents.createEvent was called with correct parameters
-      expect(mockCreateEvent).toHaveBeenCalledWith(newEvent, "test-token");
+      expect(mockCreateEvent).toHaveBeenCalledWith(newEvent);
 
       // Check if onSuccess callback was called with the created event
       expect(onSuccessMock).toHaveBeenCalledWith(createdEvent);
@@ -261,7 +270,6 @@ describe("useEvents", () => {
       expect(mockUpdateEvent).toHaveBeenCalledWith(
         eventId,
         updateData,
-        "test-token",
       );
 
       // Check if onSuccess callback was called with the updated event
@@ -326,7 +334,7 @@ describe("useEvents", () => {
       });
 
       // Check if apiEvents.deleteEvent was called with correct parameters
-      expect(mockDeleteEvent).toHaveBeenCalledWith(eventId, "test-token");
+      expect(mockDeleteEvent).toHaveBeenCalledWith(eventId);
 
       // Check if onSuccess callback was called
       expect(onSuccessMock).toHaveBeenCalled();

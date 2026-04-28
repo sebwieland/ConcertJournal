@@ -16,6 +16,7 @@ import {
 import SearchIcon from "@mui/icons-material/Search";
 import ClearIcon from "@mui/icons-material/Clear";
 import RatingStars from "../utilities/RatingStars";
+import { formatEventDate } from "../../utils/dateUtils";
 import { ConcertEvent } from "../../types/events";
 import { SwipeableList } from "react-swipeable-list";
 import "react-swipeable-list/dist/styles.css";
@@ -92,7 +93,9 @@ const SearchComponent: React.FC<SearchComponentProps> = ({
         setSearchResults(sortedResults);
         setHasSearched(true);
       } catch (error) {
-        console.error("Error during search:", error);
+        if (process.env.NODE_ENV === "development") {
+          console.error("Error during search:", error);
+        }
         setSearchResults([]);
         setHasSearched(true);
       }
@@ -126,38 +129,6 @@ const SearchComponent: React.FC<SearchComponentProps> = ({
         console.log("Enter key pressed");
       }
       handleSearch();
-    }
-  };
-
-  const formatDate = (date: string | number[]) => {
-    try {
-      if (Array.isArray(date)) {
-        const [year, month, day] = date;
-        return new Date(year, month - 1, day).toLocaleDateString();
-      } else if (
-        typeof date === "string" &&
-        date.startsWith("[") &&
-        date.endsWith("]")
-      ) {
-        try {
-          const dateArray = JSON.parse(date);
-          if (Array.isArray(dateArray) && dateArray.length === 3) {
-            return new Date(
-              dateArray[0],
-              dateArray[1] - 1,
-              dateArray[2],
-            ).toLocaleDateString();
-          }
-        } catch (error) {
-          return "Invalid date format";
-        }
-      } else if (date) {
-        return new Date(date).toLocaleDateString();
-      } else {
-        return "No date";
-      }
-    } catch (error) {
-      return "Invalid date";
     }
   };
 
@@ -245,7 +216,7 @@ const SearchComponent: React.FC<SearchComponentProps> = ({
                           {result.place}
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
-                          {formatDate(result.date)}
+                          {formatEventDate(result.date)}
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
                           {result.comment}
@@ -276,7 +247,7 @@ const SearchComponent: React.FC<SearchComponentProps> = ({
                         {result.place}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        {formatDate(result.date)}
+                        {formatEventDate(result.date)}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
                         {result.comment}

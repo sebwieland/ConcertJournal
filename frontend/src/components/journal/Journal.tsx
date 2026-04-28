@@ -1,5 +1,5 @@
 import DefaultLayout from "../../theme/DefaultLayout";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import DataCollector from "./DataCollector";
 import DataTable from "./DataTable";
 import { ConfirmProvider } from "material-ui-confirm";
@@ -25,6 +25,7 @@ import {
 import useEvents from "../../hooks/useEvents";
 import { handleApiError } from "../../api/apiErrors";
 import LoadingIndicator from "../utilities/LoadingIndicator";
+import { formatEventDate } from "../../utils/dateUtils";
 
 interface SortOrder {
   column: string;
@@ -41,24 +42,9 @@ const Journal = () => {
 
   const { data, error, isLoading, refetch } = useEvents();
 
-  useEffect(() => {
-    // Component mounted
-    return () => {
-      // Component unmountedCreateNewEntryFormPage component mounted
-    };
-  }, []);
-
   const handleSortChange = (newSortOrder: SortOrder) => {
     setSortOrder(newSortOrder);
     localStorage.setItem("journalSortOrder", JSON.stringify(newSortOrder));
-  };
-
-  const onEdit = (id: React.Key) => {
-    // Handle edit logic here
-  };
-
-  const onDelete = (id: React.Key) => {
-    // Handle delete logic here
   };
 
   if (isLoading) {
@@ -122,48 +108,7 @@ const Journal = () => {
                                 variant="body2"
                                 color="text.secondary"
                               >
-                                {(() => {
-                                  try {
-                                    if (Array.isArray(item.date)) {
-                                      return new Date(
-                                        item.date[0],
-                                        item.date[1] - 1,
-                                        item.date[2],
-                                      ).toLocaleDateString();
-                                    } else if (
-                                      typeof item.date === "string" &&
-                                      item.date.startsWith("[") &&
-                                      item.date.endsWith("]")
-                                    ) {
-                                      // Handle string representation of array
-                                      try {
-                                        const dateArray = JSON.parse(item.date);
-                                        if (
-                                          Array.isArray(dateArray) &&
-                                          dateArray.length === 3
-                                        ) {
-                                          return new Date(
-                                            dateArray[0],
-                                            dateArray[1] - 1,
-                                            dateArray[2],
-                                          ).toLocaleDateString();
-                                        }
-                                      } catch (error) {
-                                        // Error handling without logging
-                                        return "Invalid date format";
-                                      }
-                                    } else if (item.date) {
-                                      return new Date(
-                                        item.date,
-                                      ).toLocaleDateString();
-                                    } else {
-                                      return "No date";
-                                    }
-                                  } catch (error) {
-                                    // Error handling without logging
-                                    return "Invalid date";
-                                  }
-                                })()}
+                                {formatEventDate(item.date)}
                               </Typography>
                               <Typography
                                 variant="body2"
@@ -195,37 +140,13 @@ const Journal = () => {
       <DefaultLayout>
         <ConfirmProvider>
           <DataCollector>
-            {({ data, onEdit, onDelete }) => {
-              // Final validation before passing to DataTable
-              const validatedData = data.map((item) => {
-                // Create a copy to avoid mutating the original
-                const validatedItem = { ...item };
-
-                // Ensure date is valid
-                if (
-                  validatedItem.date === undefined ||
-                  validatedItem.date === null
-                ) {
-                  // Use current date as default
-                  const today = new Date();
-                  validatedItem.date = [
-                    today.getFullYear(),
-                    today.getMonth() + 1,
-                    today.getDate(),
-                  ];
-                }
-
-                return validatedItem;
-              });
-
-              return (
-                <DataTable
-                  data={validatedData}
-                  onEdit={onEdit}
-                  onDelete={onDelete}
-                />
-              );
-            }}
+            {({ data, onEdit, onDelete }) => (
+              <DataTable
+                data={data}
+                onEdit={onEdit}
+                onDelete={onDelete}
+              />
+            )}
           </DataCollector>
         </ConfirmProvider>
       </DefaultLayout>

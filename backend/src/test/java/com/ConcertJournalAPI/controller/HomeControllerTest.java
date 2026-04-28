@@ -1,5 +1,8 @@
 package com.ConcertJournalAPI.controller;
 
+import com.ConcertJournalAPI.exception.ResourceNotFoundException;
+import com.ConcertJournalAPI.model.AppUser;
+import com.ConcertJournalAPI.repository.AppUserRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -11,6 +14,7 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -20,48 +24,63 @@ public class HomeControllerTest {
     private HomeController homeController;
 
     @Mock
+    private AppUserRepository appUserRepository;
+
+    @Mock
     private SecurityContext securityContext;
 
     @Test
-    public void testHomeAuthenticated() {
+    public void testCurrentUserAuthenticated() {
         // Arrange
-        String expectedUsername = "testUser";
-        Authentication authentication = new TestingAuthenticationToken(expectedUsername, null);
+        String expectedEmail = "testUser@example.com";
+        Authentication authentication = new TestingAuthenticationToken(expectedEmail, null);
         when(securityContext.getAuthentication()).thenReturn(authentication);
         SecurityContextHolder.setContext(securityContext);
 
+        AppUser expectedUser = new AppUser();
+        expectedUser.setEmail(expectedEmail);
+        when(appUserRepository.findByEmail(expectedEmail)).thenReturn(expectedUser);
+
         // Act
-        String result = homeController.home();
+        AppUser result = homeController.currentUser();
 
         // Assert
-        assertEquals("Welcome back, " + expectedUsername + "!", result);
+        assertEquals(expectedUser, result);
+        assertEquals(expectedEmail, result.getEmail());
     }
 
     @Test
-    public void testHomeNotAuthenticated() {
+    public void testCurrentUserNotAuthenticated() {
         // Arrange
         when(securityContext.getAuthentication()).thenReturn(null);
         SecurityContextHolder.setContext(securityContext);
 
-        // Act
-        String result = homeController.home();
-
-        // Assert
-        assertEquals("You are not logged in. Please go to /login to authenticate.", result);
+        // Act & Assert
+        assertThrows(ResourceNotFoundException.class, () -> homeController.currentUser());
     }
 
     @Test
-    public void testHomeAnonymousUser() {
+    public void testCurrentUserAnonymous() {
         // Arrange
         String anonymousUsername = "anonymousUser";
         Authentication authentication = new TestingAuthenticationToken(anonymousUsername, null);
         when(securityContext.getAuthentication()).thenReturn(authentication);
         SecurityContextHolder.setContext(securityContext);
 
-        // Act
-        String result = homeController.home();
+        // Act & Assert
+        assertThrows(ResourceNotFoundException.class, () -> homeController.currentUser());
+    }
 
-        // Assert
-        assertEquals("You are not logged in. Please go to /login to authenticate.", result);
+    @Test
+    public void testCurrentUserNotFoundInRepository() {
+        // Arrange
+        String email = "unknown@example.com";
+        Authentication authentication = new TestingAuthenticationToken(email, null);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+        when(appUserRepository.findByEmail(email)).thenReturn(null);
+
+        // Act & Assert
+        assertThrows(ResourceNotFoundException.class, () -> homeController.currentUser());
     }
 }

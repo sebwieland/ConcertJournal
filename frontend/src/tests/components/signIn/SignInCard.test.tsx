@@ -120,7 +120,7 @@ describe("SignInCard", () => {
     fireEvent.blur(passwordInput);
 
     expect(
-      screen.getByText("Password must be at least 6 characters long."),
+      screen.getByText("Password must be at least 8 characters long."),
     ).toBeInTheDocument();
   });
 

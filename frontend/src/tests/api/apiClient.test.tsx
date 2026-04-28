@@ -1,50 +1,25 @@
-import React from "react";
-import { renderHook } from "@testing-library/react";
-import useApiClient from "../../api/apiClient";
-import { ConfigContext } from "../../contexts/ConfigContext";
-import { vi, describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 
-// Mock axios
-vi.mock("axios", () => ({
-  default: {
-    create: vi.fn(() => ({
-      interceptors: {
-        request: { use: vi.fn() },
-        response: { use: vi.fn() },
-      },
-    })),
-  },
-}));
+// Use importOriginal to get the real module, not a mock from other tests
+vi.mock("../../api/apiClient", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../../api/apiClient")>();
+  return {
+    ...actual,
+  };
+});
 
-// Mock apiErrors
-vi.mock("../../api/apiErrors", () => ({
-  handleApiError: vi.fn(),
-}));
+import apiClient, { setAccessToken, getAccessToken } from "../../api/apiClient";
 
-describe("useApiClient", () => {
-  it("returns an apiClient object", () => {
-    const { result } = renderHook(() => useApiClient());
-
-    expect(result.current).toHaveProperty("apiClient");
+describe("apiClient", () => {
+  it("exports a default apiClient axios instance", () => {
+    expect(apiClient).toBeDefined();
   });
 
-  it("uses the backendURL from ConfigContext when available", () => {
-    const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <ConfigContext.Provider value={{ backendURL: "https://api.example.com" }}>
-        {children}
-      </ConfigContext.Provider>
-    );
+  it("manages access token via setAccessToken/getAccessToken", () => {
+    setAccessToken("test-token-123");
+    expect(getAccessToken()).toBe("test-token-123");
 
-    const { result } = renderHook(() => useApiClient(), { wrapper });
-
-    // Just verify the hook returns an object with apiClient property
-    expect(result.current).toHaveProperty("apiClient");
-  });
-
-  it("works without ConfigContext", () => {
-    const { result } = renderHook(() => useApiClient());
-
-    // Just verify the hook returns an object with apiClient property
-    expect(result.current).toHaveProperty("apiClient");
+    setAccessToken("");
+    expect(getAccessToken()).toBe("");
   });
 });

@@ -1,8 +1,15 @@
 package com.ConcertJournalAPI.configuration;
 
+import com.ConcertJournalAPI.filter.RateLimitFilter;
+import com.ConcertJournalAPI.model.AppUser;
+import com.ConcertJournalAPI.repository.AppUserRepository;
 import com.ConcertJournalAPI.security.AuthFailureHandler;
 import com.ConcertJournalAPI.security.AuthSuccessHandler;
 import com.ConcertJournalAPI.security.JwtAuthenticationFilter;
+import com.ConcertJournalAPI.security.JwtUtils;
+import com.ConcertJournalAPI.service.RefreshTokenService;
+import io.jsonwebtoken.Claims;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,156 +20,187 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
-import org.springframework.security.web.csrf.*;
-import org.springframework.security.web.util.matcher.RequestMatcher;
-import org.springframework.util.StringUtils;
-
-import java.util.function.Supplier;
+import org.springframework.security.web.authentication.logout.LogoutHandler;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 public class SecurityConfiguration {
 
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(SecurityConfiguration.class);
 
     @Autowired
-    private CorsConfig corsConfig;
+    private RateLimitFilter rateLimitFilter;
+
+    @Autowired
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    @Autowired
+    private RefreshTokenService refreshTokenService;
+
+    @Autowired
+    private AppUserRepository appUserRepository;
 
     @Value("${auth.cookie.secure}")
     private boolean secureCookie;
 
-    @Value("${auth.cookie.httpOnly}")
-    private boolean httpOnlyCookie;
-    
-    @Value("${server.servlet.session.cookie.same-site:None}")
+    @Value("${auth.cookie.same-site:Lax}")
     private String sameSiteCookie;
+
+    @Value("${auth.cookie.domain:}")
+    private String cookieDomain;
+
+    @Value("${security.headers.hsts.enabled:true}")
+    private boolean hstsEnabled;
+
+    @Value("${security.headers.csp.enabled:true}")
+    private boolean cspEnabled;
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
-        // Log cookie settings to help debug issues
-        log.info("Cookie settings - secure: {}, httpOnly: {}, sameSite: {}",
-                secureCookie, httpOnlyCookie, sameSiteCookie);
         return authConfig.getAuthenticationManager();
     }
 
     @Bean
-    public RequestMatcher csrfRequestMatcher() {
-        return request -> !(request.getMethod().equals(HttpMethod.GET.name()) ||
-                request.getMethod().equals(HttpMethod.HEAD.name()) ||
-                request.getMethod().equals(HttpMethod.OPTIONS.name()) ||
-                request.getMethod().equals(HttpMethod.TRACE.name()));
-    }
-
-    @Bean
     public AuthSuccessHandler authSuccessHandler() {
-        return new AuthSuccessHandler();
+        return new AuthSuccessHandler(refreshTokenService, appUserRepository);
     }
 
     @Bean
     CookieCsrfTokenRepository csrfTokenRepository() {
         CookieCsrfTokenRepository repository = new CookieCsrfTokenRepository();
         repository.setCookieCustomizer(cookieBuilder -> {
-            cookieBuilder.sameSite(sameSiteCookie); // Use configured sameSite value
-            
-            // Ensure secure=true when SameSite=None (required by browsers)
+            cookieBuilder.sameSite(sameSiteCookie);
             boolean effectiveSecure = secureCookie;
             if ("None".equals(sameSiteCookie)) {
                 effectiveSecure = true;
                 if (!secureCookie) {
-                    log.warn("Forcing secure=true because SameSite=None requires it. Original setting was secure=false.");
+                    log.warn("Forcing secure=true because SameSite=None requires it.");
                 }
             }
-            
             cookieBuilder.secure(effectiveSecure);
-            cookieBuilder.domain("concertjournal.de"); // Set domain to parent domain
+            if (cookieDomain != null && !cookieDomain.isEmpty()) {
+                cookieBuilder.domain(cookieDomain);
+            }
         });
-        repository.setCookieHttpOnly(httpOnlyCookie);
+        // CSRF cookie must NOT be HttpOnly -- JavaScript needs to read it for the X-XSRF-TOKEN header
+        repository.setCookieHttpOnly(false);
         return repository;
     }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // Enable CORS
-                .cors(cors -> cors.configurationSource(corsConfig.corsConfigurationSource()))
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .cors(cors -> cors.disable())
 
-                // Enable CSRF protection
                 .csrf((csrf) -> csrf
                         .csrfTokenRepository(csrfTokenRepository())
-                        .csrfTokenRequestHandler(new CookieCsrfTokenRequestHandler())
+                        .csrfTokenRequestHandler(new SpaCsrfTokenRequestHandler())
                 )
 
+                .headers(headers -> headers
+                        .frameOptions(frameOptions -> frameOptions.sameOrigin()))
+                .headers(headers -> {
+                    if (hstsEnabled) {
+                        headers.httpStrictTransportSecurity(hsts -> hsts
+                                .includeSubDomains(true)
+                                .preload(true)
+                                .maxAgeInSeconds(31536000));
+                    }
+                })
+                .headers(headers -> {
+                    if (cspEnabled) {
+                        headers.contentSecurityPolicy(csp -> csp
+                                .policyDirectives("default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'self';"));
+                    }
+                })
+                .headers(headers -> headers
+                        .referrerPolicy(org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
+                .headers(headers -> headers
+                        .addHeaderWriter(new org.springframework.security.web.header.writers.PermissionsPolicyHeaderWriter(
+                                "geolocation=(), microphone=(), camera=(), payment=(), usb=(), magnetometer=(), gyroscope=()")))
+
                 .logout(logout -> logout
-                        .logoutUrl("/logout")
+                        .logoutUrl("/api/logout")
+                        .addLogoutHandler(refreshTokenLogoutHandler())
                         .logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler(HttpStatus.OK))
                         .invalidateHttpSession(true)
-                        .deleteCookies("JSESSIONID")
+                        .deleteCookies("refreshToken")
                 )
 
                 .formLogin(form -> form
                         .usernameParameter("email")
                         .successHandler(authSuccessHandler())
                         .failureHandler(new AuthFailureHandler())
-                        .loginPage("/login")
+                        .loginProcessingUrl("/api/login")
+                        .loginPage("/sign-in")
                 )
 
-                // Authorize requests
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/error", "/auth/**", "/register", "/login", "/actuator/prometheus", "/get-xsrf-cookie").permitAll()
+                        .requestMatchers("/", "/index.html", "/assets/**", "*.js", "*.css", "*.ico", "*.png", "*.svg", "*.woff", "*.woff2").permitAll()
+                        .requestMatchers("/error", "/api/register", "/api/login", "/api/logout", "/api/refresh-token", "/api/get-xsrf-cookie").permitAll()
+                        .requestMatchers("/actuator/health").permitAll()
+                        .requestMatchers("/actuator/**").authenticated()
+                        .requestMatchers("/api/**").authenticated()
                         .requestMatchers(HttpMethod.OPTIONS).permitAll()
-                        .anyRequest().authenticated()
+                        .anyRequest().permitAll()
                 )
-                // Use HTTP Basic Authentication (for simplicity)
-                //.httpBasic(withDefaults())
 
                 .exceptionHandling(exceptionHandling -> exceptionHandling
-                        .authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/login"))
+                        .defaultAuthenticationEntryPointFor(
+                                (request, response, authException) -> response.sendError(HttpStatus.UNAUTHORIZED.value()),
+                                request -> request.getRequestURI().startsWith("/api/")
+                        )
+                        .defaultAuthenticationEntryPointFor(
+                                new LoginUrlAuthenticationEntryPoint("/sign-in"),
+                                request -> !request.getRequestURI().startsWith("/api/")
+                        )
                 )
 
-                .addFilterBefore(new JwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
-}
 
-
-final class SpaCsrfTokenRequestHandler extends CsrfTokenRequestAttributeHandler {
-    private final CsrfTokenRequestHandler delegate = new XorCsrfTokenRequestAttributeHandler();
-
-    @Override
-    public void handle(HttpServletRequest request, HttpServletResponse response, Supplier<CsrfToken> csrfToken) {
-        /*
-         * Always use XorCsrfTokenRequestAttributeHandler to provide BREACH protection of
-         * the CsrfToken when it is rendered in the response body.
-         */
-        this.delegate.handle(request, response, csrfToken);
-    }
-
-    @Override
-    public String resolveCsrfTokenValue(HttpServletRequest request, CsrfToken csrfToken) {
-        /*
-         * If the request contains a request header, use CsrfTokenRequestAttributeHandler
-         * to resolve the CsrfToken. This applies when a single-page application includes
-         * the header value automatically, which was obtained via a cookie containing the
-         * raw CsrfToken.
-         */
-        if (StringUtils.hasText(request.getHeader(csrfToken.getHeaderName()))) {
-            return super.resolveCsrfTokenValue(request, csrfToken);
-        }
-        /*
-         * In all other cases (e.g. if the request contains a request parameter), use
-         * XorCsrfTokenRequestAttributeHandler to resolve the CsrfToken. This applies
-         * when a server-side rendered form includes the _csrf request parameter as a
-         * hidden input.
-         */
-        return this.delegate.resolveCsrfTokenValue(request, csrfToken);
+    /**
+     * Custom logout handler that revokes all refresh tokens for the user.
+     * Extracts user identity from the refresh token cookie (works in stateless mode).
+     */
+    @Bean
+    public LogoutHandler refreshTokenLogoutHandler() {
+        return (HttpServletRequest request, HttpServletResponse response, Authentication authentication) -> {
+            // Try to identify user from refresh token cookie
+            Cookie[] cookies = request.getCookies();
+            if (cookies != null) {
+                for (Cookie cookie : cookies) {
+                    if ("refreshToken".equals(cookie.getName())) {
+                        try {
+                            Claims claims = JwtUtils.parseToken(cookie.getValue());
+                            String email = claims.getSubject();
+                            AppUser user = appUserRepository.findByEmail(email);
+                            if (user != null) {
+                                refreshTokenService.revokeAllForUser(user);
+                                log.info("Revoked all refresh tokens for user {} on logout", email);
+                            }
+                        } catch (Exception e) {
+                            log.debug("Could not parse refresh token on logout", e);
+                        }
+                        break;
+                    }
+                }
+            }
+        };
     }
 }
-
-

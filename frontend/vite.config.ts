@@ -12,11 +12,7 @@ const dynamicRoutes = [
     // Add other paths here
 ]
 
-// Get environment variables with defaults
 const isDev = process.env.NODE_ENV === 'development';
-const isLocal = process.env.MODE === 'dev-local';
-const hmrHost = process.env.HMR_HOST || (isLocal ? 'localhost' : '0.0.0.0');
-const hmrPort = parseInt(process.env.HMR_PORT || '24678', 10);
 
 export default defineConfig({
     base: '/',
@@ -40,23 +36,16 @@ export default defineConfig({
             exclude: ['/secret-page']
         })
     ],
-    // Essential server configuration for HMR
     server: {
         port: 3000,
-        host: '0.0.0.0',
         open: false,
-        hmr: {
-            // Essential HMR settings
-            port: hmrPort,
-            host: hmrHost,
-            clientPort: isLocal ? undefined : hmrPort
+        proxy: {
+            '/api': {
+                target: 'http://127.0.0.1:8080',
+                changeOrigin: true,
+                secure: false
+            }
         },
-        watch: {
-            // Use polling only in Docker, native file system events for local development
-            usePolling: !isLocal,
-            interval: 200,
-            binaryInterval: 200  // Interval for binary files
-        }
     },
     // Basic dependency optimization
     optimizeDeps: {

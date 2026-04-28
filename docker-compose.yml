@@ -1,27 +1,24 @@
-version: '3.8'
-
-# Concert Journal Docker Compose Configuration
+# Concert Journal - Development
 #
-# For local frontend development (recommended):
-#   docker-compose up backend mysql
+# Hybrid mode (recommended):
+#   docker-compose up -d mysql
+#   cd backend && JWT_SECRET='dev-secret-change-in-production!' ./mvnw spring-boot:run -Dspring.profiles.active=dev
+#   cd frontend && npm run start:local
 #
-# For full Docker development:
-#   docker-compose up
-#
-# For production:
-#   NODE_ENV=production docker-compose up
+# Docker backend mode:
+#   docker-compose --profile dev up -d
+#   cd frontend && npm run start:local
 
 services:
-  # MySQL Database
   mysql:
     image: mysql:8.0
     container_name: concert-journal-mysql
     restart: unless-stopped
     environment:
       MYSQL_DATABASE: concertjournal
-      MYSQL_USER: user
-      MYSQL_PASSWORD: password
-      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_USER: ${DATABASE_USER:-user}
+      MYSQL_PASSWORD: ${DATABASE_PASSWORD:-password}
+      MYSQL_ROOT_PASSWORD: ${DATABASE_ROOT_PASSWORD:-rootpassword}
     ports:
       - "3306:3306"
     volumes:
@@ -29,36 +26,33 @@ services:
     networks:
       - concert-journal-network
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "user", "-ppassword"]
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u $${MYSQL_USER} -p$${MYSQL_PASSWORD}"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  # Backend API
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-      target: development
+    image: maven:3.9-eclipse-temurin-21-alpine
     container_name: concert-journal-backend
+    working_dir: /app
     restart: unless-stopped
+    profiles: ["dev"]
     depends_on:
       mysql:
         condition: service_healthy
     environment:
       SPRING_PROFILES_ACTIVE: dev
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/concertjournal?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
-      SPRING_DATASOURCE_USERNAME: user
-      SPRING_DATASOURCE_PASSWORD: password
+      SPRING_DATASOURCE_USERNAME: ${DATABASE_USER:-user}
+      SPRING_DATASOURCE_PASSWORD: ${DATABASE_PASSWORD:-password}
       SERVER_ADDRESS: 0.0.0.0
-      JWT_SECRET: ${JWT_SECRET}
-      # DevTools settings
-      SPRING_DEVTOOLS_RESTART_ENABLED: "true"
-      SPRING_DEVTOOLS_LIVERELOAD_ENABLED: "true"
-      SPRING_DEVTOOLS_REMOTE_SECRET: "mysecret"
+      JWT_SECRET: ${JWT_SECRET:-dev-secret-change-in-production!}
+      SPRING_FLYWAY_ENABLED: "true"
+      SPRING_FLYWAY_LOCATIONS: "classpath:db/migration"
+      SPRING_FLYWAY_BASELINE_ON_MIGRATE: "true"
+      SPRING_FLYWAY_VALIDATE_ON_MIGRATE: "true"
     ports:
       - "8080:8080"
-      - "35729:35729" # LiveReload port
     volumes:
       - ./backend:/app
       - ./backend/src:/app/src:delegated
@@ -66,44 +60,7 @@ services:
       - maven-repo:/root/.m2
     networks:
       - concert-journal-network
-    # Use Maven to run the application in development mode
-    command: "./mvnw spring-boot:run -Dspring-boot.run.jvmArguments='-Dspring.devtools.restart.enabled=true -Dspring.devtools.livereload.enabled=true'"
-
-  # Frontend Application
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-      target: development
-    container_name: concert-journal-frontend
-    restart: unless-stopped
-    depends_on:
-      - backend
-    environment:
-      # Essential environment variables for development
-      NODE_ENV: development
-      # API configuration
-      VITE_API_URL: http://backend:8080
-      # HMR settings
-      VITE_HMR: true
-      VITE_FAST_REFRESH: true
-      # Basic resource allocation
-      NODE_OPTIONS: "--max-old-space-size=2048"
-      # HMR host/port configuration
-      HMR_HOST: 0.0.0.0
-      HMR_PORT: 24678
-    ports:
-      - "3000:3000"
-      - "24678:24678" # Vite HMR websocket port
-    volumes:
-      # Mount the entire frontend directory in development mode
-      - ./frontend:/app:delegated
-      # Use named volumes for node_modules to avoid overwriting with host content
-      - frontend_node_modules:/app/node_modules
-    networks:
-      - concert-journal-network
-    # Explicitly define the command for development
-    command: npm run start -- --host 0.0.0.0 --port 3000
+    command: "./mvnw spring-boot:run"
 
 networks:
   concert-journal-network:
@@ -112,5 +69,3 @@ networks:
 volumes:
   mysql-data:
   maven-repo:
-  # Frontend volumes
-  frontend_node_modules:

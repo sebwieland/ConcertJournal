@@ -84,8 +84,9 @@ class BandEventControllerTest {
 
     @Test
     void testDeleteEvent() {
-        bandEventController.deleteEvent(1L);
+        var response = bandEventController.deleteEvent(1L);
 
+        assertEquals(204, response.getStatusCode().value());
         verify(bandEventService).deleteEventById(1L);
     }
 

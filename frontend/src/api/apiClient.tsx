@@ -1,56 +1,124 @@
-import axios from "axios";
-import { useContext, useMemo } from "react";
-import { ConfigContext } from "../contexts/ConfigContext";
-import { handleApiError } from "./apiErrors";
+import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 
-const useApiClient = () => {
-  const config = useContext(ConfigContext);
-  const API_URL = config?.backendURL ?? "http://localhost:8080";
+// Module-level access token (accessible by interceptors outside React)
+let accessToken = "";
 
-  if (process.env.NODE_ENV === "development") {
-    console.log("API Client - Using backend URL:", API_URL);
-    console.log("API Client - Config context:", config);
-  }
+export function setAccessToken(token: string): void {
+  accessToken = token;
+}
 
-  return useMemo(() => {
-    if (process.env.NODE_ENV === "development") {
-      console.log("Creating API client with URL:", API_URL);
+export function getAccessToken(): string {
+  return accessToken;
+}
+
+function getCsrfToken(): string {
+  const match = document.cookie.match(/XSRF-TOKEN=([^;]*)/);
+  return match ? match[1] : "";
+}
+
+// Singleton Axios instance
+const apiClient = axios.create({
+  baseURL: "/api",
+  withCredentials: true,
+  timeout: 10000,
+});
+
+// 401 retry queue
+let isRefreshing = false;
+let failedQueue: Array<{
+  resolve: (config: InternalAxiosRequestConfig) => void;
+  reject: (error: unknown) => void;
+  config: InternalAxiosRequestConfig;
+}> = [];
+
+// Callback to notify AuthContext of logout (set by AuthContext on mount)
+let onLogout: (() => void) | null = null;
+
+export function setOnLogout(callback: () => void): void {
+  onLogout = callback;
+}
+
+function processQueue(error: unknown, newToken: string | null): void {
+  failedQueue.forEach(({ resolve, reject, config }) => {
+    if (newToken) {
+      config.headers["Authorization"] = `Bearer ${newToken}`;
+      resolve(config);
+    } else {
+      reject(error);
+    }
+  });
+  failedQueue = [];
+}
+
+// Request interceptor: attach CSRF token and access token
+apiClient.interceptors.request.use(
+  (config) => {
+    const csrf = getCsrfToken();
+    if (csrf) {
+      config.headers["X-XSRF-TOKEN"] = csrf;
+    }
+    if (accessToken && !config.headers["Authorization"]) {
+      config.headers["Authorization"] = `Bearer ${accessToken}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  },
+);
+
+// Response interceptor: handle 401 with automatic token refresh
+apiClient.interceptors.response.use(
+  (response) => response,
+  async (error: AxiosError) => {
+    const originalRequest = error.config;
+
+    // Only intercept 401s, and not for auth endpoints themselves
+    if (
+      error.response?.status !== 401 ||
+      !originalRequest ||
+      originalRequest.url === "/refresh-token" ||
+      originalRequest.url === "/login" ||
+      originalRequest.url === "/register"
+    ) {
+      return Promise.reject(error);
     }
 
-    const apiClient = axios.create({
-      baseURL: API_URL,
-      withCredentials: true,
-      timeout: 10000, // 10 seconds timeout
-    });
+    // If already refreshing, queue the request
+    if (isRefreshing) {
+      return new Promise((resolve, reject) => {
+        failedQueue.push({
+          resolve: (config) => resolve(apiClient(config)),
+          reject,
+          config: originalRequest,
+        });
+      });
+    }
 
-    // Request interceptor
-    apiClient.interceptors.request.use(
-      (config) => {
-        // Development logging removed
-        return config;
-      },
-      (error) => {
-        return Promise.reject(handleApiError(error));
-      },
-    );
+    isRefreshing = true;
 
-    // Response interceptor
-    apiClient.interceptors.response.use(
-      (response) => {
-        // Development logging removed
-        return response;
-      },
-      (error) => {
-        const processedError = handleApiError(error);
+    try {
+      const response = await apiClient.post("/refresh-token", {});
+      const newToken = response.data.accessToken;
+      accessToken = newToken;
 
-        // Development logging removed
+      // Retry all queued requests
+      processQueue(null, newToken);
 
-        return Promise.reject(processedError);
-      },
-    );
+      // Retry the original request
+      originalRequest.headers["Authorization"] = `Bearer ${newToken}`;
+      return apiClient(originalRequest);
+    } catch (refreshError) {
+      processQueue(refreshError, null);
+      accessToken = "";
+      if (onLogout) {
+        onLogout();
+      }
+      return Promise.reject(refreshError);
+    } finally {
+      isRefreshing = false;
+    }
+  },
+);
 
-    return { apiClient };
-  }, [API_URL]);
-};
-
-export default useApiClient;
+export default apiClient;

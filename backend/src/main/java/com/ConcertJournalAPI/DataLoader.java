@@ -10,14 +10,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.env.Environment;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.IntStream;
 
 @Component
+@Profile("dev")
 public class DataLoader implements CommandLineRunner {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DataLoader.class);
@@ -44,14 +47,15 @@ public class DataLoader implements CommandLineRunner {
         if (!appUserRepository.existsAppUserByEmail("admin@example.com")) {
             // Create default user
             AppUser user = new AppUser();
-            user.setPassword(passwordEncoder.encode("password"));
+            String generatedPassword = UUID.randomUUID().toString().substring(0, 12);
+            user.setPassword(passwordEncoder.encode(generatedPassword));
             user.setRole("ADMIN");
             user.setEmail("admin@example.com");
             appUserRepository.save(user);
 
-            LOGGER.info("Default admin user created with username 'admin@example.com' and password 'password'");
+            LOGGER.info("Default admin user created with email 'admin@example.com' and password '{}'", generatedPassword);
         } else {
-            LOGGER.info("Default admin user already exists with username 'admin@example.com' and password 'password'");
+            LOGGER.info("Default admin user already exists");
         }
 
         // Generate test data for both H2 and MySQL databases when no events exist

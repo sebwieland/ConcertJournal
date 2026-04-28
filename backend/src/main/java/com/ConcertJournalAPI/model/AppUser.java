@@ -28,6 +28,7 @@ public class AppUser {
     @Email(message = "Invalid email.")
     private String email;
     @NotBlank(message = "Password is required.")
+    @JsonIgnore
     private String password;
     private String firstName;
     private String lastName;
