@@ -79,6 +79,21 @@ public class SecurityConfigurationTest {
     }
 
     @Test
+    @WithAnonymousUser
+    public void testRefreshTokenEndpointPassesAuthorizationAnonymously() throws Exception {
+        // Regression: E2E smoke found the post-login bounce to /sign-in —
+        // the SPA silently authenticated via the cookie must be able to call
+        // POST /api/refresh-token without a Bearer header. Authorisation must
+        // let it through (invalid/absent cookie → controller 400, security
+        // entrypoint 401 would mean the endpoint is wrongly guarded);
+        // CSRF still applies via the filtered chain. The MVC slice only
+        // registers BandEventController, so reaching "no handler"/404 proves
+        // authorization passed and the security entrypoint did not fire.
+        mockMvc.perform(post("/api/refresh-token").with(csrf()))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
     public void testCsrfProtection() throws Exception {
         mockMvc.perform(post("/api/allEvents")
                         .with(csrf().useInvalidToken()))

@@ -96,11 +96,12 @@ public class SecurityController {
         // Set the CSRF token as a cookie
         Cookie csrfCookie = new Cookie("XSRF-TOKEN", token.getToken());
         csrfCookie.setHttpOnly(false); // Required for JavaScript to access the cookie
-        
-        // Always use secure=true for CSRF token when SameSite=None
-        boolean effectiveSecure = true; // Default to true for CSRF token
+
+        // SameSite=None requires Secure across all browsers
+        boolean effectiveSecure = secureCookie;
         if ("None".equals(sameSiteCookie) && !effectiveSecure) {
-            log.warn("Forcing secure=true for XSRF-TOKEN cookie because SameSite=None requires it.");
+            effectiveSecure = true;
+            log.warn("Forcing secure=true for XSRF-TOKEN cookie because SameSite=None requires it. Original setting was secure=false.");
         }
         
         csrfCookie.setSecure(effectiveSecure);

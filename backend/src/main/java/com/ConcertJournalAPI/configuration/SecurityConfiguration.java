@@ -192,7 +192,7 @@ public class SecurityConfiguration {
                                 return path.length() > 1 && segments.length == 2 && !segments[1].isEmpty();
                             }
                         }).permitAll()
-                        .requestMatchers("/error", "/register", "/login", "/logout", "/actuator/health", "/actuator/prometheus", "/api/get-xsrf-cookie").permitAll()
+                        .requestMatchers("/error", "/register", "/login", "/logout", "/actuator/health", "/actuator/prometheus", "/api/get-xsrf-cookie", "/api/refresh-token").permitAll()
                         .requestMatchers("/api/**").authenticated()
                         .requestMatchers(HttpMethod.OPTIONS).permitAll()
                         .anyRequest().denyAll()
