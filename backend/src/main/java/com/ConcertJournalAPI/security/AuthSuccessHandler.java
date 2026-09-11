@@ -40,10 +40,11 @@ public class AuthSuccessHandler extends SavedRequestAwareAuthenticationSuccessHa
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         LOGGER.info("UserDetails: {}", userDetails);
 
-        // Store refresh token in cookie
+        // Store refresh token in cookie — httpOnly per config: the SPA must never
+        // need to read this credential (XSS exfiltration barrier, risk §11/R2)
         Cookie cookie = new Cookie("refreshToken", refreshToken);
         cookie.setSecure(secureCookie);
-        cookie.setHttpOnly(false);
+        cookie.setHttpOnly(httpOnlyCookie);
         cookie.setMaxAge(86400 * 30); // 30 days
         cookie.setAttribute("SameSite", "Lax");
         response.addCookie(cookie);
