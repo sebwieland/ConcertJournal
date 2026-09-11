@@ -27,6 +27,9 @@ public class AppUser {
     @NotBlank(message = "Email is required.")
     @Email(message = "Invalid email.")
     private String email;
+
+    /** Never serialised — credentials must not leave the server (risk R1). */
+    @JsonIgnore
     @NotBlank(message = "Password is required.")
     private String password;
     private String firstName;
