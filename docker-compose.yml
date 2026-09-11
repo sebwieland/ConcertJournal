@@ -82,6 +82,14 @@ services:
       SPRING_DATASOURCE_USERNAME: ${DATABASE_USER:-user}
       SPRING_DATASOURCE_PASSWORD: ${DATABASE_PASSWORD:-password}
       JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
+      # Cookie scope: the prod profile defaults to concertjournal.de + Secure.
+      # Defaults keep cookies host-only so the app also works over plain
+      # http://localhost:8080 (browsers silently drop a wrong-domain cookie,
+      # which then 403s every POST via CSRF). For the real HTTPS deployment,
+      # set AUTH_COOKIE_DOMAIN=concertjournal.de in your .env / environment.
+      AUTH_COOKIE_DOMAIN: ${AUTH_COOKIE_DOMAIN:-}
+      AUTH_COOKIE_SECURE: ${AUTH_COOKIE_SECURE:-false}
+      SERVER_SERVLET_SESSION_COOKIE_SECURE: ${SERVER_SERVLET_SESSION_COOKIE_SECURE:-false}
     ports:
       - "8080:8080"
     networks:
