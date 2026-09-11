@@ -4,6 +4,24 @@ import { handleApiError } from "./apiErrors";
 
 const useApiClient = () => {
   return useMemo(() => {
+    // Standard SPA double-submit: read the CSRF cookie and attach it as header
+    const attachCsrfHeader = (config: import("axios").InternalAxiosRequestConfig) => {
+      const method = (config.method || "").toLowerCase();
+      if (["post", "put", "patch", "delete"].includes(method)) {
+        const match = document.cookie.match(/XSRF-TOKEN=([^;]*)/);
+        if (match) {
+          config.headers["X-XSRF-TOKEN"] = match[1];
+        }
+      }
+      return config;
+    };
+
+    const commonRequestInterceptor = (client: import("axios").AxiosInstance) => {
+      client.interceptors.request.use(attachCsrfHeader, (error) => {
+        return Promise.reject(handleApiError(error));
+      });
+    };
+
     const apiClient = axios.create({
       baseURL: "/api",
       withCredentials: true,
@@ -15,6 +33,9 @@ const useApiClient = () => {
       withCredentials: true,
       timeout: 10000,
     });
+
+    commonRequestInterceptor(apiClient);
+    commonRequestInterceptor(rootClient);
 
     apiClient.interceptors.request.use(
       (config) => {
