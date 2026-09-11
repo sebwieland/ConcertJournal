@@ -1,10 +1,8 @@
-import React from "react";
 import { renderHook, act, waitFor } from "@testing-library/react";
 import { vi, describe, it, expect, beforeEach } from "vitest";
 import { AllProviders } from "../utils/test-utils";
 import useEvents from "../../hooks/useEvents";
 import { mockEventData } from "../utils/test-fixtures";
-import { ApiErrorType } from "../../types/api";
 
 // Mock the apiEvents module
 const mockGetAllEvents = vi.fn();

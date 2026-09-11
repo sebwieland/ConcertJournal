@@ -9,10 +9,7 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 
 import { styled } from "@mui/material/styles";
-import { useNavigate } from "react-router-dom";
 import { useLayoutEffect } from "react";
-import useAuth from "../../hooks/useAuth";
-import { Alert } from "@mui/material";
 
 interface SignUpCardProps {
   username: string;
@@ -61,54 +58,11 @@ export default function SignUpCard({
   handleSignUp,
   isLoading,
 }: SignUpCardProps) {
-  const navigate = useNavigate();
-
   useLayoutEffect(() => {
     if (isLoading && process.env.NODE_ENV === "development") {
       console.log("Loading...");
     }
   }, [isLoading]);
-
-  const validateInputs = () => {
-    let isValid = true;
-
-    if (!username || username.length < 3) {
-      if (process.env.NODE_ENV === "development") {
-        console.error("Username must be at least 3 characters long.");
-      }
-      isValid = false;
-    }
-
-    if (!password || password.length < 6) {
-      if (process.env.NODE_ENV === "development") {
-        console.error("Password must be at least 6 characters long.");
-      }
-      isValid = false;
-    }
-
-    if (!email || !/\S+@\S+\.\S+/.test(email)) {
-      if (process.env.NODE_ENV === "development") {
-        console.error("Please enter a valid email address.");
-      }
-      isValid = false;
-    }
-
-    if (!firstName || firstName.length < 1) {
-      if (process.env.NODE_ENV === "development") {
-        console.error("Please enter your first name.");
-      }
-      isValid = false;
-    }
-
-    if (!lastName || lastName.length < 1) {
-      if (process.env.NODE_ENV === "development") {
-        console.error("Please enter your last name.");
-      }
-      isValid = false;
-    }
-
-    return isValid;
-  };
 
   return (
     <Card variant="outlined">

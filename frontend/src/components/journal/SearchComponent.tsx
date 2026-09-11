@@ -9,7 +9,6 @@ import {
   Typography,
   InputAdornment,
   IconButton,
-  Stack,
   useTheme,
   useMediaQuery,
 } from "@mui/material";

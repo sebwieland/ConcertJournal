@@ -1,11 +1,3 @@
-import React from "react";
-import {
-  render,
-  screen,
-  act,
-  waitFor,
-  fireEvent,
-} from "@testing-library/react";
 import {
   vi,
   describe,
@@ -13,7 +5,6 @@ import {
   expect,
   beforeEach,
   beforeAll,
-  afterEach,
   afterAll,
 } from "vitest";
 
@@ -147,8 +138,7 @@ const createMockAuthContext = () => {
 };
 
 describe("AuthContext Direct Tests", () => {
-  const { cookieStore, restoreOriginalCookie, clearCookies } =
-    setupCookieMock();
+  const { restoreOriginalCookie, clearCookies } = setupCookieMock();
 
   beforeAll(() => {
     // Mock console methods to prevent noise in test output

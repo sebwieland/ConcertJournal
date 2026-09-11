@@ -4,8 +4,6 @@ import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { AuthProvider } from "./contexts/AuthContext";
 import LoadingIndicator from "./components/utilities/LoadingIndicator";
-import DefaultLayout from "./theme/DefaultLayout";
-import { Alert } from "@mui/material";
 
 const LandingPage = lazy(() => import("./components/LandingPage"));
 const NewDataEntryFormPage = lazy(
@@ -19,15 +17,7 @@ const SignUpSide = lazy(() => import("./components/signIn/SignUpSide"));
 const SignInSide = lazy(() => import("./components/signIn/SignInSide"));
 const AuthenticatedPage = lazy(() => import("./components/AuthenticatedPage"));
 
-class App extends React.Component<{}, {}> {
-  componentDidMount() {
-    // Development logging removed
-  }
-
-  componentWillUnmount() {
-    // Development logging removed
-  }
-
+class App extends React.Component<Record<string, never>> {
   render() {
     return (
       <AuthProvider>

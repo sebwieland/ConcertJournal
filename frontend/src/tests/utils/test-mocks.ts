@@ -1,12 +1,12 @@
-import { vi } from 'vitest';
-import { mockApiResponses } from './test-fixtures';
+import { vi } from "vitest";
+import { mockApiResponses } from "./test-fixtures";
 
 // Mock for react-router-dom
 export const mockNavigate = vi.fn();
 export const mockUseNavigate = () => mockNavigate;
 
 export const mockReactRouterDom = async () => {
-  const actual = await vi.importActual('react-router-dom');
+  const actual = await vi.importActual("react-router-dom");
   return {
     ...actual,
     useNavigate: mockUseNavigate,
@@ -25,22 +25,22 @@ export const mockApiClient = {
     get: mockApiClientGet,
     put: mockApiClientPut,
     delete: mockApiClientDelete,
-  }
+  },
 };
 
 // Mock for musicBrainzApi
-export const mockMbApiSearch = vi.fn().mockImplementation((type, options) => {
-  if (type === 'artist') {
+export const mockMbApiSearch = vi.fn().mockImplementation((type) => {
+  if (type === "artist") {
     return Promise.resolve({
       artists: [
         {
-          name: 'Test Artist',
-          type: 'Group',
-          country: 'US',
-          'life-span': { begin: '2000' },
-          tags: [{ count: 10, name: 'rock' }]
-        }
-      ]
+          name: "Test Artist",
+          type: "Group",
+          country: "US",
+          "life-span": { begin: "2000" },
+          tags: [{ count: 10, name: "rock" }],
+        },
+      ],
     });
   }
   return Promise.resolve({ artists: [] });
@@ -48,15 +48,15 @@ export const mockMbApiSearch = vi.fn().mockImplementation((type, options) => {
 
 export const mockMusicBrainzApi = {
   mbApi: {
-    search: mockMbApiSearch
-  }
+    search: mockMbApiSearch,
+  },
 };
 
 // Mock for apiErrors
 export const mockHandleApiError = vi.fn((error) => {
   return {
-    type: 'UNKNOWN_ERROR',
-    message: 'Mocked error',
+    type: "UNKNOWN_ERROR",
+    message: "Mocked error",
     originalError: error,
   };
 });
@@ -65,36 +65,36 @@ export const mockHandleApiError = vi.fn((error) => {
 export const resetAllMocks = () => {
   // Reset react-router-dom mocks
   mockNavigate.mockReset();
-  
+
   // Reset apiClient mocks
   mockApiClientPost.mockReset();
   mockApiClientGet.mockReset();
   mockApiClientPut.mockReset();
   mockApiClientDelete.mockReset();
-  
+
   // Reset musicBrainzApi mocks
-  mockMbApiSearch.mockReset().mockImplementation((type, options) => {
-    if (type === 'artist') {
+  mockMbApiSearch.mockReset().mockImplementation((type) => {
+    if (type === "artist") {
       return Promise.resolve({
         artists: [
           {
-            name: 'Test Artist',
-            type: 'Group',
-            country: 'US',
-            'life-span': { begin: '2000' },
-            tags: [{ count: 10, name: 'rock' }]
-          }
-        ]
+            name: "Test Artist",
+            type: "Group",
+            country: "US",
+            "life-span": { begin: "2000" },
+            tags: [{ count: 10, name: "rock" }],
+          },
+        ],
       });
     }
     return Promise.resolve({ artists: [] });
   });
-  
+
   // Reset apiErrors mocks
   mockHandleApiError.mockReset().mockImplementation((error) => {
     return {
-      type: 'UNKNOWN_ERROR',
-      message: 'Mocked error',
+      type: "UNKNOWN_ERROR",
+      message: "Mocked error",
       originalError: error,
     };
   });
@@ -105,8 +105,8 @@ export const setupSuccessfulLoginMock = () => {
   mockApiClientPost.mockResolvedValueOnce({
     status: 200,
     data: {
-      accessToken: 'new-access-token',
-      refreshToken: 'new-refresh-token',
+      accessToken: "new-access-token",
+      refreshToken: "new-refresh-token",
     },
   });
 };
@@ -114,12 +114,12 @@ export const setupSuccessfulLoginMock = () => {
 export const setupFailedLoginMock = () => {
   mockApiClientPost.mockResolvedValueOnce({
     status: 401,
-    statusText: 'Unauthorized',
+    statusText: "Unauthorized",
   });
 };
 
 export const setupNetworkErrorMock = () => {
-  const networkError = new Error('Network Error');
+  const networkError = new Error("Network Error");
   mockApiClientPost.mockRejectedValueOnce(networkError);
   return networkError;
 };
@@ -128,8 +128,8 @@ export const setupSuccessfulRegisterMock = () => {
   mockApiClientPost.mockResolvedValueOnce({
     status: 200,
     data: {
-      accessToken: 'new-access-token',
-      refreshToken: 'new-refresh-token',
+      accessToken: "new-access-token",
+      refreshToken: "new-refresh-token",
     },
   });
 };
@@ -138,7 +138,7 @@ export const setupFailedRegisterMock = () => {
   mockApiClientPost.mockResolvedValueOnce({
     status: 400,
     data: {
-      message: 'Email already in use',
+      message: "Email already in use",
     },
   });
 };
@@ -153,6 +153,6 @@ export const setupSuccessfulEventsFetchMock = () => {
 export const setupFailedEventsFetchMock = () => {
   mockApiClientGet.mockResolvedValueOnce({
     status: 500,
-    statusText: 'Internal Server Error',
+    statusText: "Internal Server Error",
   });
 };

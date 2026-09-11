@@ -48,7 +48,7 @@ export const StyledSwipeableListItem = styled(SwipeableListItem)(() => ({
   position: "relative",
 }));
 
-export const leadingActions = (action: any, id: number) => (
+export const leadingActions = (action: (id: number) => void, id: number) => (
   <LeadingActions>
     <StyledSwipeActionDelete onClick={() => action(id)}>
       <DeleteIcon sx={{ fontSize: 24 }} />
@@ -56,7 +56,7 @@ export const leadingActions = (action: any, id: number) => (
   </LeadingActions>
 );
 
-export const trailingActions = (action: any, id: number) => (
+export const trailingActions = (action: (id: number) => void, id: number) => (
   <TrailingActions>
     <StyledSwipeAction onClick={() => action(id)}>
       <EditIcon sx={{ fontSize: 24 }} />

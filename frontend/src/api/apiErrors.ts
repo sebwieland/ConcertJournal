@@ -1,7 +1,7 @@
 // src/api/apiErrors.ts
 
-import axios from 'axios';
-import { ApiErrorType } from '../types/api';
+import axios from "axios";
+import { ApiErrorType } from "../types/api";
 
 export interface ApiError {
   type: ApiErrorType;
@@ -16,8 +16,8 @@ export function handleApiError(error: unknown): ApiError {
     if (!error.response) {
       return {
         type: ApiErrorType.NETWORK_ERROR,
-        message: 'Network error. Please check your connection.',
-        originalError: error
+        message: "Network error. Please check your connection.",
+        originalError: error,
       };
     }
 
@@ -28,31 +28,31 @@ export function handleApiError(error: unknown): ApiError {
       case 401:
         return {
           type: ApiErrorType.UNAUTHORIZED,
-          message: 'Unauthorized. Please log in again.',
+          message: "Unauthorized. Please log in again.",
           statusCode,
-          originalError: error
+          originalError: error,
         };
       case 403:
         return {
           type: ApiErrorType.FORBIDDEN,
-          message: 'You do not have permission to perform this action.',
+          message: "You do not have permission to perform this action.",
           statusCode,
-          originalError: error
+          originalError: error,
         };
       case 404:
         return {
           type: ApiErrorType.NOT_FOUND,
-          message: 'The requested resource was not found.',
+          message: "The requested resource was not found.",
           statusCode,
-          originalError: error
+          originalError: error,
         };
       case 422:
         return {
           type: ApiErrorType.VALIDATION_ERROR,
-          message: 'Validation error. Please check your input.',
+          message: "Validation error. Please check your input.",
           statusCode,
           details: responseData.errors,
-          originalError: error
+          originalError: error,
         };
       case 500:
       case 502:
@@ -60,23 +60,23 @@ export function handleApiError(error: unknown): ApiError {
       case 504:
         return {
           type: ApiErrorType.SERVER_ERROR,
-          message: 'Server error. Please try again later.',
+          message: "Server error. Please try again later.",
           statusCode,
-          originalError: error
+          originalError: error,
         };
       default:
         return {
           type: ApiErrorType.UNKNOWN_ERROR,
-          message: `Error: ${responseData.message || 'Unknown error'}`,
+          message: `Error: ${responseData.message || "Unknown error"}`,
           statusCode,
-          originalError: error
+          originalError: error,
         };
     }
   }
 
   return {
     type: ApiErrorType.UNKNOWN_ERROR,
-    message: error instanceof Error ? error.message : 'Unknown error occurred',
-    originalError: error
+    message: error instanceof Error ? error.message : "Unknown error occurred",
+    originalError: error,
   };
 }

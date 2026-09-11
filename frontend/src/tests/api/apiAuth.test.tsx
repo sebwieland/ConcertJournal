@@ -13,6 +13,9 @@ const mockHandleApiError = vi.hoisted(() => vi.fn());
 // Mock the apiClient module
 vi.mock("../../api/apiClient", () => ({
   default: () => ({
+    rootClient: {
+      post: mockPost,
+    },
     apiClient: {
       post: mockPost,
     },
@@ -197,17 +200,12 @@ describe("useAuthApi", () => {
       await result.current.logout();
 
       // Check if apiClient.post was called with correct parameters
-      expect(mockPost).toHaveBeenCalledWith(
-        "/logout",
-        {},
-        {
-          withCredentials: true,
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-            "X-XSRF-TOKEN": "test-csrf-token",
-          },
+      expect(mockPost).toHaveBeenCalledWith("/logout", null, {
+        withCredentials: true,
+        headers: {
+          "X-XSRF-TOKEN": "test-csrf-token",
         },
-      );
+      });
     });
 
     it("handles logout failure", async () => {
@@ -271,6 +269,9 @@ describe("useAuthApi", () => {
       // Check if apiClient.post was called with correct parameters
       expect(mockPost).toHaveBeenCalledWith("/register", mockRegistrationData, {
         withCredentials: true,
+        headers: {
+          "X-XSRF-TOKEN": "test-csrf-token",
+        },
       });
 
       // Check if the response is correct

@@ -7,7 +7,7 @@ import {
 } from "@mui/material";
 import LogoutIcon from "@mui/icons-material/Logout";
 import BookIcon from "@mui/icons-material/Book";
-import React, { useContext, useState } from "react";
+import React, { useContext } from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import { useNavigate } from "react-router-dom";
@@ -15,7 +15,6 @@ import useAuth from "../../hooks/useAuth";
 import { AuthContext } from "../../contexts/AuthContext";
 
 const Navbar = () => {
-  const [anchorElNav, setAnchorElNav] = useState<HTMLElement | null>(null);
   const navigate = useNavigate();
   const { logout } = useAuth();
   const theme = useTheme();
@@ -24,17 +23,9 @@ const Navbar = () => {
   if (!authContext) {
     throw new Error("AuthContext is not provided");
   }
-  const { isLoggedIn, setLoggedOut } = authContext;
+  const { setLoggedOut } = authContext;
 
   // if (!isLoggedIn) return null;
-
-  const handleOpenNavMenu = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorElNav(event.currentTarget as HTMLElement | null);
-  };
-
-  const handleCloseNavMenu = () => {
-    setAnchorElNav(null);
-  };
 
   const handleLogout = () => {
     // Call setLoggedOut directly from AuthContext first to ensure immediate client-side logout

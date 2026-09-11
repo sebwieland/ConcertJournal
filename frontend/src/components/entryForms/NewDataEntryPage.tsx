@@ -2,8 +2,8 @@ import React, { useState, useEffect } from "react";
 import dayjs from "dayjs";
 import useEvents from "../../hooks/useEvents";
 import EntryForm from "./EntryForm";
-import { ConcertEvent, CreateEventData } from "../../types/events";
-import { ApiError, handleApiError } from "../../api/apiErrors";
+import { CreateEventData } from "../../types/events";
+import { handleApiError } from "../../api/apiErrors";
 
 const CreateNewEntryFormPage = () => {
   const { data, createEvent } = useEvents();

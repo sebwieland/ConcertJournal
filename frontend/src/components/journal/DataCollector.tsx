@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect } from "react";
 import useEvents from "../../hooks/useEvents";
 import { useConfirm } from "material-ui-confirm";
 import EventsApi from "../../api/apiEvents";
@@ -6,7 +6,7 @@ import useAuth from "../../hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { JSX } from "react";
 import { ConcertEvent } from "../../types/events";
-import { ApiError, handleApiError } from "../../api/apiErrors";
+import { handleApiError } from "../../api/apiErrors";
 
 interface DataCollectorProps {
   children: (state: DataCollectorState) => JSX.Element;

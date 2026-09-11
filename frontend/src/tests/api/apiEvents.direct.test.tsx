@@ -1,5 +1,4 @@
 import { vi, describe, it, expect } from "vitest";
-import axios from "axios";
 import { handleApiError } from "../../api/apiErrors";
 
 // Create a direct mock of the EventsApi functions
