@@ -1,0 +1,126 @@
+landing/desktop [console.debug] [vite] connecting...
+landing/desktop [console.debug] [vite] connected.
+landing/desktop [console.info] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold
+landing/desktop [console.log] === CSRF Token Fetch ===
+landing/desktop [console.log] Current domain: localhost
+landing/desktop [console.log] Could not parse API URL
+landing/desktop [console.log] Current cookies: 
+landing/desktop [console.log] No CSRF token found, fetching new one
+landing/desktop [console.error] Failed to load resource: the server responded with a status of 500 (Internal Server Error)
+landing/desktop [console.error] Error fetching CSRF token: {type: SERVER_ERROR, message: Server error. Please try again later., statusCode: 500, originalError: AxiosError}
+landing/desktop [console.log] After fetch, cookies: 
+landing/desktop [console.warning] Failed to get CSRF token after fetch
+landing/desktop [console.error] Failed to refresh token: {type: SERVER_ERROR, message: Server error. Please try again later., statusCode: 500, originalError: AxiosError}
+landing/mobile [console.debug] [vite] connecting...
+landing/mobile [console.debug] [vite] connected.
+landing/mobile [console.info] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold
+landing/mobile [console.log] === CSRF Token Fetch ===
+landing/mobile [console.log] Current domain: localhost
+landing/mobile [console.log] Could not parse API URL
+landing/mobile [console.log] Current cookies: 
+landing/mobile [console.log] No CSRF token found, fetching new one
+landing/mobile [console.error] Failed to load resource: the server responded with a status of 500 (Internal Server Error)
+landing/mobile [console.error] Error fetching CSRF token: {type: SERVER_ERROR, message: Server error. Please try again later., statusCode: 500, originalError: AxiosError}
+landing/mobile [console.log] After fetch, cookies: 
+landing/mobile [console.warning] Failed to get CSRF token after fetch
+landing/mobile [console.error] Failed to refresh token: {type: SERVER_ERROR, message: Server error. Please try again later., statusCode: 500, originalError: AxiosError}
+sign-in/desktop [console.debug] [vite] connecting...
+sign-in/desktop [console.debug] [vite] connected.
+sign-in/desktop [console.info] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold
+sign-in/desktop [console.log] === CSRF Token Fetch ===
+sign-in/desktop [console.log] Current domain: localhost
+sign-in/desktop [console.log] Could not parse API URL
+sign-in/desktop [console.log] Current cookies: 
+sign-in/desktop [console.log] No CSRF token found, fetching new one
+sign-in/desktop [console.error] Failed to load resource: the server responded with a status of 500 (Internal Server Error)
+sign-in/desktop [console.error] Error fetching CSRF token: {type: SERVER_ERROR, message: Server error. Please try again later., statusCode: 500, originalError: AxiosError}
+sign-in/desktop [console.log] After fetch, cookies: 
+sign-in/desktop [console.warning] Failed to get CSRF token after fetch
+sign-in/mobile [console.debug] [vite] connecting...
+sign-in/mobile [console.debug] [vite] connected.
+sign-in/mobile [console.info] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold
+sign-in/mobile [console.log] === CSRF Token Fetch ===
+sign-in/mobile [console.log] Current domain: localhost
+sign-in/mobile [console.log] Could not parse API URL
+sign-in/mobile [console.log] Current cookies: 
+sign-in/mobile [console.log] No CSRF token found, fetching new one
+sign-in/mobile [console.error] Failed to load resource: the server responded with a status of 500 (Internal Server Error)
+sign-in/mobile [console.error] Error fetching CSRF token: {type: SERVER_ERROR, message: Server error. Please try again later., statusCode: 500, originalError: AxiosError}
+sign-in/mobile [console.log] After fetch, cookies: 
+sign-in/mobile [console.warning] Failed to get CSRF token after fetch
+sign-up/desktop [console.debug] [vite] connecting...
+sign-up/desktop [console.debug] [vite] connected.
+sign-up/desktop [console.info] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold
+sign-up/desktop [console.log] === CSRF Token Fetch ===
+sign-up/desktop [console.log] Current domain: localhost
+sign-up/desktop [console.log] Could not parse API URL
+sign-up/desktop [console.log] Current cookies: 
+sign-up/desktop [console.log] No CSRF token found, fetching new one
+sign-up/desktop [console.error] Failed to load resource: the server responded with a status of 500 (Internal Server Error)
+sign-up/desktop [console.error] Error fetching CSRF token: {type: SERVER_ERROR, message: Server error. Please try again later., statusCode: 500, originalError: AxiosError}
+sign-up/desktop [console.log] After fetch, cookies: 
+sign-up/desktop [console.warning] Failed to get CSRF token after fetch
+sign-up/mobile [console.debug] [vite] connecting...
+sign-up/mobile [console.debug] [vite] connected.
+sign-up/mobile [console.info] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold
+sign-up/mobile [console.log] === CSRF Token Fetch ===
+sign-up/mobile [console.log] Current domain: localhost
+sign-up/mobile [console.log] Could not parse API URL
+sign-up/mobile [console.log] Current cookies: 
+sign-up/mobile [console.log] No CSRF token found, fetching new one
+sign-up/mobile [console.error] Failed to load resource: the server responded with a status of 500 (Internal Server Error)
+sign-up/mobile [console.error] Error fetching CSRF token: {type: SERVER_ERROR, message: Server error. Please try again later., statusCode: 500, originalError: AxiosError}
+sign-up/mobile [console.log] After fetch, cookies: 
+sign-up/mobile [console.warning] Failed to get CSRF token after fetch
+journal/desktop [console.debug] [vite] connecting...
+journal/desktop [console.debug] [vite] connected.
+journal/desktop [console.info] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold
+journal/desktop [console.log] === CSRF Token Fetch ===
+journal/desktop [console.log] Current domain: localhost
+journal/desktop [console.log] Could not parse API URL
+journal/desktop [console.log] Current cookies: 
+journal/desktop [console.log] No CSRF token found, fetching new one
+journal/desktop [console.error] Failed to load resource: the server responded with a status of 500 (Internal Server Error)
+journal/desktop [console.error] Error fetching CSRF token: {type: SERVER_ERROR, message: Server error. Please try again later., statusCode: 500, originalError: AxiosError}
+journal/desktop [console.log] After fetch, cookies: 
+journal/desktop [console.warning] Failed to get CSRF token after fetch
+journal/desktop [console.error] Failed to refresh token: {type: SERVER_ERROR, message: Server error. Please try again later., statusCode: 500, originalError: AxiosError}
+journal/mobile [console.debug] [vite] connecting...
+journal/mobile [console.debug] [vite] connected.
+journal/mobile [console.info] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold
+journal/mobile [console.log] === CSRF Token Fetch ===
+journal/mobile [console.log] Current domain: localhost
+journal/mobile [console.log] Could not parse API URL
+journal/mobile [console.log] Current cookies: 
+journal/mobile [console.log] No CSRF token found, fetching new one
+journal/mobile [console.error] Failed to load resource: the server responded with a status of 500 (Internal Server Error)
+journal/mobile [console.error] Error fetching CSRF token: {type: SERVER_ERROR, message: Server error. Please try again later., statusCode: 500, originalError: AxiosError}
+journal/mobile [console.log] After fetch, cookies: 
+journal/mobile [console.warning] Failed to get CSRF token after fetch
+journal/mobile [console.error] Failed to refresh token: {type: SERVER_ERROR, message: Server error. Please try again later., statusCode: 500, originalError: AxiosError}
+new-entry/desktop [console.debug] [vite] connecting...
+new-entry/desktop [console.debug] [vite] connected.
+new-entry/desktop [console.info] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold
+new-entry/desktop [console.log] === CSRF Token Fetch ===
+new-entry/desktop [console.log] Current domain: localhost
+new-entry/desktop [console.log] Could not parse API URL
+new-entry/desktop [console.log] Current cookies: 
+new-entry/desktop [console.log] No CSRF token found, fetching new one
+new-entry/desktop [console.error] Failed to load resource: the server responded with a status of 500 (Internal Server Error)
+new-entry/desktop [console.error] Error fetching CSRF token: {type: SERVER_ERROR, message: Server error. Please try again later., statusCode: 500, originalError: AxiosError}
+new-entry/desktop [console.log] After fetch, cookies: 
+new-entry/desktop [console.warning] Failed to get CSRF token after fetch
+new-entry/desktop [console.error] Failed to refresh token: {type: SERVER_ERROR, message: Server error. Please try again later., statusCode: 500, originalError: AxiosError}
+new-entry/mobile [console.debug] [vite] connecting...
+new-entry/mobile [console.debug] [vite] connected.
+new-entry/mobile [console.info] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold
+new-entry/mobile [console.log] === CSRF Token Fetch ===
+new-entry/mobile [console.log] Current domain: localhost
+new-entry/mobile [console.log] Could not parse API URL
+new-entry/mobile [console.log] Current cookies: 
+new-entry/mobile [console.log] No CSRF token found, fetching new one
+new-entry/mobile [console.error] Failed to load resource: the server responded with a status of 500 (Internal Server Error)
+new-entry/mobile [console.error] Error fetching CSRF token: {type: SERVER_ERROR, message: Server error. Please try again later., statusCode: 500, originalError: AxiosError}
+new-entry/mobile [console.log] After fetch, cookies: 
+new-entry/mobile [console.warning] Failed to get CSRF token after fetch
+new-entry/mobile [console.error] Failed to refresh token: {type: SERVER_ERROR, message: Server error. Please try again later., statusCode: 500, originalError: AxiosError}
