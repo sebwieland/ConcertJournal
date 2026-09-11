@@ -166,8 +166,32 @@ public class SecurityConfiguration {
                         .requestMatchers("/", "/index.html", "/assets/**", "*.js", "*.css", "*.ico", "*.png", "*.svg", "*.woff", "*.woff2", "*.xml", "*.txt", "*.webmanifest").permitAll()
                         // SPA document routes (single-segment, no dot) forward to index.html
                         // via SpaController and must load anonymously — React Router then
-                        // handles its own auth gating client-side
-                        .requestMatchers("/{path:[^\\.]*}").permitAll()
+                        // handles its own auth gating client-side. Implemented as an
+                        // explicit matcher: brace-regex path patterns like
+                        // "/{path:[^\\.]*}" are NOT reliably supported by the security
+                        // request matcher builders (see regression E2E finding).
+                        .requestMatchers(new RequestMatcher() {
+                            @Override
+                            public boolean matches(jakarta.servlet.http.HttpServletRequest request) {
+                                if (!HttpMethod.GET.matches(request.getMethod())) {
+                                    return false;
+                                }
+                                // Works in both servlet containers and MockMvc tests
+                                String path = request.getServletPath();
+                                if (path.isEmpty()) {
+                                    path = request.getRequestURI().substring(request.getContextPath().length());
+                                }
+                                if (path.startsWith("/api/") || path.startsWith("/actuator") ||
+                                        path.startsWith("/assets/") || path.startsWith("/error") ||
+                                        path.startsWith("/register") || path.startsWith("/login") ||
+                                        path.startsWith("/logout") || path.contains(".")) {
+                                    return false;
+                                }
+                                // single non-root segment only (e.g. /sign-up)
+                                String[] segments = path.split("/");
+                                return path.length() > 1 && segments.length == 2 && !segments[1].isEmpty();
+                            }
+                        }).permitAll()
                         .requestMatchers("/error", "/register", "/login", "/logout", "/actuator/health", "/actuator/prometheus", "/api/get-xsrf-cookie").permitAll()
                         .requestMatchers("/api/**").authenticated()
                         .requestMatchers(HttpMethod.OPTIONS).permitAll()
