@@ -81,11 +81,6 @@
             <artifactId>spring-security-test</artifactId>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>org.springframework.session</groupId>
-            <artifactId>spring-session-core</artifactId>
-            <version>3.4.2</version> <!-- Use the latest version available -->
-        </dependency>
 
         <dependency>
             <groupId>io.jsonwebtoken</groupId>

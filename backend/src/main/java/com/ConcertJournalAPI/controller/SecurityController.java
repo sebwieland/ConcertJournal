@@ -59,9 +59,9 @@ public class SecurityController {
             String newAccessToken = JwtUtils.generateToken(authentication);
             String newRefreshToken = JwtUtils.generateRefreshToken(authentication);
 
-            // Set the new refresh token in a secure cookie
+            // Refresh token is a credential — always JS-unreadable (config-driven)
             Cookie newRefreshTokenCookie = new Cookie("refreshToken", newRefreshToken);
-            newRefreshTokenCookie.setHttpOnly(false);
+            newRefreshTokenCookie.setHttpOnly(httpOnlyCookie);
             
             // Ensure secure=true when SameSite=None (required by browsers)
             boolean effectiveSecure = secureCookie;

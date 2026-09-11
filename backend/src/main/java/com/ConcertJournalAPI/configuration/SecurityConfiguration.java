@@ -151,7 +151,7 @@ public class SecurityConfiguration {
                         .logoutUrl("/logout")
                         .logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler(HttpStatus.OK))
                         .invalidateHttpSession(true)
-                        .deleteCookies("JSESSIONID")
+                        .deleteCookies("JSESSIONID", "refreshToken")
                 )
 
                 .formLogin(form -> form
