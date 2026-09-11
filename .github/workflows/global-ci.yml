@@ -67,6 +67,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Set up Buildx (docker-container driver enables GHA cache export)
+        uses: docker/setup-buildx-action@v3
+
       - name: Build unified production image
         uses: docker/build-push-action@v6
         with:
