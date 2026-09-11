@@ -28,7 +28,10 @@ export default defineConfig({
     },
     build: {
         outDir: 'dist',
-        minify: 'terser',
+        // esbuild minify: ~10x faster and far less memory-hungry than terser —
+        // the terser step OOM-killed (SIGKILL) the build inside low-memory
+        // Docker VMs; esbuild fits comfortably and produces ~equal size.
+        minify: 'esbuild',
         sourcemap: process.env.NODE_ENV === 'development'
     },
     plugins: [
