@@ -1,49 +1,75 @@
 #!/bin/bash
 
 # Local development script for Concert Journal
-# This script helps run the frontend locally while using containerized backend services
+#
+# Strategy (ADR-007 in docs/architecture): containerize the *dependencies*
+# (MySQL), run the Spring Boot backend on the host for fast feedback
+# (debugger, DevTools, native file watching), and the frontend locally via Vite.
 
-# Colors for output
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
+RED='\033[0;31m'
+NC='\033[0m'
 
-echo -e "${YELLOW}Starting Concert Journal in hybrid mode...${NC}"
-echo -e "${YELLOW}This will run the frontend locally and the backend in Docker${NC}"
+BACKEND_PID=""
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Check if Docker is running
+cleanup() {
+  if [ -n "$BACKEND_PID" ]; then
+    echo -e "${YELLOW}Stopping backend (pid $BACKEND_PID)...${NC}"
+    kill "$BACKEND_PID" 2>/dev/null
+    wait "$BACKEND_PID" 2>/dev/null
+  fi
+  echo -e "${YELLOW}MySQL container is left running (volume kept).${NC}"
+  echo -e "To stop it too: docker-compose down"
+}
+trap cleanup EXIT INT TERM
+
+echo -e "${YELLOW}Starting Concert Journal (MySQL in Docker, backend + frontend on host)...${NC}"
+
 if ! docker info > /dev/null 2>&1; then
-  echo "Docker is not running. Please start Docker and try again."
+  echo -e "${RED}Docker is not running. Please start Docker and try again.${NC}"
   exit 1
 fi
 
-# Start the backend services
-echo -e "${YELLOW}Starting backend services in Docker...${NC}"
-docker-compose up -d mysql backend
+# Make sure no stale backend container occupies port 8080
+docker-compose --profile dev rm -sf backend 2>/dev/null
 
-# Wait for backend to be ready
-echo -e "${YELLOW}Waiting for backend services to be ready...${NC}"
-echo -e "${YELLOW}This may take a few moments...${NC}"
-sleep 10
+# Start MySQL
+echo -e "${YELLOW}Starting MySQL in Docker...${NC}"
+docker-compose --profile dev up -d mysql
 
-# Check if backend is accessible
-echo -e "${YELLOW}Checking if backend is accessible...${NC}"
-if curl -s http://localhost:8080/actuator/health > /dev/null; then
-  echo -e "${GREEN}Backend is up and running!${NC}"
-else
-  echo -e "${YELLOW}Backend may not be fully initialized yet. Check docker logs for details:${NC}"
-  echo -e "docker-compose logs backend"
-fi
+echo -e "${YELLOW}Waiting for MySQL to be healthy...${NC}"
+until [ "$(docker inspect --format='{{.State.Health.Status}}' concert-journal-mysql 2>/dev/null)" = "healthy" ]; do
+  sleep 2
+done
+echo -e "${GREEN}MySQL is ready.${NC}"
 
-# Start the frontend locally
+# Secrets & config for the host-run backend
+export JWT_SECRET="${JWT_SECRET:-local-dev-secret-that-is-definitely-over-32-bytes-long}"
+echo -e "${YELLOW}JWT_SECRET exported (${JWT_SECRET:0:8}...).${NC}"
+
+# Start backend on the host in the background
+echo -e "${YELLOW}Starting backend on host (profile dev)...${NC}"
+cd "$SCRIPT_DIR/backend"
+./mvnw spring-boot:run -Dspring.profiles.active=dev -q &
+BACKEND_PID=$!
+
+echo -e "${YELLOW}Waiting for backend to come up (first run may download dependencies)...${NC}"
+for i in $(seq 1 60); do
+  if curl -sf http://localhost:8080/actuator/health > /dev/null; then
+    echo -e "${GREEN}Backend is up and running!${NC}"
+    break
+  fi
+  if ! kill -0 "$BACKEND_PID" 2>/dev/null; then
+    echo -e "${RED}Backend process exited. Check its log output above.${NC}"
+    exit 1
+  fi
+  [ "$i" = 60 ] && echo -e "${RED}Backend did not answer within 120s — continuing anyway.${NC}"
+  sleep 2
+done
+
+# Start the frontend locally (foreground; Ctrl+C stops backend too via trap)
 echo -e "${YELLOW}Starting frontend locally...${NC}"
-cd frontend
-
-# Run vite directly with environment variables instead of using cross-env
-echo -e "${YELLOW}Running vite directly with NODE_ENV=development...${NC}"
+cd "$SCRIPT_DIR/frontend"
 NODE_ENV=development npx vite --port 3000 --mode dev-local
-
-# Note: The script will stay with the frontend process
-# To stop everything when done:
-# 1. Stop the frontend with Ctrl+C
-# 2. Run: docker-compose down
