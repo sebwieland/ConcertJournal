@@ -164,6 +164,10 @@ public class SecurityConfiguration {
                 // Authorize requests
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/", "/index.html", "/assets/**", "*.js", "*.css", "*.ico", "*.png", "*.svg", "*.woff", "*.woff2", "*.xml", "*.txt", "*.webmanifest").permitAll()
+                        // SPA document routes (single-segment, no dot) forward to index.html
+                        // via SpaController and must load anonymously — React Router then
+                        // handles its own auth gating client-side
+                        .requestMatchers("/{path:[^\\.]*}").permitAll()
                         .requestMatchers("/error", "/register", "/login", "/logout", "/actuator/health", "/actuator/prometheus", "/api/get-xsrf-cookie").permitAll()
                         .requestMatchers("/api/**").authenticated()
                         .requestMatchers(HttpMethod.OPTIONS).permitAll()

@@ -67,6 +67,18 @@ public class SecurityConfigurationTest {
     }
 
     @Test
+    @WithAnonymousUser
+    public void testSpaDocumentRoutesServeAnonymously() throws Exception {
+        // Regression: E2E smoke found /sign-up bounced to the Thymeleaf /login
+        // fallback in the unified container because the route matched no
+        // permitAll rule. SPA document routes must reach SpaController.
+        // (Static index.html may 404 in this lightweight MVC slice — what
+        // matters is that authorization neither redirects nor denies.)
+        mockMvc.perform(get("/sign-up"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
     public void testCsrfProtection() throws Exception {
         mockMvc.perform(post("/api/allEvents")
                         .with(csrf().useInvalidToken()))
