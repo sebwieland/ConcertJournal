@@ -76,6 +76,10 @@ public class SecurityConfigurationTest {
         // matters is that authorization neither redirects nor denies.)
         mockMvc.perform(get("/sign-up"))
                 .andExpect(status().isNotFound());
+        // The domain root must be mapped to the SPA as well (Whitelabel 404
+        // otherwise), not guarded by authorization.
+        mockMvc.perform(get("/"))
+                .andExpect(status().isNotFound());
     }
 
     @Test
