@@ -1,5 +1,6 @@
 package com.ConcertJournalAPI.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -36,6 +37,8 @@ public class BandEvent {
     @Temporal(TemporalType.TIMESTAMP)
     private Instant modificationDate;
 
+    /** Owner is resolved server-side — never accepted from or leaked to the client (risk R1). */
+    @JsonIgnore
     @ManyToOne
     @JoinColumn(name = "users_id")
     private AppUser appUser;

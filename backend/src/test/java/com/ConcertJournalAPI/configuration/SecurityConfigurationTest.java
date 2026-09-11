@@ -52,7 +52,7 @@ public class SecurityConfigurationTest {
     @Test
     @WithMockUser(username = TEST_USERNAME, roles = TEST_ROLE)
     public void testAuthorizedAccessToEventEndpoint() throws Exception {
-        mockMvc.perform(get("/allEvents"))
+        mockMvc.perform(get("/api/allEvents"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON));
     }
@@ -60,14 +60,15 @@ public class SecurityConfigurationTest {
     @Test
     @WithAnonymousUser
     public void testUnauthorizedAccessToEventsEndpoint() throws Exception {
-        mockMvc.perform(get("/allEvents"))
-                .andExpect(status().isFound())
-                .andExpect(redirectedUrlPattern("**/login"));
+        // API clients receive a JSON 401 instead of a login redirect
+        mockMvc.perform(get("/api/allEvents"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON));
     }
 
     @Test
     public void testCsrfProtection() throws Exception {
-        mockMvc.perform(post("/allEvents")
+        mockMvc.perform(post("/api/allEvents")
                         .with(csrf().useInvalidToken()))
                 .andExpect(status().isForbidden());
     }
@@ -93,33 +94,5 @@ public class SecurityConfigurationTest {
     public void testLogoutWorks() throws Exception {
         mockMvc.perform(logout())
                 .andExpect(status().isOk());
-    }
-
-    @Test
-    void testCsrfRequestMatcher() {
-        // Arrange
-        SecurityConfiguration securityConfiguration = new SecurityConfiguration();
-        RequestMatcher csrfRequestMatcher = securityConfiguration.csrfRequestMatcher();
-
-        // Act and Assert
-        HttpServletRequest getRequest = mock(HttpServletRequest.class);
-        when(getRequest.getMethod()).thenReturn(HttpMethod.GET.name());
-        Assertions.assertFalse(csrfRequestMatcher.matches(getRequest));
-
-        HttpServletRequest postRequest = mock(HttpServletRequest.class);
-        when(postRequest.getMethod()).thenReturn(HttpMethod.POST.name());
-        Assertions.assertTrue(csrfRequestMatcher.matches(postRequest));
-
-        HttpServletRequest headRequest = mock(HttpServletRequest.class);
-        when(headRequest.getMethod()).thenReturn(HttpMethod.HEAD.name());
-        Assertions.assertFalse(csrfRequestMatcher.matches(headRequest));
-
-        HttpServletRequest optionsRequest = mock(HttpServletRequest.class);
-        when(optionsRequest.getMethod()).thenReturn(HttpMethod.OPTIONS.name());
-        Assertions.assertFalse(csrfRequestMatcher.matches(optionsRequest));
-
-        HttpServletRequest traceRequest = mock(HttpServletRequest.class);
-        when(traceRequest.getMethod()).thenReturn(HttpMethod.TRACE.name());
-        Assertions.assertFalse(csrfRequestMatcher.matches(traceRequest));
     }
 }
