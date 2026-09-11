@@ -10,11 +10,13 @@ import org.springframework.security.core.Authentication;
 import javax.crypto.SecretKey;
 
 import java.util.Date;
+import java.util.Optional;
 
 import static com.ConcertJournalAPI.configuration.SecurityConstants.*;
 
 public class JwtUtils {
-    private static final String jwtSecret = System.getenv("JWT_SECRET");
+    private static final String jwtSecret = Optional.ofNullable(System.getenv("JWT_SECRET"))
+        .orElseThrow(() -> new IllegalStateException("JWT_SECRET environment variable must be set"));
 
 
     public static String generateToken(Authentication authentication) {

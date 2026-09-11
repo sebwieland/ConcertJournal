@@ -1,5 +1,6 @@
 package com.ConcertJournalAPI.controller;
 
+import com.ConcertJournalAPI.configuration.SecurityConstants;
 import com.ConcertJournalAPI.security.JwtUtils;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
@@ -13,11 +14,13 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Collections;
 
 @RestController
+@RequestMapping("/api")
 public class SecurityController {
     
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(SecurityController.class);
@@ -70,7 +73,9 @@ public class SecurityController {
             newRefreshTokenCookie.setMaxAge(86400 * 30); // 30 days
             newRefreshTokenCookie.setValue(newRefreshToken);
             newRefreshTokenCookie.setAttribute("SameSite", sameSiteCookie);
-            newRefreshTokenCookie.setDomain("concertjournal.de"); // Set domain to parent domain
+            if (org.springframework.util.StringUtils.hasText(SecurityConstants.cookieDomain)) {
+                newRefreshTokenCookie.setDomain(SecurityConstants.cookieDomain);
+            }
             newRefreshTokenCookie.setPath("/");
             
             log.info("Setting refreshToken cookie - secure: {}, sameSite: {}",
@@ -98,7 +103,9 @@ public class SecurityController {
         csrfCookie.setSecure(effectiveSecure);
         csrfCookie.setPath("/");
         csrfCookie.setAttribute("SameSite", sameSiteCookie);
-        csrfCookie.setDomain("concertjournal.de"); // Set domain to parent domain
+        if (org.springframework.util.StringUtils.hasText(SecurityConstants.cookieDomain)) {
+            csrfCookie.setDomain(SecurityConstants.cookieDomain);
+        }
         csrfCookie.setMaxAge(2592000); // 30 days in seconds
         
         log.info("Setting XSRF-TOKEN cookie - secure: {}, sameSite: {}", effectiveSecure, sameSiteCookie);
