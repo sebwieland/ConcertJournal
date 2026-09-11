@@ -51,6 +51,9 @@ public class SecurityController {
         }
         try {
             Claims claims = JwtUtils.parseToken(refreshToken);
+            if (!JwtUtils.TOKEN_TYPE_REFRESH.equals(claims.get(JwtUtils.CLAIM_TOKEN_TYPE, String.class))) {
+                return ResponseEntity.badRequest().build();
+            }
             String subject = claims.getSubject();
             Authentication authentication = new UsernamePasswordAuthenticationToken(subject, null, Collections.emptyList());
             String newAccessToken = JwtUtils.generateToken(authentication);

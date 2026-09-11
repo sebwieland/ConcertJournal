@@ -22,7 +22,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (token != null) {
             try {
                 Claims claims = JwtUtils.parseToken(token);
-                authenticateUser(claims);
+                // Only access tokens authenticate API requests; refresh tokens must
+                // never be usable as credentials against endpoints (risk R2)
+                if (JwtUtils.TOKEN_TYPE_ACCESS.equals(claims.get(JwtUtils.CLAIM_TOKEN_TYPE, String.class))) {
+                    authenticateUser(claims);
+                }
             } catch (JwtException e) {
                 // Handle invalid token
             }
