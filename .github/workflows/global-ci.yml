@@ -109,6 +109,11 @@ jobs:
                 SPRING_DATASOURCE_USERNAME: user
                 SPRING_DATASOURCE_PASSWORD: password
                 JWT_SECRET: ${JWT_SECRET}
+                # CI runs on http://localhost — override prod cookie settings
+                # that assume the concertjournal.de domain and HTTPS
+                AUTH_COOKIE_DOMAIN: ""
+                AUTH_COOKIE_SECURE: "false"
+                SERVER_SERVLET_SESSION_COOKIE_SECURE: "false"
               ports:
                 - "8080:8080"
           EOF
