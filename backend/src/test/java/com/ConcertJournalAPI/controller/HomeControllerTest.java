@@ -1,5 +1,6 @@
 package com.ConcertJournalAPI.controller;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -22,6 +23,11 @@ public class HomeControllerTest {
     @Mock
     private SecurityContext securityContext;
 
+    @AfterEach
+    public void clearSecurityContext() {
+        SecurityContextHolder.clearContext();
+    }
+
     @Test
     public void testHomeAuthenticated() {
         // Arrange
@@ -31,10 +37,10 @@ public class HomeControllerTest {
         SecurityContextHolder.setContext(securityContext);
 
         // Act
-        String result = homeController.home();
+        String result = homeController.currentUser();
 
         // Assert
-        assertEquals("Welcome back, " + expectedUsername + "!", result);
+        assertEquals(expectedUsername, result);
     }
 
     @Test
@@ -44,10 +50,10 @@ public class HomeControllerTest {
         SecurityContextHolder.setContext(securityContext);
 
         // Act
-        String result = homeController.home();
+        String result = homeController.currentUser();
 
         // Assert
-        assertEquals("You are not logged in. Please go to /login to authenticate.", result);
+        assertEquals("anonymous", result);
     }
 
     @Test
@@ -59,9 +65,9 @@ public class HomeControllerTest {
         SecurityContextHolder.setContext(securityContext);
 
         // Act
-        String result = homeController.home();
+        String result = homeController.currentUser();
 
         // Assert
-        assertEquals("You are not logged in. Please go to /login to authenticate.", result);
+        assertEquals("anonymous", result);
     }
 }
