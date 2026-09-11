@@ -24,6 +24,12 @@ async function shot(name) { await page.screenshot({ path: `${out}/${name}.png`, 
   page = await context.newPage();
   page.on('console', m => consoleLog.push(`[${m.type()}] ${m.text().slice(0, 250)}`));
   page.on('pageerror', e => consoleLog.push(`[pageerror] ${String(e).slice(0, 250)}`));
+  // Track network activity around /login for diagnosis
+  page.on('response', r => {
+    if (r.url().includes('login') || r.url().includes('/api/refresh-token')) {
+      consoleLog.push(`[net] ${r.request().method()} ${r.status()} ${r.url()}`);
+    }
+  });
 
   const newUser = false;
   // ---------- 1. Registration ----------
@@ -61,8 +67,14 @@ async function shot(name) { await page.screenshot({ path: `${out}/${name}.png`, 
       const body = await loginResp.text();
       const isJson = body.trim().startsWith('{');
       step('login:POST', isJson || loginResp.status() === 200 ? 'INFO' : 'FAIL',
-        `${loginResp.status()} ${loginResp.url()} contentType=${(loginResp.headers()['content-type'] || '?')} body="${body.slice(0, 100)}"`);
-      if (isJson) { try { const j = JSON.parse(body); globalThis.accessToken = j.accessToken; } catch {} }
+        `${loginResp.status()} ${loginResp.url()} contentType=${(loginResp.headers()['content-type'] || '?')} len=${body.length}`);
+      try {
+        const j = JSON.parse(body);
+        globalThis.accessToken = j.accessToken;
+        consoleLog.push(`[diag] login body parsed OK; accessToken=${j.accessToken ? 'present(' + String(j.accessToken).length + ' chars)' : 'MISSING'}, refreshToken=${j.refreshToken ? 'present' : 'missing'}`);
+      } catch (e) {
+        consoleLog.push(`[diag] login body JSON.parse FAILED: ${String(e).slice(0, 120)} bodyStart=${body.slice(0, 60)}`);
+      }
     } else step('login:POST', 'FAIL', 'no login network call observed');
     await page.waitForTimeout(2500);
     const cookies = await context.cookies();
@@ -210,9 +222,15 @@ async function shot(name) { await page.screenshot({ path: `${out}/${name}.png`, 
 
   fs.writeFileSync(`${out}/e2e-report.json`, JSON.stringify(results, null, 2));
   fs.writeFileSync(`${out}/e2e-console.txt`, [...new Set(consoleLog)].join('\n'));
+  const fail = results.filter(r => r.status === 'FAIL' || r.status.startsWith('❌')).length;
+  if (fail > 0) {
+    // Dump diagnostics inline so the CI log is self-contained
+    console.log('\n===== BROWSER CONSOLE / DIAGNOSTICS (on failure) =====');
+    [...new Set(consoleLog)].slice(-80).forEach(l => console.log(l));
+    console.log('=====================================================');
+  }
   await browser.close();
   const pass = results.filter(r => r.status === 'PASS').length;
-  const fail = results.filter(r => r.status === 'FAIL' || r.status.startsWith('❌')).length;
   console.log(`\nSUMMARY: ${pass} pass, ${fail} fail, ${results.length - pass - fail} other`);
   process.exit(fail > 0 ? 1 : 0);
 })();
