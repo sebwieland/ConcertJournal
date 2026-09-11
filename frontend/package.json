@@ -21,10 +21,10 @@
     "react-router-dom": "^7.0.0",
     "react-swipeable-list": "^1.10.0",
     "typescript": "^5.0.0",
-    "web-vitals": "^2.1.4",
     "vite": "^5.1.4",
     "vite-plugin-sitemap": "^0.5.3",
-    "vite-tsconfig-paths": "^4.2.1"
+    "vite-tsconfig-paths": "^4.2.1",
+    "web-vitals": "^2.1.4"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.6.3",
@@ -42,6 +42,7 @@
     "eslint-plugin-react": "^7.33.2",
     "eslint-plugin-react-hooks": "^4.6.0",
     "jsdom": "^23.0.1",
+    "playwright": "^1.49.0",
     "prettier": "^3.2.5",
     "serve": "^14.2.1",
     "terser": "^5.29.2",
@@ -58,7 +59,8 @@
     "test": "vitest",
     "test:coverage": "vitest run --coverage",
     "lint": "eslint .",
-    "lint:fix": "eslint . --fix"
+    "lint:fix": "eslint . --fix",
+    "test:e2e": "node e2e/e2e.js"
   },
   "vitest": {
     "coverage": {
