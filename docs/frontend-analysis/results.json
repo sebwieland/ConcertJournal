@@ -1,0 +1,82 @@
+[
+  {
+    "name": "landing",
+    "vp": "desktop",
+    "finalUrl": "http://localhost:3000/sign-in",
+    "title": "ConcertJournal",
+    "status": 200,
+    "firstHeading": "Sign in"
+  },
+  {
+    "name": "landing",
+    "vp": "mobile",
+    "finalUrl": "http://localhost:3000/sign-in",
+    "title": "ConcertJournal",
+    "status": 200,
+    "firstHeading": "Sign in"
+  },
+  {
+    "name": "sign-in",
+    "vp": "desktop",
+    "finalUrl": "http://localhost:3000/sign-in",
+    "title": "ConcertJournal",
+    "status": 200,
+    "firstHeading": "Sign in"
+  },
+  {
+    "name": "sign-in",
+    "vp": "mobile",
+    "finalUrl": "http://localhost:3000/sign-in",
+    "title": "ConcertJournal",
+    "status": 200,
+    "firstHeading": "Sign in"
+  },
+  {
+    "name": "sign-up",
+    "vp": "desktop",
+    "finalUrl": "http://localhost:3000/sign-up",
+    "title": "ConcertJournal",
+    "status": 200,
+    "firstHeading": "Sign up"
+  },
+  {
+    "name": "sign-up",
+    "vp": "mobile",
+    "finalUrl": "http://localhost:3000/sign-up",
+    "title": "ConcertJournal",
+    "status": 200,
+    "firstHeading": "Sign up"
+  },
+  {
+    "name": "journal",
+    "vp": "desktop",
+    "finalUrl": "http://localhost:3000/sign-in",
+    "title": "ConcertJournal",
+    "status": 200,
+    "firstHeading": "Sign in"
+  },
+  {
+    "name": "journal",
+    "vp": "mobile",
+    "finalUrl": "http://localhost:3000/sign-in",
+    "title": "ConcertJournal",
+    "status": 200,
+    "firstHeading": "Sign in"
+  },
+  {
+    "name": "new-entry",
+    "vp": "desktop",
+    "finalUrl": "http://localhost:3000/sign-in",
+    "title": "ConcertJournal",
+    "status": 200,
+    "firstHeading": "Sign in"
+  },
+  {
+    "name": "new-entry",
+    "vp": "mobile",
+    "finalUrl": "http://localhost:3000/sign-in",
+    "title": "ConcertJournal",
+    "status": 200,
+    "firstHeading": "Sign in"
+  }
+]
