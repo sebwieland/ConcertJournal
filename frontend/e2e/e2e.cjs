@@ -26,8 +26,12 @@ async function shot(name) { await page.screenshot({ path: `${out}/${name}.png`, 
   page.on('pageerror', e => consoleLog.push(`[pageerror] ${String(e).slice(0, 250)}`));
   // Track network activity around /login for diagnosis
   page.on('response', r => {
-    if (r.url().includes('login') || r.url().includes('/api/refresh-token')) {
-      consoleLog.push(`[net] ${r.request().method()} ${r.status()} ${r.url()}`);
+    const u = r.url();
+    if (r.status() >= 400) {
+      consoleLog.push(`[http-error] ${r.request().method()} ${r.status()} ${u.replace(BASE, '')}`);
+    } else if (u.includes('login') || u.includes('/api/refresh-token') ||
+        u.includes('/api/event') || u.includes('/api/allEvents')) {
+      consoleLog.push(`[net] ${r.request().method()} ${r.status()} ${u.replace(BASE, '')}`);
     }
   });
 
@@ -133,17 +137,22 @@ async function shot(name) { await page.screenshot({ path: `${out}/${name}.png`, 
       try {
         const probe = await page.evaluate(async (t) => {
           const r = await fetch('/api/allEvents', { headers: { Authorization: `Bearer ${t}` }, credentials: 'same-origin' });
-          const events = await r.json();
+          const bodyText = await r.text();
+          const events = Array.isArray(safeJson(bodyText)) ? safeJson(bodyText) : [];
+
+          function safeJson(s) { try { return JSON.parse(s); } catch { return { parseError: s.slice(0, 200) }; } }
+          void safeJson;
           const serialized = Array.isArray(events) ? JSON.stringify(events[0] || {}) : JSON.stringify(events);
           return {
             status: r.status,
             count: Array.isArray(events) ? events.length : -1,
+            bodySnippet: bodyText ? bodyText.slice(0, 160) : '(empty)',
             passwordLeak: /"password"\s*:\s*"[^"]{10,}"/.test(serialized),
             appUserLeak: serialized.includes('appUser'),
           };
         }, globalThis.accessToken);
         step('api:allEvents', probe.status === 200 && probe.count >= 1 ? 'PASS' : 'FAIL',
-          `status=${probe.status} count=${probe.count}`);
+          `status=${probe.status} count=${probe.count} body=${probe.bodySnippet.replace(globalThis.accessToken, '<token>')}`);
         step('api:R1-password-leak-fixed', !probe.passwordLeak && !probe.appUserLeak ? 'PASS' : '❌ STILL LEAKING',
           `passwordLeak=${probe.passwordLeak} appUserLeak=${probe.appUserLeak}`);
       } catch (e) { step('api:allEvents', 'FAIL', String(e).slice(0, 150)); }
@@ -156,7 +165,12 @@ async function shot(name) { await page.screenshot({ path: `${out}/${name}.png`, 
       await page.waitForTimeout(2000);
       step('edit-entry:accessible', /sign-in/.test(page.url()) ? 'FAIL' : 'PASS', `url=${page.url()}`);
       const bandVal = await page.getByLabel('Band').inputValue().catch(() => '?');
-      step('edit-entry:prefilled', bandVal.includes('Hosen') ? 'PASS' : 'FAIL', `band="${bandVal}"`);
+      if (bandVal === '?') {
+        const pageText = await page.evaluate(() => document.body.innerText.slice(0, 200));
+        step('edit-entry:prefilled', 'FAIL', `band missing — page shows: "${pageText.replace(/\n/g, ' ')}"`);
+      } else {
+        step('edit-entry:prefilled', bandVal.includes('Hosen') ? 'PASS' : 'FAIL', `band="${bandVal}"`);
+      }
       await page.getByLabel('Comment').fill('E2E edited comment');
       const [updResp] = await Promise.all([
         page.waitForResponse(r => r.url().includes('/api/event/'), { timeout: 20000 }).catch(() => null),
