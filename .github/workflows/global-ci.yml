@@ -154,6 +154,12 @@ jobs:
           cd frontend
           npm run test:e2e
 
+      - name: Dump application logs on failure
+        if: failure()
+        run: |
+          echo "===== app container logs (tail 200) ====="
+          docker compose -f ci-compose.yml logs app --tail 200 || true
+
       - name: Upload E2E artifacts on failure
         if: failure()
         uses: actions/upload-artifact@v4
