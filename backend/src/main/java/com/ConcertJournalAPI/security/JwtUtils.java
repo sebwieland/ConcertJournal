@@ -18,10 +18,23 @@ public class JwtUtils {
     private static final String jwtSecret = Optional.ofNullable(System.getenv("JWT_SECRET"))
         .orElseThrow(() -> new IllegalStateException("JWT_SECRET environment variable must be set"));
 
+    static {
+        if (jwtSecret.getBytes(java.nio.charset.StandardCharsets.UTF_8).length < 32) {
+            throw new IllegalStateException("JWT_SECRET must be at least 32 bytes (256 bits) for HMAC-SHA256 JWTs");
+        }
+        if (jwtSecret.equals("dev-secret-change-in-production") || jwtSecret.equals("change-me-in-production")) {
+            throw new IllegalStateException("JWT_SECRET must not be a known default value — set a unique secret");
+        }
+    }
+
+    public static final String CLAIM_TOKEN_TYPE = "typ";
+    public static final String TOKEN_TYPE_ACCESS = "access";
+    public static final String TOKEN_TYPE_REFRESH = "refresh";
 
     public static String generateToken(Authentication authentication) {
         return Jwts.builder()
                 .subject(authentication.getName())
+                .claim(CLAIM_TOKEN_TYPE, TOKEN_TYPE_ACCESS)
                 .issuedAt(new Date())
                 .expiration(new Date((new Date()).getTime() + 180000)) // 3 Minutes
                 .signWith(getSigningKey())
@@ -31,6 +44,7 @@ public class JwtUtils {
     public static String generateRefreshToken(Authentication authentication) {
         return Jwts.builder()
                 .subject(authentication.getName())
+                .claim(CLAIM_TOKEN_TYPE, TOKEN_TYPE_REFRESH)
                 .issuedAt(new Date())
                 .expiration(new Date((new Date()).getTime() + 2592000000L)) // 30 days
                 .signWith(getSigningKey())

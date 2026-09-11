@@ -66,7 +66,7 @@ public class SecurityControllerTest {
     @Test
     void testRefreshAccessToken_RefreshTokenFoundAndValid_ReturnsOkWithNewAccessToken() {
         // Arrange
-        String validToken = JwtUtils.generateToken(authentication);
+        String validToken = JwtUtils.generateRefreshToken(authentication);
         Cookie[] cookies = new Cookie[]{new Cookie("refreshToken", validToken)};
         when(request.getCookies()).thenReturn(cookies);
         Claims claims = mock(Claims.class);

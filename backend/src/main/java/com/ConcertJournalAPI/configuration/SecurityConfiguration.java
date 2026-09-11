@@ -85,14 +85,6 @@ public class SecurityConfiguration {
     }
 
     @Bean
-    public RequestMatcher csrfRequestMatcher() {
-        return request -> !(request.getMethod().equals(HttpMethod.GET.name()) ||
-                request.getMethod().equals(HttpMethod.HEAD.name()) ||
-                request.getMethod().equals(HttpMethod.OPTIONS.name()) ||
-                request.getMethod().equals(HttpMethod.TRACE.name()));
-    }
-
-    @Bean
     public AuthSuccessHandler authSuccessHandler() {
         return new AuthSuccessHandler();
     }
@@ -126,10 +118,10 @@ public class SecurityConfiguration {
         http
                 .cors(cors -> cors.disable())
 
-                // Enable CSRF protection
+                // Enable CSRF protection (double submit cookie, BREACH-safe XOR tokens)
                 .csrf((csrf) -> csrf
                         .csrfTokenRepository(csrfTokenRepository())
-                        .csrfTokenRequestHandler(new CookieCsrfTokenRequestHandler())
+                        .csrfTokenRequestHandler(new SpaCsrfTokenRequestHandler())
                 )
 
                 // OWASP Security Headers
@@ -171,17 +163,26 @@ public class SecurityConfiguration {
 
                 // Authorize requests
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/index.html", "/assets/**", "*.js", "*.css", "*.ico", "*.png", "*.svg", "*.woff", "*.woff2").permitAll()
-                        .requestMatchers("/error", "/register", "/login", "/actuator/prometheus", "/api/get-xsrf-cookie").permitAll()
+                        .requestMatchers("/", "/index.html", "/assets/**", "*.js", "*.css", "*.ico", "*.png", "*.svg", "*.woff", "*.woff2", "*.xml", "*.txt", "*.webmanifest").permitAll()
+                        .requestMatchers("/error", "/register", "/login", "/logout", "/actuator/health", "/actuator/prometheus", "/api/get-xsrf-cookie").permitAll()
                         .requestMatchers("/api/**").authenticated()
                         .requestMatchers(HttpMethod.OPTIONS).permitAll()
-                        .anyRequest().permitAll()
+                        .anyRequest().denyAll()
                 )
                 // Use HTTP Basic Authentication (for simplicity)
                 //.httpBasic(withDefaults())
 
                 .exceptionHandling(exceptionHandling -> exceptionHandling
-                        .authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/login"))
+                        // API clients get a proper 401 JSON; browser navigation redirects to /login
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            if (request.getRequestURI().startsWith("/api/")) {
+                                response.setStatus(HttpStatus.UNAUTHORIZED.value());
+                                response.setContentType("application/json");
+                                response.getWriter().write("{\"error\":\"Unauthorized\"}");
+                            } else {
+                                new LoginUrlAuthenticationEntryPoint("/login").commence(request, response, authException);
+                            }
+                        })
                 )
 
                 .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)
