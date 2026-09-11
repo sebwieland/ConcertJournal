@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import DefaultLayout from "../theme/DefaultLayout";
 import DataCollector from "./journal/DataCollector";
 import calculateStatistics from "../utils/calculateStatistics";
-import { ConcertEvent } from "../types/events";
+
 import { ConfirmProvider } from "material-ui-confirm";
 import StatCard from "./utilities/StatCard";
 import {
@@ -13,12 +13,12 @@ import {
 } from "@mui/icons-material";
 import { Alert, Divider } from "@mui/material";
 import useEvents from "../hooks/useEvents";
-import { handleApiError } from "../api/apiErrors";
+
 import LoadingIndicator from "./utilities/LoadingIndicator";
 import SearchComponent from "./journal/SearchComponent";
 
 export default function LandingPage() {
-  const { data, error, isLoading, refetch } = useEvents();
+  const { data, error, isLoading } = useEvents();
 
   useEffect(() => {
     // Component mount logic
@@ -88,7 +88,7 @@ export default function LandingPage() {
           {/* Force the SearchComponent to be included in all builds */}
           <div data-testid="search-component-container">
             <DataCollector>
-              {({ data: collectedData, onEdit, onDelete }) => (
+              {({ onEdit, onDelete }) => (
                 <SearchComponent
                   data={events}
                   onEdit={onEdit}

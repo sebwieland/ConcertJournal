@@ -9,7 +9,6 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 
 import { styled } from "@mui/material/styles";
-import { useNavigate } from "react-router-dom";
 import { useLayoutEffect } from "react";
 
 interface SignInCardProps {
@@ -47,8 +46,6 @@ export default function SignInCard({
   handleLogin,
   isLoading,
 }: SignInCardProps) {
-  const navigate = useNavigate();
-
   useLayoutEffect(() => {
     if (isLoading && process.env.NODE_ENV === "development") {
       console.log("Loading...");
@@ -147,7 +144,7 @@ export default function SignInCard({
           {isLoading ? "Loading..." : "Sign in"}
         </Button>
         <Typography sx={{ textAlign: "center" }}>
-          Don't have an account?{" "}
+          Don&apos;t have an account?{" "}
           <span>
             <Link href="/sign-up" variant="body2" sx={{ alignSelf: "center" }}>
               Sign up

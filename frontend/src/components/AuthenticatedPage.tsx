@@ -8,7 +8,9 @@ interface AuthenticatedPageProps {
   element: React.ReactElement;
 }
 
-const AuthenticatedPage = memo(({ element }: AuthenticatedPageProps) => {
+const AuthenticatedPage = memo(function AuthenticatedPage({
+  element,
+}: AuthenticatedPageProps) {
   const authContext = useContext(AuthContext);
   if (!authContext) {
     throw new Error("AuthContext is not provided");

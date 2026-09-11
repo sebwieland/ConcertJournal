@@ -2,7 +2,7 @@
 
 export interface SortOrder {
   column: string;
-  order: 'asc' | 'desc';
+  order: "asc" | "desc";
 }
 
 export interface ArtistTag {

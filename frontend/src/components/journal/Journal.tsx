@@ -23,7 +23,6 @@ import {
   trailingActions,
 } from "./SwipeableListItem";
 import useEvents from "../../hooks/useEvents";
-import { handleApiError } from "../../api/apiErrors";
 import LoadingIndicator from "../utilities/LoadingIndicator";
 
 interface SortOrder {
@@ -39,7 +38,7 @@ const Journal = () => {
     return saved ? JSON.parse(saved) : { column: "date", order: "desc" };
   });
 
-  const { data, error, isLoading, refetch } = useEvents();
+  const { error, isLoading } = useEvents();
 
   useEffect(() => {
     // Component mounted
@@ -51,14 +50,6 @@ const Journal = () => {
   const handleSortChange = (newSortOrder: SortOrder) => {
     setSortOrder(newSortOrder);
     localStorage.setItem("journalSortOrder", JSON.stringify(newSortOrder));
-  };
-
-  const onEdit = (id: React.Key) => {
-    // Handle edit logic here
-  };
-
-  const onDelete = (id: React.Key) => {
-    // Handle delete logic here
   };
 
   if (isLoading) {

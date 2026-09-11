@@ -4,9 +4,21 @@ const typescriptConfig = require('@typescript-eslint/eslint-plugin').configs.rec
 const reactHooksConfig = require('eslint-plugin-react-hooks').configs.recommended;
 const prettierConfig = require('eslint-plugin-prettier').configs.recommended;
 
+const rules = {
+  ...typescriptConfig.rules,
+  ...reactConfig.rules,
+  ...reactHooksConfig.rules,
+  ...prettierConfig.rules,
+  // React 18 uses the automatic JSX runtime — no React import needed in scope
+  'react/react-in-jsx-scope': 'off',
+};
+
 module.exports = [
   {
-    files: ['**/*.tsx'],
+    ignores: ['vite.config.ts', 'vitest.config.ts', 'vitest.setup.ts'],
+  },
+  {
+    files: ['**/*.{ts,tsx}'],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',
@@ -28,17 +40,18 @@ module.exports = [
       'react-hooks': require('eslint-plugin-react-hooks'),
       prettier: require('eslint-plugin-prettier'),
     },
-    rules: {
-      ...reactConfig.rules,
-      ...typescriptConfig.rules,
-      ...reactHooksConfig.rules,
-      ...prettierConfig.rules,
-      // Custom rules can be added here
-    },
+    rules,
     settings: {
       react: {
         version: 'detect',
       },
+    },
+  },
+  {
+    files: ['src/tests/**/*.{ts,tsx}'],
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/ban-ts-comment': 'off',
     },
   },
 ];

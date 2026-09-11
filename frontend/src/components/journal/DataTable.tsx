@@ -1,22 +1,17 @@
 import React from "react";
-import {
-  DataGrid,
-  GridColDef,
-  GridRenderCellParams,
-  GridRowId,
-} from "@mui/x-data-grid";
+import { DataGrid, GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
 import dayjs from "dayjs";
 import Button from "@mui/material/Button";
 import RatingStars from "../utilities/RatingStars";
-import { Alert } from "@mui/material";
+import { ConcertEvent } from "../../types/events";
 
 interface DataTableProps {
-  data: any[];
+  data: ConcertEvent[];
   onEdit: (id: number) => void;
   onDelete: (id: number) => void;
 }
 
-class DataTable extends React.Component<DataTableProps, {}> {
+class DataTable extends React.Component<DataTableProps, Record<string, never>> {
   componentDidMount() {
     if (process.env.NODE_ENV === "development") {
       console.log("DataTable component mounted");
@@ -41,7 +36,7 @@ class DataTable extends React.Component<DataTableProps, {}> {
       sortComparator: (v1, v2) => {
         try {
           // Handle dates that come as arrays [year, month, day]
-          const getDate = (value: any) => {
+          const getDate = (value: unknown) => {
             // Handle undefined or null values
             if (value === undefined || value === null) {
               return dayjs(); // Default to current date
@@ -82,7 +77,7 @@ class DataTable extends React.Component<DataTableProps, {}> {
               }
             }
 
-            return dayjs(value);
+            return dayjs(value as string | number | Date);
           };
 
           const date1 = getDate(v1);
@@ -96,10 +91,10 @@ class DataTable extends React.Component<DataTableProps, {}> {
           return 0; // Return 0 if comparison fails
         }
       },
-      valueFormatter: (params: any) => {
+      valueFormatter: (params: { value?: unknown } | unknown[]) => {
         // Handle case where params is directly the date array
         if (Array.isArray(params)) {
-          const [year, month, day] = params;
+          const [year, month, day] = params as [number, number, number];
           const date = dayjs()
             .year(year)
             .month(month - 1)
@@ -146,7 +141,7 @@ class DataTable extends React.Component<DataTableProps, {}> {
           }
 
           // Handle date that comes as a regular string
-          const date = dayjs(params.value);
+          const date = dayjs(params.value as string | number | Date);
           return date.format("DD/MM/YYYY");
         } catch (error) {
           return "Invalid date";

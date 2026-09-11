@@ -1,4 +1,5 @@
-export default function getTheme(mode: string): { palette: any } {
+import { PaletteOptions } from "@mui/material/styles";
+export default function getTheme(mode: string): { palette: PaletteOptions } {
   return {
     palette: {
       mode: mode === "dark" ? "dark" : "light",

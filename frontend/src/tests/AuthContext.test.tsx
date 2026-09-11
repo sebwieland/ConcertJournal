@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { AuthContextInterface } from "../contexts/AuthContext";
-import { render, screen, act, waitFor } from "@testing-library/react";
+import { render, screen, act } from "@testing-library/react";
 
 // Create a mock implementation of the AuthContextInterface
 const createMockAuthContext = (): AuthContextInterface => ({

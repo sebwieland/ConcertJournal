@@ -1,7 +1,8 @@
 import React from "react";
 import { render, screen, fireEvent } from "../../../tests/utils/test-utils";
-import { vi, describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach } from "vitest";
 import DataTable from "../../../components/journal/DataTable";
+import { ConcertEvent } from "../../../types/events";
 import {
   mockEventData,
   mockFunctions,
@@ -131,24 +132,24 @@ describe("DataTable", () => {
 
     // Test date valueFormatter with array input
     const dateArray = [2023, 5, 15];
-    // @ts-ignore - We're only testing the functionality, not the type signature
+    // @ts-expect-error - We're only testing the functionality, not the type signature
     const formattedArrayDate = valueFormatter({ value: dateArray });
     expect(formattedArrayDate).toBe("15/05/2023");
 
     // Test date valueFormatter with string representation of array
     const dateArrayString = JSON.stringify([2023, 6, 20]);
-    // @ts-ignore - We're only testing the functionality, not the type signature
+    // @ts-expect-error - We're only testing the functionality, not the type signature
     const formattedArrayStringDate = valueFormatter({ value: dateArrayString });
     expect(formattedArrayStringDate).toBe("20/06/2023");
 
     // Test date valueFormatter with regular date string
     const dateString = "2023-07-25";
-    // @ts-ignore - We're only testing the functionality, not the type signature
+    // @ts-expect-error - We're only testing the functionality, not the type signature
     const formattedStringDate = valueFormatter({ value: dateString });
     expect(formattedStringDate).toBe("25/07/2023");
 
     // Test with null value
-    // @ts-ignore - We're only testing the functionality, not the type signature
+    // @ts-expect-error - We're only testing the functionality, not the type signature
     const nullDate = valueFormatter({ value: null });
     expect(nullDate).toBe("Unknown date");
   });
@@ -179,24 +180,24 @@ describe("DataTable", () => {
     // Test sortComparator with array dates
     const date1 = [2023, 5, 15];
     const date2 = [2023, 6, 20];
-    // @ts-ignore - We're only testing the functionality, not the type signature
+    // @ts-expect-error - We're only testing the functionality, not the type signature
     const compareResult1 = sortComparator(date1, date2);
     expect(compareResult1).toBeLessThan(0); // date1 is before date2
 
     // Test sortComparator with string dates
     const dateStr1 = "2023-05-15";
     const dateStr2 = "2023-06-20";
-    // @ts-ignore - We're only testing the functionality, not the type signature
+    // @ts-expect-error - We're only testing the functionality, not the type signature
     const compareResult2 = sortComparator(dateStr1, dateStr2);
     expect(compareResult2).toBeLessThan(0); // dateStr1 is before dateStr2
 
     // Test sortComparator with mixed formats
-    // @ts-ignore - We're only testing the functionality, not the type signature
+    // @ts-expect-error - We're only testing the functionality, not the type signature
     const compareResult3 = sortComparator(date1, dateStr2);
     expect(compareResult3).toBeLessThan(0); // date1 is before dateStr2
 
     // Test sortComparator with invalid input
-    // @ts-ignore - We're only testing the functionality, not the type signature
+    // @ts-expect-error - We're only testing the functionality, not the type signature
     const compareResult4 = sortComparator("invalid", "also invalid");
     // The actual implementation may return NaN for invalid dates
     expect(Number.isNaN(compareResult4) || compareResult4 === 0).toBe(true);
@@ -232,7 +233,7 @@ describe("DataTable", () => {
 
     render(
       <DataTable
-        data={dataWithMissingRating}
+        data={dataWithMissingRating as unknown as ConcertEvent[]}
         onEdit={mockOnEdit}
         onDelete={mockOnDelete}
       />,
@@ -260,7 +261,7 @@ describe("DataTable", () => {
 
     render(
       <DataTable
-        data={dataWithDefaultId}
+        data={dataWithDefaultId as unknown as ConcertEvent[]}
         onEdit={mockOnEdit}
         onDelete={mockOnDelete}
       />,
@@ -289,7 +290,7 @@ describe("DataTable", () => {
 
     render(
       <DataTable
-        data={dataWithStringId}
+        data={dataWithStringId as unknown as ConcertEvent[]}
         onEdit={mockOnEdit}
         onDelete={mockOnDelete}
       />,

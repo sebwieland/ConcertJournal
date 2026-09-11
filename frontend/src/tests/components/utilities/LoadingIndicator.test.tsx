@@ -1,5 +1,4 @@
 import React from "react";
-import { screen } from "@testing-library/react";
 import LoadingIndicator from "../../../components/utilities/LoadingIndicator";
 import { describe, it, expect } from "vitest";
 import { renderWithProviders } from "../../utils/test-utils";

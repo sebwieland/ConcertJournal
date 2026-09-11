@@ -34,8 +34,7 @@ const useAuth = (): UseAuth => {
   if (!authContext) {
     throw new Error("AuthContext is not provided");
   }
-  const { setIsLoggedIn, setAccessToken, fetchCsrfToken, setLoggedOut } =
-    authContext;
+  const { setIsLoggedIn, setAccessToken, fetchCsrfToken } = authContext;
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<ApiError | null>(null);
 

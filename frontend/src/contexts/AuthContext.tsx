@@ -153,14 +153,7 @@ const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
     } finally {
       setIsLoading(false); // Ensure isLoading is set to false after attempt
     }
-  }, [
-    csrfToken,
-    apiClient,
-    setLoggedOut,
-    setAccessToken,
-    setIsLoggedIn,
-    fetchCsrfToken,
-  ]);
+  }, [csrfToken, apiClient, setLoggedOut, setAccessToken]);
 
   useEffect(() => {
     const setupAuth = async () => {

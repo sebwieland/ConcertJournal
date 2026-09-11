@@ -6,7 +6,7 @@ import useAuth from "../../hooks/useAuth";
 import dayjs from "dayjs";
 import EntryForm from "./EntryForm";
 import { ConcertEvent, UpdateEventData } from "../../types/events";
-import { ApiError, handleApiError } from "../../api/apiErrors";
+import { handleApiError } from "../../api/apiErrors";
 
 const EditEntryFormPage = () => {
   const eventsApi = EventsApi();
