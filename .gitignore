@@ -144,3 +144,6 @@ sessionTmp/
 
 # opencode tooling
 .opencode/
+
+# Playwright E2E artifacts
+frontend/e2e/e2e-out/
