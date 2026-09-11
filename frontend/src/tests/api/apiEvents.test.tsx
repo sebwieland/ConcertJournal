@@ -15,13 +15,6 @@ vi.mock("../../api/apiClient", () => ({
   }),
 }));
 
-// Mock the ConfigContext
-vi.mock("../../contexts/ConfigContext", () => ({
-  ConfigContext: {
-    Provider: ({ children }: { children: React.ReactNode }) => children,
-  },
-}));
-
 // Mock the apiErrors module
 vi.mock("../../api/apiErrors", () => ({
   handleApiError: (error: any) => error,
