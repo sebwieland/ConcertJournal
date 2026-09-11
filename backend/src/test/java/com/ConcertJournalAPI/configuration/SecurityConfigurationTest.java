@@ -30,7 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(controllers = BandEventController.class)
 @AutoConfigureMockMvc
-@Import({PasswordConfig.class, SecurityConfiguration.class, CorsConfig.class})
+@Import({PasswordConfig.class, SecurityConfiguration.class})
 public class SecurityConfigurationTest {
 
     private static final String TEST_USERNAME = "admin@example.com";
