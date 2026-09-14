@@ -1,11 +1,16 @@
-FROM node:22-alpine AS frontend-build
+# Build stages are pinned to $BUILDPLATFORM: dist/ and the JAR are
+# arch-independent, so they compile natively on the runner once and get
+# copied into both platform variants of the runtime stage. Without this,
+# running Node under QEMU for linux/arm64 crashes (Illegal instruction)
+# and Maven takes 3-4x longer.
+FROM --platform=$BUILDPLATFORM node:22-alpine AS frontend-build
 WORKDIR /frontend
 COPY frontend/package*.json ./
 RUN npm ci --prefer-offline --no-audit
 COPY frontend/ ./
 RUN npm run build
 
-FROM maven:3.9-eclipse-temurin-21-alpine AS backend-build
+FROM --platform=$BUILDPLATFORM maven:3.9-eclipse-temurin-21-alpine AS backend-build
 WORKDIR /app
 COPY backend/pom.xml ./
 RUN mvn dependency:go-offline -B -T 1C \
