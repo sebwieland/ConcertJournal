@@ -80,6 +80,11 @@ public class SecurityConfigurationTest {
         // otherwise), not guarded by authorization.
         mockMvc.perform(get("/"))
                 .andExpect(status().isNotFound());
+        // Two-segment SPA routes (React Router path params) must reach the
+        // SPA too — otherwise they fall through to denyAll and the browser
+        // lands on the backend login form instead of the client router.
+        mockMvc.perform(get("/edit-entry/11"))
+                .andExpect(status().isNotFound());
     }
 
     @Test
