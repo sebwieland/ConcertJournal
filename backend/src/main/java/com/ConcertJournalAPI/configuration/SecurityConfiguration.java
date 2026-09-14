@@ -187,9 +187,12 @@ public class SecurityConfiguration {
                                         path.startsWith("/logout") || path.contains(".")) {
                                     return false;
                                 }
-                                // single non-root segment only (e.g. /sign-up)
+                                // SPA document routes traverse the security chain:
+                                // 1 segment (/sign-up) or 2 (/edit-entry/11) —
+                                // deeper routes would hit denyAll → /login redirect.
                                 String[] segments = path.split("/");
-                                return path.length() > 1 && segments.length == 2 && !segments[1].isEmpty();
+                                return (segments.length == 2 && !segments[1].isEmpty()) ||
+                                       (segments.length == 3 && !segments[1].isEmpty() && !segments[2].isEmpty());
                             }
                         }).permitAll()
                         .requestMatchers("/error", "/register", "/login", "/logout", "/actuator/health", "/actuator/prometheus", "/api/get-xsrf-cookie", "/api/refresh-token").permitAll()
