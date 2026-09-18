@@ -1,4 +1,4 @@
-import dayjs from "dayjs";
+import dayjs, { Dayjs } from "dayjs";
 
 export type EventDateInput = string | number[] | string[] | null | undefined;
 
