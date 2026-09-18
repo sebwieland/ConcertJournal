@@ -2,11 +2,13 @@ package com.ConcertJournalAPI;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
+// No @EnableWebMvc: it disables Spring Boot's MVC auto-configuration, which
+// silently dropped all spring.jackson.* settings (its hand-built converters
+// used a default ObjectMapper) and cost us ISO date serialization. Boot
+// honors WebMvcConfigurer resource handlers natively.
 
 @SpringBootApplication
-@EnableWebMvc
 public class ConcertJournalAPI {
 	public static void main(String[] args) {
 		SpringApplication.run(ConcertJournalAPI.class, args);
