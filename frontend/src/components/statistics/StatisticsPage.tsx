@@ -129,9 +129,7 @@ const StatisticsPage: React.FC = () => {
             data: stats.topArtists.map((a) => a.name),
           },
         ]}
-        series={[
-          { data: stats.topArtists.map((a) => a.count), label: "Seen" },
-        ]}
+        series={[{ data: stats.topArtists.map((a) => a.count), label: "Seen" }]}
       />
     ),
   );
