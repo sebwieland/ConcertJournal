@@ -74,8 +74,12 @@ describe("StatisticsPage", () => {
     });
     renderWithProviders(<StatisticsPage />);
 
-    expect(screen.getAllByText(/Add an entry to your journal/).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/Rate a few concerts/).length).toBeGreaterThan(0);
+    expect(
+      screen.getAllByText(/Add an entry to your journal/).length,
+    ).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Rate a few concerts/).length).toBeGreaterThan(
+      0,
+    );
     expect(screen.getByText(/No artists yet/)).toBeInTheDocument();
     // drought stats are deliberately dash-unknown with a single entry
     expect(screen.getAllByText("–").length).toBeGreaterThan(0);
