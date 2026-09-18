@@ -47,7 +47,10 @@ const EMPTY = (): StatisticsData => ({
   ratingDistribution: [1, 2, 3, 4, 5].map((rating) => ({ rating, count: 0 })),
   longestDroughtDays: null,
   currentDroughtDays: null,
-  weekdayProfile: [1, 2, 3, 4, 5, 6, 7].map((weekday) => ({ weekday, count: 0 })),
+  weekdayProfile: [1, 2, 3, 4, 5, 6, 7].map((weekday) => ({
+    weekday,
+    count: 0,
+  })),
   goldenEra: null,
 });
 
@@ -115,8 +118,14 @@ const computeStatistics = (entries: ConcertEvent[] = []): StatisticsData => {
       .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name))
       .slice(0, n);
 
-  const topArtists = asTopList(countBy((e) => e.bandName), 5);
-  const topLocations = asTopList(countBy((e) => e.place), 5);
+  const topArtists = asTopList(
+    countBy((e) => e.bandName),
+    5,
+  );
+  const topLocations = asTopList(
+    countBy((e) => e.place),
+    5,
+  );
 
   // ----- rating distribution (1..5) -----
   const ratingDistribution = [1, 2, 3, 4, 5].map((rating) => ({
@@ -135,7 +144,9 @@ const computeStatistics = (entries: ConcertEvent[] = []): StatisticsData => {
 
   const latest = dates.length > 0 ? dates[dates.length - 1] : null;
   const currentDroughtDays =
-    latest !== null ? Math.max(0, dayjs().startOf("day").diff(latest.startOf("day"), "day")) : null;
+    latest !== null
+      ? Math.max(0, dayjs().startOf("day").diff(latest.startOf("day"), "day"))
+      : null;
 
   // ----- weekday profile (dayjs: 0 = Sunday .. 6 = Saturday) -----
   const weekdayCounts = new Map<number, number>();
@@ -143,7 +154,10 @@ const computeStatistics = (entries: ConcertEvent[] = []): StatisticsData => {
     weekdayCounts.set(d.day(), (weekdayCounts.get(d.day()) || 0) + 1);
   });
   const weekdayProfile = [1, 2, 3, 4, 5, 6, 0] // Monday..Sunday display order
-    .map((d) => ({ weekday: d === 0 ? 7 : d, count: weekdayCounts.get(d) || 0 }));
+    .map((d) => ({
+      weekday: d === 0 ? 7 : d,
+      count: weekdayCounts.get(d) || 0,
+    }));
 
   // ----- golden era -----
   const goldenEraCandidate = [...avgRatingPerYear].sort(

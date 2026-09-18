@@ -5,14 +5,14 @@ import { ConcertEvent } from "../../types/events";
 const event = (
   id: number,
   bandName: string,
-  date: string | number[],
+  date?: string | number[],
   rating?: number,
   place?: string,
 ): ConcertEvent => ({
   id,
   bandName,
   place: place ?? "Berlin",
-  date,
+  date: date ?? "",
   comment: "",
   rating: rating ?? 0,
 });
@@ -125,7 +125,10 @@ describe("computeStatistics", () => {
   });
 
   it("skips events without parseable dates", () => {
-    const stats = computeStatistics([event(1, "A", undefined), event(2, "B", "2023-01-01")]);
+    const stats = computeStatistics([
+      event(1, "A"),
+      event(2, "B", "2023-01-01"),
+    ]);
     expect(stats.perYear).toEqual([{ year: 2023, count: 1 }]);
   });
 });
