@@ -10,6 +10,9 @@ const NewDataEntryFormPage = lazy(
   () => import("./components/entryForms/NewDataEntryPage"),
 );
 const Journal = lazy(() => import("./components/journal/Journal"));
+const StatisticsPage = lazy(
+  () => import("./components/statistics/StatisticsPage"),
+);
 const EditEntryFormPage = lazy(
   () => import("./components/entryForms/EditEntryFormPage"),
 );
@@ -38,6 +41,10 @@ class App extends React.Component<Record<string, never>> {
                 <Route
                   path="/your-journal"
                   element={<AuthenticatedPage element={<Journal />} />}
+                />
+                <Route
+                  path="/statistics"
+                  element={<AuthenticatedPage element={<StatisticsPage />} />}
                 />
                 <Route
                   path="/edit-entry/:id"

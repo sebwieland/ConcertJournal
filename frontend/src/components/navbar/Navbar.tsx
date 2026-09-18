@@ -7,6 +7,7 @@ import {
 } from "@mui/material";
 import LogoutIcon from "@mui/icons-material/Logout";
 import BookIcon from "@mui/icons-material/Book";
+import InsightsIcon from "@mui/icons-material/Insights";
 import React, { useContext } from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
@@ -56,6 +57,9 @@ const Navbar = () => {
       <Button color="inherit" onClick={() => navigate("/your-journal")}>
         Your Journal
       </Button>
+      <Button color="inherit" onClick={() => navigate("/statistics")}>
+        Statistics
+      </Button>
       <Button color="inherit" onClick={() => navigate("/new-entry")}>
         Add Entry
       </Button>
@@ -74,6 +78,14 @@ const Navbar = () => {
       >
         <BookIcon sx={{ mr: 1 }} />
         <Typography>Your Journal</Typography>
+      </Button>
+      <Button
+        color="inherit"
+        onClick={() => navigate("/statistics")}
+        sx={{ textTransform: "none", padding: 0 }}
+      >
+        <InsightsIcon sx={{ mr: 1 }} />
+        <Typography>Stats</Typography>
       </Button>
       <Button
         color="inherit"
