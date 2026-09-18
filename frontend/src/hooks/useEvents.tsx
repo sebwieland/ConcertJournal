@@ -1,6 +1,7 @@
 import { useQuery, useMutation } from "react-query";
 import EventsApi from "../api/apiEvents";
 import useAuth from "./useAuth";
+import parseEventDate from "../utils/parseEventDate";
 import {
   ConcertEvent,
   CreateEventData,
@@ -50,42 +51,21 @@ const useEvents = (): UseEvents => {
       try {
         const response = await eventsApi.getAllEvents(token);
 
-        // Process the response to ensure dates are in the correct format
+        // Normalize every historical date shape to a plain ISO string
+        // (shared with calculateStatistics via utils/parseEventDate);
+        // items without a parseable date fall back to today, as before
         const processedResponse = Array.isArray(response)
           ? response.map((item) => {
-              // Make a copy of the item to avoid mutating the original
               const processedItem = { ...item };
-
-              // Handle undefined or null dates by providing a default date
-              if (
-                processedItem.date === undefined ||
-                processedItem.date === null
-              ) {
-                // Use current date as default
-                const today = new Date();
-                processedItem.date = [
-                  today.getFullYear(),
-                  today.getMonth() + 1,
-                  today.getDate(),
-                ];
-              }
-              // If date is a string that looks like an array, convert it to an actual array
-              else if (
-                typeof processedItem.date === "string" &&
-                processedItem.date.startsWith("[") &&
-                processedItem.date.endsWith("]")
-              ) {
-                try {
-                  processedItem.date = JSON.parse(processedItem.date);
-                } catch (error) {
-                  // Provide a default date if parsing fails
-                  const today = new Date();
-                  processedItem.date = [
-                    today.getFullYear(),
-                    today.getMonth() + 1,
-                    today.getDate(),
-                  ];
-                }
+              const parsed = parseEventDate(processedItem.date);
+              if (parsed) {
+                processedItem.date = parsed.format("YYYY-MM-DD");
+              } else {
+                const fallback = new Date();
+                const iso = (n: number) => String(n).padStart(2, "0");
+                processedItem.date =
+                  `${fallback.getFullYear()}-${iso(fallback.getMonth() + 1)}` +
+                  `-${iso(fallback.getDate())}`;
               }
 
               return processedItem;

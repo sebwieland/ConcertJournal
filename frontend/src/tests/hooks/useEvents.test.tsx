@@ -71,8 +71,11 @@ describe("useEvents", () => {
       // Check if getAllEvents was called with the token
       expect(mockGetAllEvents).toHaveBeenCalledWith("test-token");
 
-      // Check if data is set correctly
-      expect(result.current.data).toEqual(mockEventData);
+      // Check if data is set correctly — dates are normalized to ISO strings
+      expect(result.current.data).toEqual([
+        { ...mockEventData[0], date: "2023-05-15" },
+        { ...mockEventData[1], date: "2023-06-20" },
+      ]);
     });
 
     it("should handle API errors when fetching events", async () => {
@@ -133,10 +136,21 @@ describe("useEvents", () => {
         expect(result.current.isLoading).toBe(false);
       });
 
-      // Check if dates are processed correctly
-      expect(Array.isArray(result.current.data?.[0].date)).toBe(true);
-      expect(Array.isArray(result.current.data?.[1].date)).toBe(true);
-      expect(Array.isArray(result.current.data?.[2].date)).toBe(true);
+      // Check if dates are processed correctly — every historical shape
+      // (array, stringified array, null) is normalized to ISO strings,
+      // with null falling back to *today* by design
+      const dates = result.current.data?.map((e) => e.date);
+      expect(typeof dates?.[0]).toBe("string");
+      expect(dates?.[0]).toBe("2023-05-15");
+      expect(typeof dates?.[1]).toBe("string");
+      expect(dates?.[1]).toBe("2023-06-20");
+      // Null date falls back to today's date, still as a string
+      expect(typeof dates?.[2]).toBe("string");
+      const today = new Date();
+      const iso = (n: number) => String(n).padStart(2, "0");
+      expect(dates?.[2]).toBe(
+        `${today.getFullYear()}-${iso(today.getMonth() + 1)}-${iso(today.getDate())}`,
+      );
     });
   });
 
