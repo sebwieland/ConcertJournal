@@ -132,6 +132,18 @@ async function shot(name) { await page.screenshot({ path: `${out}/${name}.png`, 
     await shot('05-journal');
   } catch (e) { step('journal:entry-visible', 'FAIL', String(e).slice(0, 200)); await shot('05-journal-fail'); }
 
+  // ---------- 5b. Statistics page ----------
+  try {
+    await page.goto(`${BASE}/statistics`, { waitUntil: 'networkidle', timeout: 30000 });
+    await page.waitForTimeout(2500);
+    const body = await page.evaluate(() => document.body.innerText);
+    const hasHeading = body.includes('Your Statistics');
+    const hasCharts = body.includes('Concerts per year') && body.includes('Top 5 artists');
+    step('statistics:renders', hasHeading && hasCharts ? 'PASS' : 'FAIL',
+      `heading=${hasHeading} charts=${hasCharts} url=${page.url()}`);
+    await shot('05b-statistics');
+  } catch (e) { step('statistics:renders', 'FAIL', String(e).slice(0, 200)); await shot('05b-statistics-fail'); }
+
     // ---------- 6a. API probe: allEvents payload (R1 must be FIXED) ----------
     if (globalThis.accessToken) {
       try {
