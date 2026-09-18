@@ -50,10 +50,10 @@ flowchart TB
 
 | Block | Responsibility | Source path |
 |---|---|---|
-| Frontend: App & Routing | Class-component shell; lazy-loaded routes (`/`, `/new-entry`, `/your-journal`, `/edit-entry/:id`, `/sign-in`, `/sign-up`) behind `AuthenticatedPage` guard | `frontend/src/App.tsx`, `frontend/src/index.tsx` |
+| Frontend: App & Routing | Class-component shell; lazy-loaded routes (`/`, `/new-entry`, `/your-journal`, `/statistics`, `/edit-entry/:id`, `/sign-in`, `/sign-up`) behind `AuthenticatedPage` guard | `frontend/src/App.tsx`, `frontend/src/index.tsx` |
 | Frontend: AuthContext | Owns access token, CSRF token, silent refresh interval (2 min), login state | `frontend/src/contexts/AuthContext.tsx` |
 | Frontend: API Clients | Axios instance (`baseURL: /api`, `withCredentials`), auth/event calls, error normalisation, MusicBrainz lookup | `frontend/src/api/*.tsx` |
-| Frontend: UI Components | Journal table, entry forms, sign-in/up pages, landing page, navbar, theming | `frontend/src/components/**` |
+| Frontend: UI Components | Journal table, entry forms, sign-in/up pages, landing page, statistics dashboard (MUI X Charts), navbar, theming | `frontend/src/components/**` |
 | Backend: Controllers | REST endpoints (`BandEventController`, `HomeController`, `SecurityController`, `UserController`), SPA forwarding (`SpaController`), login page (`LoginController`) | `backend/.../controller/` |
 | Backend: Services | `BandEventService` (CRUD + per-user ownership scoping), `CustomUserDetailsService` | `backend/.../service/` |
 | Backend: Repositories | `BandEventRepository`, `AppUserRepository` (Spring Data JPA) | `backend/.../repository/` |
