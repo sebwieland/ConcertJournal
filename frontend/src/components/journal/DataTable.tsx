@@ -1,6 +1,5 @@
 import React from "react";
 import { DataGrid, GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
-import dayjs from "dayjs";
 import Button from "@mui/material/Button";
 import RatingStars from "../utilities/RatingStars";
 import { Link as RouterLink } from "react-router-dom";
@@ -78,7 +77,13 @@ class DataTable extends React.Component<DataTableProps, Record<string, never>> {
         return (d1?.valueOf() ?? 0) - (d2?.valueOf() ?? 0);
       },
     },
-    { field: "comment", headerName: "Comment", cellClassName: "comment-cell", minWidth: 190, flex: 1 },
+    {
+      field: "comment",
+      headerName: "Comment",
+      cellClassName: "comment-cell",
+      minWidth: 190,
+      flex: 1,
+    },
     {
       field: "rating",
       headerName: "Rating",

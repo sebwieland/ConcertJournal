@@ -8,7 +8,9 @@ describe("getTheme", () => {
     expect(palette.mode).toBe("light");
     expect((palette.primary as { main: string }).main).toBe("#4F46E5");
     expect((palette.secondary as { main: string }).main).toBe("#F59E0B");
-    expect(String((theme.typography as { fontFamily?: string })?.fontFamily)).toContain("InterVariable");
+    expect(
+      String((theme.typography as { fontFamily?: string })?.fontFamily),
+    ).toContain("InterVariable");
     expect(theme.shape?.borderRadius).toBe(12);
   });
 
@@ -33,8 +35,14 @@ describe("getTheme", () => {
     const lightPalette = lightTheme.palette!;
     const darkPalette = darkTheme.palette!;
 
-    expect(lightPalette.secondary ? (lightPalette.secondary as { main: string }).main : undefined).toBe(
-      darkPalette.secondary ? (darkPalette.secondary as { main: string }).main : undefined,
+    expect(
+      lightPalette.secondary
+        ? (lightPalette.secondary as { main: string }).main
+        : undefined,
+    ).toBe(
+      darkPalette.secondary
+        ? (darkPalette.secondary as { main: string }).main
+        : undefined,
     );
     expect((lightPalette.primary as { main: string }).main).toBe("#4F46E5");
     expect((darkPalette.primary as { main: string }).main).toBe("#818CF8");

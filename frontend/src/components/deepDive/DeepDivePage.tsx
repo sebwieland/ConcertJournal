@@ -102,165 +102,171 @@ const DeepDivePage: React.FC = () => {
       : null;
   const first = dives[0];
   const last = dives[dives.length - 1];
-  const otherKindLabel = kind === "artist" ? "Venue" : "Artist";
 
   return (
     <DefaultLayout>
       <Box sx={{ py: 3, maxWidth: 880, mx: "auto", width: "100%" }}>
-      <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
-        <Button
-          startIcon={<ArrowBack />}
-          onClick={() => navigate(-1)}
-          sx={{ textTransform: "none" }}
-        >
-          Back
-        </Button>
-      </Box>
-      <Box sx={{ mb: 3 }}>
-        <Chip
-          icon={kindIcon}
-          label={label}
-          color="primary"
-          variant="outlined"
-          sx={{ mb: 1 }}
-        />
-        <Typography variant="h4">{name}</Typography>
-        <Typography variant="body1" color="text.secondary">
-          {dives.length} {dives.length === 1 ? "concert" : "concerts"} in your
-          journal
-        </Typography>
-      </Box>
-
-      {dives.length === 0 ? (
-        <Card>
-          <CardContent>
-            <Typography>
-              No journal entries found for &quot;{name}&quot;.
-            </Typography>
-            <Button
-              component={RouterLink}
-              to="/your-journal"
-              sx={{ mt: 2, textTransform: "none" }}
-            >
-              Go to your journal
-            </Button>
-          </CardContent>
-        </Card>
-      ) : (
-        <>
-          <Box
-            sx={{
-              display: "flex",
-              flexWrap: "wrap",
-              justifyContent: "center",
-              gap: 1,
-              mb: 3,
-            }}
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
+          <Button
+            startIcon={<ArrowBack />}
+            onClick={() => navigate(-1)}
+            sx={{ textTransform: "none" }}
           >
-            {[
-              {
-                icon: <Star />,
-                label: "Average rating",
-                value: avgRating?.toFixed(1) ?? "–",
-              },
-              {
-                icon: <CalendarToday />,
-                label: "First concert",
-                value: first ? first.date.format("YYYY-MM-DD") : "–",
-              },
-              {
-                icon: <CalendarToday />,
-                label: "Latest concert",
-                value: last ? last.date.format("YYYY-MM-DD") : "–",
-              },
-            ].map((card) => (
-              <Card key={card.label} sx={{ minWidth: 220, flex: "1 1 220px" }}>
-                <CardContent sx={{ textAlign: "center" }}>
-                  <Box sx={{ color: "primary.main", mb: 1 }}>{card.icon}</Box>
-                  <Typography variant="subtitle2" color="text.secondary">
-                    {card.label}
-                  </Typography>
-                  <Typography variant="h6">{card.value}</Typography>
+            Back
+          </Button>
+        </Box>
+        <Box sx={{ mb: 3 }}>
+          <Chip
+            icon={kindIcon}
+            label={label}
+            color="primary"
+            variant="outlined"
+            sx={{ mb: 1 }}
+          />
+          <Typography variant="h4">{name}</Typography>
+          <Typography variant="body1" color="text.secondary">
+            {dives.length} {dives.length === 1 ? "concert" : "concerts"} in your
+            journal
+          </Typography>
+        </Box>
+
+        {dives.length === 0 ? (
+          <Card>
+            <CardContent>
+              <Typography>
+                No journal entries found for &quot;{name}&quot;.
+              </Typography>
+              <Button
+                component={RouterLink}
+                to="/your-journal"
+                sx={{ mt: 2, textTransform: "none" }}
+              >
+                Go to your journal
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
+          <>
+            <Box
+              sx={{
+                display: "flex",
+                flexWrap: "wrap",
+                justifyContent: "center",
+                gap: 1,
+                mb: 3,
+              }}
+            >
+              {[
+                {
+                  icon: <Star />,
+                  label: "Average rating",
+                  value: avgRating?.toFixed(1) ?? "–",
+                },
+                {
+                  icon: <CalendarToday />,
+                  label: "First concert",
+                  value: first ? first.date.format("YYYY-MM-DD") : "–",
+                },
+                {
+                  icon: <CalendarToday />,
+                  label: "Latest concert",
+                  value: last ? last.date.format("YYYY-MM-DD") : "–",
+                },
+              ].map((card) => (
+                <Card
+                  key={card.label}
+                  sx={{ minWidth: 220, flex: "1 1 220px" }}
+                >
+                  <CardContent sx={{ textAlign: "center" }}>
+                    <Box sx={{ color: "primary.main", mb: 1 }}>{card.icon}</Box>
+                    <Typography variant="subtitle2" color="text.secondary">
+                      {card.label}
+                    </Typography>
+                    <Typography variant="h6">{card.value}</Typography>
+                  </CardContent>
+                </Card>
+              ))}
+            </Box>
+
+            {ratings.length > 1 && (
+              <Card sx={{ mb: 3 }}>
+                <CardContent>
+                  <Typography variant="h6">Ratings over time</Typography>
+                  <LineChart
+                    height={220}
+                    xAxis={[
+                      {
+                        scaleType: "point",
+                        data: dives
+                          .filter((m) => m.event.rating > 0)
+                          .map((m) => m.date.format("YYYY-MM-DD")),
+                      },
+                    ]}
+                    series={[
+                      {
+                        data: dives
+                          .filter((m) => m.event.rating > 0)
+                          .map((m) => m.event.rating),
+                        label: "Rating",
+                        curve: "linear",
+                      },
+                    ]}
+                    yAxis={[{ min: 0, max: 5 }]}
+                  />
                 </CardContent>
               </Card>
-            ))}
-          </Box>
+            )}
 
-          {ratings.length > 1 && (
-            <Card sx={{ mb: 3 }}>
-              <CardContent>
-                <Typography variant="h6">Ratings over time</Typography>
-                <LineChart
-                  height={220}
-                  xAxis={[
-                    {
-                      scaleType: "point",
-                      data: dives.map((m) => m.date.format("YYYY-MM-DD")),
-                    },
-                  ]}
-                  series={[
-                    {
-                      data: dives.map((m) => m.event.rating),
-                      label: "Rating",
-                      curve: "linear",
-                    },
-                  ]}
-                  yAxis={[{ min: 0, max: 5 }]}
-                />
-              </CardContent>
-            </Card>
-          )}
-
-          <Typography variant="h6" sx={{ mb: 1 }}>
-            Every {label.toLowerCase()} concert, in order
-          </Typography>
-          {dives.map((m, index) => (
-            <Box key={m.event.id}>
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 2,
-                  py: 1.5,
-                  flexWrap: "wrap",
-                }}
-              >
-                <Typography sx={{ width: 110 }}>
-                  {m.date.format("DD/MM/YYYY")}
-                </Typography>
-                <Typography
-                  component={RouterLink}
-                  to={
-                    kind === "artist"
-                      ? `/venue/${encodeURIComponent(m.event.place)}`
-                      : `/artist/${encodeURIComponent(m.event.bandName)}`
-                  }
+            <Typography variant="h6" sx={{ mb: 1 }}>
+              Every {label.toLowerCase()} concert, in order
+            </Typography>
+            {dives.map((m, index) => (
+              <Box key={m.event.id}>
+                <Box
                   sx={{
-                    flex: 1,
-                    minWidth: 160,
-                    color: "primary.main",
-                    textDecoration: "none",
-                    "&:hover": { textDecoration: "underline" },
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 2,
+                    py: 1.5,
+                    flexWrap: "wrap",
                   }}
                 >
-                  {kind === "artist" ? m.event.place : m.event.bandName}
-                </Typography>
-                <RatingStars rating={m.event.rating} />
-                {m.event.comment && (
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    sx={{ flexBasis: "100%" }}
-                  >
-                    {m.event.comment}
+                  <Typography sx={{ width: 110 }}>
+                    {m.date.format("DD/MM/YYYY")}
                   </Typography>
-                )}
+                  <Typography
+                    component={RouterLink}
+                    to={
+                      kind === "artist"
+                        ? `/venue/${encodeURIComponent(m.event.place)}`
+                        : `/artist/${encodeURIComponent(m.event.bandName)}`
+                    }
+                    sx={{
+                      flex: 1,
+                      minWidth: 160,
+                      color: "primary.main",
+                      textDecoration: "none",
+                      "&:hover": { textDecoration: "underline" },
+                    }}
+                  >
+                    {kind === "artist" ? m.event.place : m.event.bandName}
+                  </Typography>
+                  <RatingStars rating={m.event.rating} />
+                  {m.event.comment && (
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ flexBasis: "100%" }}
+                    >
+                      {m.event.comment}
+                    </Typography>
+                  )}
+                </Box>
+                {index < dives.length - 1 && <Divider />}
               </Box>
-              {index < dives.length - 1 && <Divider />}
-            </Box>
-          ))}
-        </>
-      )}
+            ))}
+          </>
+        )}
       </Box>
     </DefaultLayout>
   );

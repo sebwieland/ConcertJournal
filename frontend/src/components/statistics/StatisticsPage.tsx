@@ -12,7 +12,6 @@ import {
   CardContent,
   Divider,
   Typography,
-  useMediaQuery,
   useTheme,
 } from "@mui/material";
 import { BarChart, LineChart } from "@mui/x-charts";
@@ -259,9 +258,9 @@ const StatisticsPage: React.FC = () => {
                 : undefined
             }
           />
-      </Box>
+        </Box>
 
-      <Divider sx={{ my: 4 }} />
+        <Divider sx={{ my: 4 }} />
 
         <Box
           sx={{

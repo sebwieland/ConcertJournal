@@ -59,7 +59,7 @@ export default function LandingPage() {
             </Box>
           </Typography>
           <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
-            Every show you've seen — searchable, rated, and stat-driven.
+            Every show you&apos;ve seen — searchable, rated, and stat-driven.
           </Typography>
           <Box
             sx={{ display: "flex", flexWrap: "wrap", justifyContent: "center" }}
@@ -68,6 +68,7 @@ export default function LandingPage() {
               title="Concerts attended"
               value={statistics.totalCount.toString()}
               icon={<PlaylistAddCheck />}
+              linkTo="/your-journal"
             />
             {statistics.mostSeenArtist && (
               <StatCard
@@ -81,6 +82,7 @@ export default function LandingPage() {
               title="Most Artists on a Single Day"
               value={statistics.mostArtistsOnASingleDay.toString()}
               icon={<Group />}
+              linkTo="/statistics"
             />
             {statistics.mostVisitedLocation && (
               <StatCard
