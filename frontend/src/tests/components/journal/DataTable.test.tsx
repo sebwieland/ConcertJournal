@@ -27,7 +27,7 @@ describe("DataTable", () => {
     );
 
     // Check if column headers are rendered
-    expect(screen.getByText("ID")).toBeInTheDocument();
+// ID column intentionally removed — it carries no information
     expect(screen.getByText("Band")).toBeInTheDocument();
     expect(screen.getByText("Place")).toBeInTheDocument();
     expect(screen.getByText("Date")).toBeInTheDocument();
@@ -54,7 +54,7 @@ describe("DataTable", () => {
     expect(screen.getByText("Test Place 2")).toBeInTheDocument();
     expect(screen.getByText("Amazing performance")).toBeInTheDocument();
 
-    // Check if ratings are rendered
+    // Check if ratings are rendered (global vitest mock emits data-testid)
     const ratingElements = screen.getAllByTestId("rating-stars");
     expect(ratingElements).toHaveLength(2);
     expect(ratingElements[0]).toHaveAttribute("data-rating", "4");
@@ -124,34 +124,31 @@ describe("DataTable", () => {
     });
 
     // Get the valueFormatter function
-    const valueFormatter = instance.columns[3].valueFormatter;
+    const valueFormatter = instance.columns[2].valueFormatter;
     if (!valueFormatter) {
-      fail("valueFormatter is not defined");
+      throw new Error("valueFormatter is not defined");
       return;
     }
 
+    // v7 valueFormatter receives the raw value first (not a params object)
     // Test date valueFormatter with array input
     const dateArray = [2023, 5, 15];
-    // @ts-expect-error - We're only testing the functionality, not the type signature
-    const formattedArrayDate = valueFormatter({ value: dateArray });
+    const formattedArrayDate = valueFormatter(dateArray as never);
     expect(formattedArrayDate).toBe("15/05/2023");
 
     // Test date valueFormatter with string representation of array
     const dateArrayString = JSON.stringify([2023, 6, 20]);
-    // @ts-expect-error - We're only testing the functionality, not the type signature
-    const formattedArrayStringDate = valueFormatter({ value: dateArrayString });
+    const formattedArrayStringDate = valueFormatter(dateArrayString as never);
     expect(formattedArrayStringDate).toBe("20/06/2023");
 
     // Test date valueFormatter with regular date string
     const dateString = "2023-07-25";
-    // @ts-expect-error - We're only testing the functionality, not the type signature
-    const formattedStringDate = valueFormatter({ value: dateString });
+    const formattedStringDate = valueFormatter(dateString as never);
     expect(formattedStringDate).toBe("25/07/2023");
 
     // Test with null value
-    // @ts-expect-error - We're only testing the functionality, not the type signature
-    const nullDate = valueFormatter({ value: null });
-    expect(nullDate).toBe("Unknown date");
+    const nullDate = valueFormatter(null as never);
+    expect(nullDate).toBe("");
   });
 
   it("handles date sorting correctly", () => {
@@ -171,9 +168,9 @@ describe("DataTable", () => {
     });
 
     // Get the sortComparator function
-    const sortComparator = instance.columns[3].sortComparator;
+    const sortComparator = instance.columns[2].sortComparator;
     if (!sortComparator) {
-      fail("sortComparator is not defined");
+      throw new Error("sortComparator is not defined");
       return;
     }
 
@@ -199,15 +196,15 @@ describe("DataTable", () => {
     // Test sortComparator with invalid input
     // @ts-expect-error - We're only testing the functionality, not the type signature
     const compareResult4 = sortComparator("invalid", "also invalid");
-    // The actual implementation may return NaN for invalid dates
-    expect(Number.isNaN(compareResult4) || compareResult4 === 0).toBe(true);
+    // Unparseable dates count as 0, so equal
+    expect(compareResult4).toBe(0);
   });
 
   it("handles empty data array", () => {
     render(<DataTable data={[]} onEdit={mockOnEdit} onDelete={mockOnDelete} />);
 
     // Check if the DataGrid is still rendered with column headers
-    expect(screen.getByText("ID")).toBeInTheDocument();
+// ID column intentionally removed — it carries no information
     expect(screen.getByText("Band")).toBeInTheDocument();
     expect(screen.getByText("Place")).toBeInTheDocument();
     expect(screen.getByText("Date")).toBeInTheDocument();

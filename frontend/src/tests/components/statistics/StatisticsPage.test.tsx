@@ -55,7 +55,7 @@ describe("StatisticsPage", () => {
     renderWithProviders(<StatisticsPage />);
 
     expect(screen.getByText("Your Statistics")).toBeInTheDocument();
-    expect(screen.getByText("Concerts attended:")).toBeInTheDocument();
+    expect(screen.getByText("Concerts attended")).toBeInTheDocument();
     expect(screen.getByText("Concerts per year")).toBeInTheDocument();
     expect(screen.getByText("Average rating per year")).toBeInTheDocument();
     expect(screen.getByText("Top 5 artists")).toBeInTheDocument();
@@ -63,7 +63,7 @@ describe("StatisticsPage", () => {
     expect(screen.getByText("Rating distribution")).toBeInTheDocument();
     expect(screen.getByText("Concert weekdays")).toBeInTheDocument();
     // fun stats with data
-    expect(screen.getByText("Golden era:")).toBeInTheDocument();
+    expect(screen.getByText("Golden era")).toBeInTheDocument();
   });
 
   it("shows friendly hints for an empty journal", () => {

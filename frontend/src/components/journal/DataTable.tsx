@@ -4,6 +4,7 @@ import dayjs from "dayjs";
 import Button from "@mui/material/Button";
 import RatingStars from "../utilities/RatingStars";
 import { Link as RouterLink } from "react-router-dom";
+import parseEventDate from "../../utils/parseEventDate";
 import { ConcertEvent } from "../../types/events";
 
 interface DataTableProps {
@@ -26,16 +27,19 @@ class DataTable extends React.Component<DataTableProps, Record<string, never>> {
   }
 
   columns: GridColDef[] = [
-    { field: "id", headerName: "ID", width: 70 },
     {
       field: "bandName",
       headerName: "Band",
-      width: 130,
+      width: 160,
       renderCell: (params: GridRenderCellParams) =>
         params.value ? (
           <RouterLink
             to={`/artist/${encodeURIComponent(String(params.value))}`}
-            style={{ color: "inherit", textDecoration: "underline" }}
+            style={{
+              color: "inherit",
+              textDecoration: "underline",
+              fontWeight: 600,
+            }}
           >
             {params.value}
           </RouterLink>
@@ -46,12 +50,12 @@ class DataTable extends React.Component<DataTableProps, Record<string, never>> {
     {
       field: "place",
       headerName: "Place",
-      width: 130,
+      width: 140,
       renderCell: (params: GridRenderCellParams) =>
         params.value ? (
           <RouterLink
             to={`/venue/${encodeURIComponent(String(params.value))}`}
-            style={{ color: "inherit", textDecoration: "underline" }}
+            style={{ color: "inherit", textDecoration: "none" }}
           >
             {params.value}
           </RouterLink>
@@ -63,123 +67,18 @@ class DataTable extends React.Component<DataTableProps, Record<string, never>> {
       field: "date",
       headerName: "Date",
       width: 130,
-      type: "date" as const,
-      sortComparator: (v1, v2) => {
-        try {
-          // Handle dates that come as arrays [year, month, day]
-          const getDate = (value: unknown) => {
-            // Handle undefined or null values
-            if (value === undefined || value === null) {
-              return dayjs(); // Default to current date
-            }
-
-            if (Array.isArray(value)) {
-              if (value.length !== 3) {
-                return dayjs(); // Default to current date for invalid arrays
-              }
-
-              const [year, month, day] = value;
-              // Note: month in dayjs is 0-indexed, but our array uses 1-indexed months
-              return dayjs()
-                .year(year)
-                .month(month - 1)
-                .date(day);
-            }
-
-            // Handle string representation of array
-            if (
-              typeof value === "string" &&
-              value.startsWith("[") &&
-              value.endsWith("]")
-            ) {
-              try {
-                const dateArray = JSON.parse(value);
-                if (Array.isArray(dateArray) && dateArray.length === 3) {
-                  const [year, month, day] = dateArray;
-                  return dayjs()
-                    .year(year)
-                    .month(month - 1)
-                    .date(day);
-                } else {
-                  return dayjs(); // Default to current date for invalid arrays
-                }
-              } catch (error) {
-                return dayjs(); // Default to current date on parsing error
-              }
-            }
-
-            return dayjs(value as string | number | Date);
-          };
-
-          const date1 = getDate(v1);
-          const date2 = getDate(v2);
-
-          return date1.diff(date2);
-        } catch (error) {
-          if (process.env.NODE_ENV === "development") {
-            console.error("Error comparing dates:", v1, v2, error);
-          }
-          return 0; // Return 0 if comparison fails
-        }
+      // v7 valueFormatter receives the raw value first (not a params object)
+      valueFormatter: (value: unknown) => {
+        const date = parseEventDate(value as never);
+        return date ? date.format("DD/MM/YYYY") : "";
       },
-      valueFormatter: (params: { value?: unknown } | unknown[]) => {
-        // Handle case where params is directly the date array
-        if (Array.isArray(params)) {
-          const [year, month, day] = params as [number, number, number];
-          const date = dayjs()
-            .year(year)
-            .month(month - 1)
-            .date(day);
-          return date.format("DD/MM/YYYY");
-        }
-
-        // Defensive check for date value
-        if (!params || params.value === undefined || params.value === null) {
-          return "Unknown date";
-        }
-
-        try {
-          // Handle date that comes as an array [year, month, day]
-          if (Array.isArray(params.value)) {
-            const [year, month, day] = params.value;
-            // Note: month in dayjs is 0-indexed, but our array uses 1-indexed months
-            const date = dayjs()
-              .year(year)
-              .month(month - 1)
-              .date(day);
-            return date.format("DD/MM/YYYY");
-          }
-
-          // Handle date that comes as a string representation of an array
-          if (
-            typeof params.value === "string" &&
-            params.value.startsWith("[") &&
-            params.value.endsWith("]")
-          ) {
-            try {
-              const dateArray = JSON.parse(params.value);
-              if (Array.isArray(dateArray) && dateArray.length === 3) {
-                const [year, month, day] = dateArray;
-                const date = dayjs()
-                  .year(year)
-                  .month(month - 1)
-                  .date(day);
-                return date.format("DD/MM/YYYY");
-              }
-            } catch (error) {
-              return "Invalid date";
-            }
-          }
-
-          // Handle date that comes as a regular string
-          const date = dayjs(params.value as string | number | Date);
-          return date.format("DD/MM/YYYY");
-        } catch (error) {
-          return "Invalid date";
-        }
+      sortComparator: (v1, v2) => {
+        const d1 = parseEventDate(v1 as never);
+        const d2 = parseEventDate(v2 as never);
+        return (d1?.valueOf() ?? 0) - (d2?.valueOf() ?? 0);
       },
     },
-    { field: "comment", headerName: "Comment", width: 130 },
+    { field: "comment", headerName: "Comment", cellClassName: "comment-cell", minWidth: 190, flex: 1 },
     {
       field: "rating",
       headerName: "Rating",

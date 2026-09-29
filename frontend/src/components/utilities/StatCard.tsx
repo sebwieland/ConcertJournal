@@ -1,6 +1,5 @@
 import React, { JSX } from "react";
-import { Card, CardContent, Typography } from "@mui/material";
-import Box from "@mui/material/Box";
+import { Card, CardContent, Typography, Box, useTheme } from "@mui/material";
 import { Link } from "react-router-dom";
 
 interface StatCardProps {
@@ -12,25 +11,63 @@ interface StatCardProps {
 }
 
 const StatCard: React.FC<StatCardProps> = ({ title, value, icon, linkTo }) => {
+  const theme = useTheme();
+  const isDark = theme.palette.mode === "dark";
+
   const card = (
-    <Card style={{ margin: "20px", width: "300px" }}>
-      <CardContent
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          textAlign: "center",
-        }}
-      >
-        <Box sx={{ display: "flex", alignItems: "center" }}>
+    <Card
+      sx={{
+        margin: "12px",
+        width: "270px",
+        transition: "transform 0.15s ease, box-shadow 0.15s ease",
+        "&:hover": {
+          transform: "translateY(-3px)",
+          boxShadow: isDark
+            ? "0 8px 24px rgba(0, 0, 0, 0.4)"
+            : "0 8px 24px rgba(79, 70, 229, 0.12)",
+        },
+      }}
+    >
+      <CardContent sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: 52,
+            height: 52,
+            borderRadius: "14px",
+            flexShrink: 0,
+            color: isDark
+              ? theme.palette.primary.light
+              : theme.palette.primary.dark,
+            backgroundColor: isDark
+              ? "rgba(129, 140, 248, 0.14)"
+              : "rgba(79, 70, 229, 0.10)",
+          }}
+        >
           {icon}
-          <Typography variant="h5" component="h2" sx={{ marginLeft: "10px" }}>
-            {title}:
+        </Box>
+        <Box sx={{ minWidth: 0 }}>
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{ fontWeight: 500, mb: 0.5 }}
+          >
+            {title}
+          </Typography>
+          <Typography
+            variant="h6"
+            component="p"
+            sx={{
+              fontWeight: 700,
+              lineHeight: 1.2,
+              wordBreak: "break-word",
+            }}
+          >
+            {value}
           </Typography>
         </Box>
-        <Typography variant="h5" component="p" sx={{ marginTop: "10px" }}>
-          {value}
-        </Typography>
       </CardContent>
     </Card>
   );

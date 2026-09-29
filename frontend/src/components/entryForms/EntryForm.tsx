@@ -365,7 +365,7 @@ const EntryForm: React.FC<EntryFormProps> = ({
             fullWidth
             onClick={handleSubmit}
           >
-            {isUpdate ? "UPDATE ENTRY" : "CREATE NEW ENTRY"}
+            {isUpdate ? "Update Entry" : "Create New Entry"}
           </Button>
         </div>
 
@@ -377,7 +377,7 @@ const EntryForm: React.FC<EntryFormProps> = ({
             fullWidth
             onClick={() => navigate(-1)}
           >
-            GO BACK
+            Go Back
           </Button>
         </div>
 

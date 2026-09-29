@@ -1,5 +1,10 @@
 import React from "react";
-import { Link as RouterLink, useLocation, useNavigate, useParams } from "react-router-dom";
+import {
+  Link as RouterLink,
+  useLocation,
+  useNavigate,
+  useParams,
+} from "react-router-dom";
 import DefaultLayout from "../../theme/DefaultLayout";
 import LoadingIndicator from "../utilities/LoadingIndicator";
 import RatingStars from "../utilities/RatingStars";
@@ -44,7 +49,9 @@ const DeepDivePage: React.FC = () => {
   const { pathname } = useLocation();
   // The route is a literal path segment (/artist/:name, /venue/:name) —
   // derive the deep-dive kind from the URL instead of a param
-  const kind: DeepDiveKind = pathname.startsWith("/artist") ? "artist" : "venue";
+  const kind: DeepDiveKind = pathname.startsWith("/artist")
+    ? "artist"
+    : "venue";
   const navigate = useNavigate();
   const { data, error, isLoading } = useEvents();
 
@@ -99,6 +106,7 @@ const DeepDivePage: React.FC = () => {
 
   return (
     <DefaultLayout>
+      <Box sx={{ py: 3, maxWidth: 880, mx: "auto", width: "100%" }}>
       <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
         <Button
           startIcon={<ArrowBack />}
@@ -253,6 +261,7 @@ const DeepDivePage: React.FC = () => {
           ))}
         </>
       )}
+      </Box>
     </DefaultLayout>
   );
 };
