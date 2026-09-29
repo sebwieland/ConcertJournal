@@ -27,7 +27,7 @@ describe("DataTable", () => {
     );
 
     // Check if column headers are rendered
-// ID column intentionally removed — it carries no information
+    // ID column intentionally removed — it carries no information
     expect(screen.getByText("Band")).toBeInTheDocument();
     expect(screen.getByText("Place")).toBeInTheDocument();
     expect(screen.getByText("Date")).toBeInTheDocument();
@@ -133,21 +133,41 @@ describe("DataTable", () => {
     // v7 valueFormatter receives the raw value first (not a params object)
     // Test date valueFormatter with array input
     const dateArray = [2023, 5, 15];
-    const formattedArrayDate = valueFormatter(dateArray as never);
+    const formattedArrayDate = valueFormatter(
+      dateArray as never,
+      {} as never,
+      {} as never,
+      {} as never,
+    );
     expect(formattedArrayDate).toBe("15/05/2023");
 
     // Test date valueFormatter with string representation of array
     const dateArrayString = JSON.stringify([2023, 6, 20]);
-    const formattedArrayStringDate = valueFormatter(dateArrayString as never);
+    const formattedArrayStringDate = valueFormatter(
+      dateArrayString as never,
+      {} as never,
+      {} as never,
+      {} as never,
+    );
     expect(formattedArrayStringDate).toBe("20/06/2023");
 
     // Test date valueFormatter with regular date string
     const dateString = "2023-07-25";
-    const formattedStringDate = valueFormatter(dateString as never);
+    const formattedStringDate = valueFormatter(
+      dateString as never,
+      {} as never,
+      {} as never,
+      {} as never,
+    );
     expect(formattedStringDate).toBe("25/07/2023");
 
     // Test with null value
-    const nullDate = valueFormatter(null as never);
+    const nullDate = valueFormatter(
+      null as never,
+      {} as never,
+      {} as never,
+      {} as never,
+    );
     expect(nullDate).toBe("");
   });
 
@@ -204,7 +224,7 @@ describe("DataTable", () => {
     render(<DataTable data={[]} onEdit={mockOnEdit} onDelete={mockOnDelete} />);
 
     // Check if the DataGrid is still rendered with column headers
-// ID column intentionally removed — it carries no information
+    // ID column intentionally removed — it carries no information
     expect(screen.getByText("Band")).toBeInTheDocument();
     expect(screen.getByText("Place")).toBeInTheDocument();
     expect(screen.getByText("Date")).toBeInTheDocument();
