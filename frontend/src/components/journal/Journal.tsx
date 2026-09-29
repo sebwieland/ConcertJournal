@@ -12,6 +12,7 @@ import {
   Alert,
 } from "@mui/material";
 import Typography from "@mui/material/Typography";
+import { Link } from "react-router-dom";
 import RatingStars from "../utilities/RatingStars";
 import { sortData } from "../../utils/SortData";
 import { SwipeableList } from "react-swipeable-list";
@@ -100,12 +101,20 @@ const Journal = () => {
                             }}
                           >
                             <CardContent sx={{ height: "100%" }}>
-                              <Typography variant="h5" component="div">
+                              <Typography
+                                variant="h5"
+                                component={Link}
+                                to={`/artist/${encodeURIComponent(item.bandName)}`}
+                                sx={{ color: "inherit" }}
+                              >
                                 {item.bandName}
                               </Typography>
                               <Typography
                                 variant="body2"
                                 color="text.secondary"
+                                component={Link}
+                                to={`/venue/${encodeURIComponent(item.place)}`}
+                                sx={{ display: "inline-block" }}
                               >
                                 {item.place}
                               </Typography>

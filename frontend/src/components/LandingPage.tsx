@@ -65,21 +65,27 @@ export default function LandingPage() {
               value={statistics.totalCount.toString()}
               icon={<PlaylistAddCheck />}
             />
-            <StatCard
-              title="Most Seen Artist"
-              value={statistics.mostSeenArtist}
-              icon={<MusicNote />}
-            />
+            {statistics.mostSeenArtist && (
+              <StatCard
+                title="Most Seen Artist"
+                value={statistics.mostSeenArtist}
+                icon={<MusicNote />}
+                linkTo={`/artist/${encodeURIComponent(statistics.mostSeenArtist)}`}
+              />
+            )}
             <StatCard
               title="Most Artists on a Single Day"
               value={statistics.mostArtistsOnASingleDay.toString()}
               icon={<Group />}
             />
-            <StatCard
-              title="Most Visited Location"
-              value={statistics.mostVisitedLocation}
-              icon={<LocationOn />}
-            />
+            {statistics.mostVisitedLocation && (
+              <StatCard
+                title="Most Visited Location"
+                value={statistics.mostVisitedLocation}
+                icon={<LocationOn />}
+                linkTo={`/venue/${encodeURIComponent(statistics.mostVisitedLocation)}`}
+              />
+            )}
           </div>
 
           <Divider sx={{ my: 3 }} />

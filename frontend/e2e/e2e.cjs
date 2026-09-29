@@ -144,6 +144,31 @@ async function shot(name) { await page.screenshot({ path: `${out}/${name}.png`, 
     await shot('05b-statistics');
   } catch (e) { step('statistics:renders', 'FAIL', String(e).slice(0, 200)); await shot('05b-statistics-fail'); }
 
+  // ---------- 5c. Deep-dive drill-down (journal -> artist -> venue) ----------
+  try {
+    await page.goto(`${BASE}/your-journal`, { waitUntil: 'networkidle', timeout: 30000 });
+    await page.waitForTimeout(1500);
+    // Desktop: clickable band cell in the DataGrid
+    const bandLink = page.getByRole('link', { name: 'Die Toten E2E Hosen' }).first();
+    await bandLink.click();
+    await page.waitForTimeout(1500);
+    const artistOk = /\/artist\//.test(page.url()) &&
+      (await page.evaluate(() => document.body.innerText)).includes('Average rating');
+    step('deepdive:artist', artistOk ? 'PASS' : 'FAIL', `url=${page.url()}`);
+    // Artist page -> venue cross-link
+    const venueLink = page.getByRole('link', { name: 'Berlin' }).first();
+    if (await venueLink.count()) {
+      await venueLink.click();
+      await page.waitForTimeout(1500);
+      const venueOk = /\/venue\//.test(page.url()) &&
+        (await page.evaluate(() => document.body.innerText)).includes('Berlin');
+      step('deepdive:venue', venueOk ? 'PASS' : 'FAIL', `url=${page.url()}`);
+    } else {
+      step('deepdive:venue', 'INFO', 'no venue link on artist page (place empty)');
+    }
+    await shot('05c-deepdive');
+  } catch (e) { step('deepdive', 'FAIL', String(e).slice(0, 200)); await shot('05c-deepdive-fail'); }
+
     // ---------- 6a. API probe: allEvents payload (R1 must be FIXED) ----------
     if (globalThis.accessToken) {
       try {

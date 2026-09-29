@@ -1,15 +1,18 @@
 import React, { JSX } from "react";
 import { Card, CardContent, Typography } from "@mui/material";
 import Box from "@mui/material/Box";
+import { Link } from "react-router-dom";
 
 interface StatCardProps {
   title: string;
   value: string;
   icon: JSX.Element;
+  /** Optional SPA route — when set, the card becomes a clickable link */
+  linkTo?: string;
 }
 
-const StatCard: React.FC<StatCardProps> = ({ title, value, icon }) => {
-  return (
+const StatCard: React.FC<StatCardProps> = ({ title, value, icon, linkTo }) => {
+  const card = (
     <Card style={{ margin: "20px", width: "300px" }}>
       <CardContent
         sx={{
@@ -30,6 +33,19 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, icon }) => {
         </Typography>
       </CardContent>
     </Card>
+  );
+
+  if (!linkTo) {
+    return card;
+  }
+  return (
+    <Link
+      to={linkTo}
+      style={{ textDecoration: "none", color: "inherit" }}
+      aria-label={`${title}: ${value}`}
+    >
+      {card}
+    </Link>
   );
 };
 

@@ -3,6 +3,7 @@ import { DataGrid, GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
 import dayjs from "dayjs";
 import Button from "@mui/material/Button";
 import RatingStars from "../utilities/RatingStars";
+import { Link as RouterLink } from "react-router-dom";
 import { ConcertEvent } from "../../types/events";
 
 interface DataTableProps {
@@ -26,8 +27,38 @@ class DataTable extends React.Component<DataTableProps, Record<string, never>> {
 
   columns: GridColDef[] = [
     { field: "id", headerName: "ID", width: 70 },
-    { field: "bandName", headerName: "Band", width: 130 },
-    { field: "place", headerName: "Place", width: 130 },
+    {
+      field: "bandName",
+      headerName: "Band",
+      width: 130,
+      renderCell: (params: GridRenderCellParams) =>
+        params.value ? (
+          <RouterLink
+            to={`/artist/${encodeURIComponent(String(params.value))}`}
+            style={{ color: "inherit", textDecoration: "underline" }}
+          >
+            {params.value}
+          </RouterLink>
+        ) : (
+          ""
+        ),
+    },
+    {
+      field: "place",
+      headerName: "Place",
+      width: 130,
+      renderCell: (params: GridRenderCellParams) =>
+        params.value ? (
+          <RouterLink
+            to={`/venue/${encodeURIComponent(String(params.value))}`}
+            style={{ color: "inherit", textDecoration: "underline" }}
+          >
+            {params.value}
+          </RouterLink>
+        ) : (
+          ""
+        ),
+    },
     {
       field: "date",
       headerName: "Date",

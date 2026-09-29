@@ -235,11 +235,21 @@ const StatisticsPage: React.FC = () => {
           title="Most Seen Artist"
           value={overview.mostSeenArtist || UNKNOWN}
           icon={<MusicNote />}
+          linkTo={
+            overview.mostSeenArtist
+              ? `/artist/${encodeURIComponent(overview.mostSeenArtist)}`
+              : undefined
+          }
         />
         <StatCard
           title="Most Visited Location"
           value={overview.mostVisitedLocation || UNKNOWN}
           icon={<LocationOn />}
+          linkTo={
+            overview.mostVisitedLocation
+              ? `/venue/${encodeURIComponent(overview.mostVisitedLocation)}`
+              : undefined
+          }
         />
       </Box>
 

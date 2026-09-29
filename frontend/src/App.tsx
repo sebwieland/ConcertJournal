@@ -13,6 +13,7 @@ const Journal = lazy(() => import("./components/journal/Journal"));
 const StatisticsPage = lazy(
   () => import("./components/statistics/StatisticsPage"),
 );
+const DeepDivePage = lazy(() => import("./components/deepDive/DeepDivePage"));
 const EditEntryFormPage = lazy(
   () => import("./components/entryForms/EditEntryFormPage"),
 );
@@ -45,6 +46,14 @@ class App extends React.Component<Record<string, never>> {
                 <Route
                   path="/statistics"
                   element={<AuthenticatedPage element={<StatisticsPage />} />}
+                />
+                <Route
+                  path="/artist/:name"
+                  element={<AuthenticatedPage element={<DeepDivePage />} />}
+                />
+                <Route
+                  path="/venue/:name"
+                  element={<AuthenticatedPage element={<DeepDivePage />} />}
                 />
                 <Route
                   path="/edit-entry/:id"
