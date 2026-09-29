@@ -30,7 +30,7 @@ const UNKNOWN = "–";
 const CHART_HEIGHT = 250;
 
 const chartCard = (title: string, chart: React.ReactNode): React.ReactNode => (
-  <Card sx={{ mb: 3 }}>
+  <Card sx={{ width: "100%" }}>
     <CardContent>
       <Typography variant="h6">{title}</Typography>
       <Box sx={{ mt: 2 }}>{chart}</Box>
@@ -46,7 +46,6 @@ const hint = (text: string) => (
 
 const StatisticsPage: React.FC = () => {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const { data, error, isLoading } = useEvents();
 
   if (isLoading) {
@@ -78,6 +77,7 @@ const StatisticsPage: React.FC = () => {
     ) : (
       <BarChart
         height={CHART_HEIGHT}
+        colors={[theme.palette.primary.main]}
         xAxis={[
           {
             scaleType: "band",
@@ -98,6 +98,7 @@ const StatisticsPage: React.FC = () => {
     ) : (
       <LineChart
         height={CHART_HEIGHT}
+        colors={[theme.palette.primary.main]}
         xAxis={[
           {
             scaleType: "point",
@@ -123,6 +124,7 @@ const StatisticsPage: React.FC = () => {
     ) : (
       <BarChart
         height={220}
+        colors={[theme.palette.primary.main]}
         xAxis={[
           {
             scaleType: "band",
@@ -141,6 +143,7 @@ const StatisticsPage: React.FC = () => {
     ) : (
       <BarChart
         height={220}
+        colors={[theme.palette.primary.main]}
         xAxis={[
           {
             scaleType: "band",
@@ -161,6 +164,7 @@ const StatisticsPage: React.FC = () => {
     ) : (
       <BarChart
         height={200}
+        colors={[theme.palette.primary.main]}
         xAxis={[
           {
             scaleType: "band",
@@ -185,6 +189,7 @@ const StatisticsPage: React.FC = () => {
     ) : (
       <BarChart
         height={200}
+        colors={[theme.palette.primary.main]}
         xAxis={[{ scaleType: "band", data: weekdayLabels }]}
         series={[
           { data: stats.weekdayProfile.map((d) => d.count), label: "Concerts" },
@@ -195,98 +200,98 @@ const StatisticsPage: React.FC = () => {
 
   return (
     <DefaultLayout>
-      <Box sx={{ mb: 2 }}>
-        <Typography variant="h4">Your Statistics</Typography>
-      </Box>
-      <Box sx={{ display: "flex", flexWrap: "wrap", justifyContent: "center" }}>
-        <StatCard
-          title="Concerts attended"
-          value={overview.totalCount.toString()}
-          icon={<PlaylistAddCheck />}
-        />
-        <StatCard
-          title="Longest drought"
-          value={
-            stats.longestDroughtDays === null
-              ? UNKNOWN
-              : `${stats.longestDroughtDays} days`
-          }
-          icon={<AcUnit />}
-        />
-        <StatCard
-          title="Current drought"
-          value={
-            stats.currentDroughtDays === null
-              ? UNKNOWN
-              : `${stats.currentDroughtDays} ${stats.currentDroughtDays === 1 ? "day" : "days"}`
-          }
-          icon={<TimerOutlined />}
-        />
-        <StatCard
-          title="Golden era"
-          value={
-            stats.goldenEra
-              ? `${stats.goldenEra.year} (Ø ${stats.goldenEra.avg})`
-              : UNKNOWN
-          }
-          icon={<EmojiEvents />}
-        />
-        <StatCard
-          title="Most Seen Artist"
-          value={overview.mostSeenArtist || UNKNOWN}
-          icon={<MusicNote />}
-          linkTo={
-            overview.mostSeenArtist
-              ? `/artist/${encodeURIComponent(overview.mostSeenArtist)}`
-              : undefined
-          }
-        />
-        <StatCard
-          title="Most Visited Location"
-          value={overview.mostVisitedLocation || UNKNOWN}
-          icon={<LocationOn />}
-          linkTo={
-            overview.mostVisitedLocation
-              ? `/venue/${encodeURIComponent(overview.mostVisitedLocation)}`
-              : undefined
-          }
-        />
-      </Box>
-
-      <Divider sx={{ my: 3 }} />
-
-      <Box
-        sx={{
-          display: "flex",
-          flexWrap: "wrap",
-          gap: 2,
-          "& > *": {
-            flex: "1 1 420px",
-            minWidth: isMobile ? "100%" : "420px",
-          },
-        }}
-      >
-        {concertsPerYear}
-        {ratingPerYear}
-        {topArtists}
-        {topLocations}
-        {ratingDistribution}
-        {weekdayChart}
-      </Box>
-
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          mt: 2,
-        }}
-      >
-        <CalendarMonth color="disabled" fontSize="small" />
-        <Typography variant="caption" color="text.secondary" sx={{ ml: 1 }}>
-          Based on {events.length} journal{" "}
-          {events.length === 1 ? "entry" : "entries"}
+      <Box sx={{ py: 3, maxWidth: 1240, mx: "auto" }}>
+        <Typography variant="h4" sx={{ mb: 3 }}>
+          Your Statistics
         </Typography>
+        <Box
+          sx={{ display: "flex", flexWrap: "wrap", justifyContent: "center" }}
+        >
+          <StatCard
+            title="Concerts attended"
+            value={overview.totalCount.toString()}
+            icon={<PlaylistAddCheck />}
+          />
+          <StatCard
+            title="Longest drought"
+            value={
+              stats.longestDroughtDays === null
+                ? UNKNOWN
+                : `${stats.longestDroughtDays} days`
+            }
+            icon={<AcUnit />}
+          />
+          <StatCard
+            title="Current drought"
+            value={
+              stats.currentDroughtDays === null
+                ? UNKNOWN
+                : `${stats.currentDroughtDays} ${stats.currentDroughtDays === 1 ? "day" : "days"}`
+            }
+            icon={<TimerOutlined />}
+          />
+          <StatCard
+            title="Golden era"
+            value={
+              stats.goldenEra
+                ? `${stats.goldenEra.year} (Ø ${stats.goldenEra.avg})`
+                : UNKNOWN
+            }
+            icon={<EmojiEvents />}
+          />
+          <StatCard
+            title="Most Seen Artist"
+            value={overview.mostSeenArtist || UNKNOWN}
+            icon={<MusicNote />}
+            linkTo={
+              overview.mostSeenArtist
+                ? `/artist/${encodeURIComponent(overview.mostSeenArtist)}`
+                : undefined
+            }
+          />
+          <StatCard
+            title="Most Visited Location"
+            value={overview.mostVisitedLocation || UNKNOWN}
+            icon={<LocationOn />}
+            linkTo={
+              overview.mostVisitedLocation
+                ? `/venue/${encodeURIComponent(overview.mostVisitedLocation)}`
+                : undefined
+            }
+          />
+      </Box>
+
+      <Divider sx={{ my: 4 }} />
+
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
+            gap: 3,
+          }}
+        >
+          {concertsPerYear}
+          {ratingPerYear}
+          {topArtists}
+          {topLocations}
+          {ratingDistribution}
+          {weekdayChart}
+        </Box>
+
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            mt: 3,
+          }}
+        >
+          <CalendarMonth color="disabled" fontSize="small" />
+          <Typography variant="caption" color="text.secondary" sx={{ ml: 1 }}>
+            Based on {events.length} journal{" "}
+            {events.length === 1 ? "entry" : "entries"}
+          </Typography>
+        </Box>
       </Box>
     </DefaultLayout>
   );

@@ -20,7 +20,9 @@ const event = (
 ) => ({ id, bandName, place, date, comment: "", rating });
 
 const renderAt = (path: string) => {
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
   return render(
     <QueryClientProvider client={client}>
       <AuthContext.Provider
@@ -102,6 +104,8 @@ describe("DeepDivePage", () => {
       isLoading: false,
     });
     const { container } = renderAt("/artist/Die%20Hosen");
-    expect(within(container).getByText("Ratings over time")).toBeInTheDocument();
+    expect(
+      within(container).getByText("Ratings over time"),
+    ).toBeInTheDocument();
   });
 });

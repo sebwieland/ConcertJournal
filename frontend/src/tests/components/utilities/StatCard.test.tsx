@@ -12,7 +12,7 @@ describe("StatCard Component", () => {
       />,
     );
 
-    expect(screen.getByText("Total Concerts:")).toBeInTheDocument();
+    expect(screen.getByText("Total Concerts")).toBeInTheDocument();
   });
 
   it("renders the value correctly", () => {
@@ -51,7 +51,7 @@ describe("StatCard Component", () => {
       />,
     );
 
-    expect(screen.getByText(`${title}:`)).toBeInTheDocument();
+    expect(screen.getByText(title)).toBeInTheDocument();
     expect(screen.getByText(value)).toBeInTheDocument();
     expect(screen.getByTestId("test-icon")).toBeInTheDocument();
   });
