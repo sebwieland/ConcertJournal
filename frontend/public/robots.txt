@@ -1,3 +1,14 @@
-# https://www.robotstxt.org/robotstxt.html
+# Public robots.txt — index the landing page, keep private app routes out
 User-agent: *
-Disallow:
+Disallow: /api
+Disallow: /actuator
+Disallow: /sign-in
+Disallow: /sign-up
+Disallow: /your-journal
+Disallow: /new-entry
+Disallow: /edit-entry
+Disallow: /statistics
+Disallow: /artist/
+Disallow: /venue/
+
+Sitemap: https://concertjournal.de/sitemap.xml
