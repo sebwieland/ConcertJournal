@@ -2,6 +2,13 @@
 
 Monorepo: React/TypeScript frontend + Spring Boot backend.
 
+## Git Workflow (hard rules for agents)
+
+- **NEVER push to a remote without explicit instruction from the user.**
+- **NEVER commit directly to `main`.** Work on feature branches; let the user decide what lands on main.
+- Commit locally only: small, conventional commits on the current feature branch.
+- If work accidentally lands on `main`: move it to the feature branch, reset `main` to its previous state (`git reset --hard <prev> && git push` only on explicit request).
+
 ## Development
 
 **Hybrid mode (recommended):** Frontend runs locally with Vite proxy, backend in Docker.
