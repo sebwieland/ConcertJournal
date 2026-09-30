@@ -4,13 +4,10 @@ import react from '@vitejs/plugin-react'
 import tsconfigPaths from 'vite-tsconfig-paths'
 import Sitemap from 'vite-plugin-sitemap'
 
-const dynamicRoutes = [
-    '/new-entry',
-    '/your-journal',
-    '/sign-up',
-    '/sign-in',
-    // Add other paths here
-]
+// Only public routes belong in the sitemap — everything else sits behind
+// login and must not be advertised to crawlers. The home page is picked
+// up automatically; an empty list avoids duplicated entries.
+const dynamicRoutes: string[] = []
 
 // Get environment variables with defaults
 const isDev = process.env.NODE_ENV === 'development';
@@ -40,7 +37,9 @@ export default defineConfig({
         Sitemap({
             hostname: 'https://concertjournal.de',
             dynamicRoutes,
-            exclude: ['/secret-page']
+            // robots.txt is a static file in public/ with our real rules;
+            // the plugin's default would overwrite it with "allow /"
+            generateRobotsTxt: false,
         })
     ],
     // Essential server configuration for HMR
