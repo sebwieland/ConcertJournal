@@ -8,6 +8,16 @@ updates:
       time: "06:00"
       timezone: "Europe/Berlin"
     open-pull-requests-limit: 10
+    # React 19 must arrive as a MANUALLY-driven migration (react-query v3 -> @tanstack/react-query v5).
+    # Dependabot's group update-type filter doesn't hold majors out (verified in updater logs),
+    # so these get hard-ignored until that session. Delete the entries then.
+    ignore:
+      - dependency-name: "react"
+        versions: [">=19"]
+      - dependency-name: "react-dom"
+        versions: [">=19"]
+      - dependency-name: "web-vitals"
+        versions: [">=3"]
     groups:
       # @mui/* must move in lockstep (material + x-charts + x-data-grid + x-date-pickers)
       # update-type:minor keeps MAJORS (v7->v8/v9, react 18->19) OUT of group PRs —
