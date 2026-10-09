@@ -1,0 +1,17 @@
+# Trivy suppression file — read automatically by every trivy run in this repo.
+#
+# One CVE or finding ID per line, e.g.:
+#
+#   CVE-2024-12345
+#   CVE-2024-12345 # java format string in bundled lib, not reachable — SW, 2026-01
+#
+# Also supports GoVulnCheck-style pseudo-IDs for Go, not relevant here.
+# avd-... or AWS-... IDs cover Aqua VM MISCONFIGURATIONS, e.g.:
+#
+#   avd-aws-0107 # docker-compose mysql demo passwords, never deployed — see AGENTS.md
+#
+# Rules of engagement:
+# - Every entry needs a one-line rationale and a date on the same line.
+# - When a fix lands (dependency PR merged, image rebased), DELETE the line.
+# - The weekly scheduled scan keeps re-testing the released image, so stale
+#   suppressions don't hide regressions forever.

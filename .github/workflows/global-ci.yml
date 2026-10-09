@@ -82,6 +82,26 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      - name: Cache Trivy vulnerability database
+        uses: actions/cache@v4
+        with:
+          path: $HOME/.cache/trivy
+          key: trivy-db-${{ runner.os }}
+
+      # Fail-fast gate BEFORE the e2e stack boots — blocks every publish to the
+      # registry (publish-artifacts needs e2e-smoke success). This is also the
+      # authoritative scan of the FULL transitive backend dependency graph
+      # (Boot fat jar + alpine base) since trivy fs only sees pom.xml direct deps.
+      - name: Security scan of the unified image (HIGH/CRITICAL gate)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: 'concertjournal:ci'
+          scan-type: 'image'
+          format: 'table'
+          severity: 'CRITICAL,HIGH'
+          ignore-unfixed: true
+          exit-code: '1'
+
       - name: Write CI compose file (deployable = CI artifact)
         run: |
           cat > ci-compose.yml <<'EOF'
