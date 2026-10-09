@@ -13,7 +13,7 @@
     "axios": "^1.8.4",
     "dayjs": "^1.11.23",
     "material-ui-confirm": "^4.0.0",
-    "musicbrainz-api": "^0.24.0",
+    "musicbrainz-api": "^0.25.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-query": "^3.39.3",
