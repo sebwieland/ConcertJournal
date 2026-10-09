@@ -16,5 +16,5 @@
 # - The weekly scheduled scan keeps re-testing the released image, so stale
 #   suppressions don't hide regressions forever.
 
-# CVE-2026-47884 # spring-webmvc RCE via XsltView path traversal — app serves no XSLT views; only fixed in Spring Framework 7.0.9 (no 6.2.x backport). Real fix = Boot 4.1.1 migration (Dependabot PR #16). SW, 2026-10-09
-# CVE-2026-47890 # spring-webmvc/webflux SSE stream corruption with view resolution — app has no SSE view controllers; only fixed in Spring Framework 7.0.9. Real fix = Boot 4.1.1 migration. SW, 2026-10-09
+CVE-2026-47884 # spring-webmvc RCE via XsltView path traversal — app serves no XSLT views; only fixed in Spring Framework 7.0.9 (no 6.2.x backport). Real fix = Boot 4.1.1 migration (Dependabot PR #16). SW, 2026-10-09
+CVE-2026-47890 # spring-webmvc/webflux SSE stream corruption with view resolution — app has no SSE view controllers; only fixed in Spring Framework 7.0.9. Real fix = Boot 4.1.1 migration. SW, 2026-10-09
