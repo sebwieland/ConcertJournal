@@ -83,6 +83,8 @@ Access: Frontend http://localhost:3000 (proxies `/api` → `:8080`), Backend htt
 
 ## Conventions
 
+- Dependabot grouping lessons (purchased 2026-10-09): groups' `update-type:` filter does **not** keep majors out (verified in updater logs — react 19 rode a "prod-minors" PR). The working mechanism is flat `ignore:` version blocks in `dependabot.yml`; every held major is listed there with a one-line comment citing the session that owes the migration (react 19 ⇒ @tanstack/react-query v5, vite 8 family, vitest 5, eslint 10+ts-es 8, TypeScript 7 (Go compiler!), springdoc 3 ⇒ Boot 4.x, mysql-connector-j 26.x). When a migration lands, delete its ignore line in the same PR. `@dependabot recreate` re-cuts a PR; queue-lag means recreate jobs can replay the pre-config resolution — never stack multiple recreate comments, one at a time, and re-read the PR's package table before re-running CI
+
 - Test data auto-generated on startup if DB empty (`DataLoader.java`: admin@example.com / password + 10 demo events)
 - Backend uses Lombok; frontend uses MUI + react-query (still v3 API)
 - CI order: lint → test → build (frontend); test → build (backend)
