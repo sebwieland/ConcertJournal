@@ -10,15 +10,20 @@ updates:
     open-pull-requests-limit: 10
     groups:
       # @mui/* must move in lockstep (material + x-charts + x-data-grid + x-date-pickers)
+      # update-type:minor keeps MAJORS (v7->v8/v9, react 18->19) OUT of group PRs —
+      # a recreate once rolled react@19 + x-charts@9 into a mixed PR that broke react-query v3.
       mui:
         patterns:
           - "@mui/*"
+        update-type: "minor"
       production-dependencies:
         dependency-type: "production"
         exclude-patterns:
           - "@mui/*"
+        update-type: "minor"
       dev-dependencies:
         dependency-type: "development"
+        update-type: "minor"
     commit-message:
       prefix: "deps"
       prefix-development: "deps-dev"
@@ -38,6 +43,7 @@ updates:
           - "*"
         exclude-patterns:
           - "org.springframework.boot:*"
+        update-type: "minor"
     commit-message:
       prefix: "deps"
 
