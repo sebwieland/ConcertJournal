@@ -18,6 +18,41 @@ updates:
         versions: [">=19"]
       - dependency-name: "web-vitals"
         versions: [">=3"]
+      # --- dev toolchain majors: each needs a dedicated upgrade session ---
+      # vite 8 + plugin-react 6 + sitemap/tsconfig-paths move together
+      - dependency-name: "vite"
+        versions: [">=6"]
+      - dependency-name: "@vitejs/plugin-react"
+        versions: [">=5"]
+      - dependency-name: "vite-tsconfig-paths"
+        versions: [">=5"]
+      - dependency-name: "vite-plugin-sitemap"
+        versions: [">=0.6"]
+      # vitest 5 + @vitest/coverage-v8 5 move together
+      - dependency-name: "vitest"
+        versions: [">=2"]
+      - dependency-name: "@vitest/coverage-v8"
+        versions: [">=2"]
+      # eslint 10 needs migration to v10 flat-config + typescript-eslint 8+
+      - dependency-name: "eslint"
+        versions: [">=9"]
+      - dependency-name: "@typescript-eslint/*"
+        versions: [">=8"]
+      - dependency-name: "eslint-plugin-react-hooks"
+        versions: [">=5"]
+      # TypeScript 7 is a different compiler (Go port) — plan separately
+      - dependency-name: "typescript"
+        versions: [">=6"]
+      - dependency-name: "@testing-library/jest-dom"
+        versions: [">=7"]
+      - dependency-name: "jsdom"
+        versions: [">=24"]
+      - dependency-name: "@types/node"
+        versions: [">=23"]
+      - dependency-name: "@types/jest"
+        versions: [">=30"]
+      - dependency-name: "cross-env"
+        versions: [">=8"]
     groups:
       # @mui/* must move in lockstep (material + x-charts + x-data-grid + x-date-pickers)
       # update-type:minor keeps MAJORS (v7->v8/v9, react 18->19) OUT of group PRs —
@@ -46,6 +81,13 @@ updates:
       time: "06:00"
       timezone: "Europe/Berlin"
     open-pull-requests-limit: 10
+    # springdoc 3.x targets Boot 4 / Spring Framework 7 — hold until the Boot 4.1 migration.
+    # mysql-connector-j 26.x is the new release-numbering line; re-check compat (Boot 3.5, Java 21) before letting it in.
+    ignore:
+      - dependency-name: "org.springdoc:springdoc-openapi-starter-webmvc-ui"
+        versions: ["in >=3.0.0"]
+      - dependency-name: "com.mysql:mysql-connector-j"
+        versions: ["in >=26.0.0"]
     groups:
       # everything together except Spring Boot itself — the parent takes its own PR
       backend-dependencies:
