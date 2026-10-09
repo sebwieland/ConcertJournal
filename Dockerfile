@@ -3,7 +3,7 @@
 # copied into both platform variants of the runtime stage. Without this,
 # running Node under QEMU for linux/arm64 crashes (Illegal instruction)
 # and Maven takes 3-4x longer.
-FROM --platform=$BUILDPLATFORM node:22-alpine AS frontend-build
+FROM --platform=$BUILDPLATFORM node:25-alpine AS frontend-build
 WORKDIR /frontend
 COPY frontend/package*.json ./
 RUN npm ci --prefer-offline --no-audit
