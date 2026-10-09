@@ -13,13 +13,13 @@
     "axios": "^1.8.4",
     "dayjs": "^1.11.23",
     "material-ui-confirm": "^4.0.0",
-    "musicbrainz-api": "^1.2.1",
+    "musicbrainz-api": "^0.24.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-query": "^3.39.3",
     "react-router-dom": "^7.18.4",
     "react-swipeable-list": "^1.10.0",
-    "web-vitals": "^6.2.3"
+    "web-vitals": "^2.1.4"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.6.3",
