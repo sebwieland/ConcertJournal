@@ -85,9 +85,9 @@ updates:
     # mysql-connector-j 26.x is the new release-numbering line; re-check compat (Boot 3.5, Java 21) before letting it in.
     ignore:
       - dependency-name: "org.springdoc:springdoc-openapi-starter-webmvc-ui"
-        versions: ["in >=3.0.0"]
+        versions: [">=3.0.0"]
       - dependency-name: "com.mysql:mysql-connector-j"
-        versions: ["in >=26.0.0"]
+        versions: [">=26.0.0"]
     groups:
       # everything together except Spring Boot itself — the parent takes its own PR
       backend-dependencies:
