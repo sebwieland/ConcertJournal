@@ -10,7 +10,7 @@ RUN npm ci --prefer-offline --no-audit
 COPY frontend/ ./
 RUN npm run build
 
-FROM --platform=$BUILDPLATFORM maven:3.9-eclipse-temurin-21-alpine AS backend-build
+FROM --platform=$BUILDPLATFORM maven:3.9-eclipse-temurin-26-alpine AS backend-build
 WORKDIR /app
 COPY backend/pom.xml ./
 RUN mvn dependency:go-offline -B -T 1C \
