@@ -1,0 +1,67 @@
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/frontend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Europe/Berlin"
+    open-pull-requests-limit: 10
+    groups:
+      # @mui/* must move in lockstep (material + x-charts + x-data-grid + x-date-pickers)
+      mui:
+        patterns:
+          - "@mui/*"
+      production-dependencies:
+        dependency-type: "production"
+        exclude-patterns:
+          - "@mui/*"
+      dev-dependencies:
+        dependency-type: "development"
+    commit-message:
+      prefix: "deps"
+      prefix-development: "deps-dev"
+
+  - package-ecosystem: "maven"
+    directory: "/backend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Europe/Berlin"
+    open-pull-requests-limit: 10
+    groups:
+      # everything together except Spring Boot itself — the parent takes its own PR
+      backend-dependencies:
+        patterns:
+          - "*"
+        exclude-patterns:
+          - "org.springframework.boot:*"
+    commit-message:
+      prefix: "deps"
+
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Europe/Berlin"
+    commit-message:
+      prefix: "deps"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Europe/Berlin"
+    open-pull-requests-limit: 10
+    groups:
+      actions-dependencies:
+        patterns:
+          - "*"
+    commit-message:
+      prefix: "ci"

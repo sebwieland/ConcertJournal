@@ -1,0 +1,107 @@
+name: Security Scans
+
+# Repo-wide Trivy filesystem scan (vulns + secrets + Docker misconfig) on every
+# code change to main. The weekly cron additionally re-scans the RELEASED
+# `latest` image from the registry so CVEs disclosed after a release still
+# surface (the CI-time image scan can't catch what's new in the registry weeks later).
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'backend/**'
+      - 'frontend/**'
+      - 'Dockerfile'
+      - 'docker-compose.yml'
+      - '.trivyignore'
+      - '.github/workflows/security.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'backend/**'
+      - 'frontend/**'
+      - 'Dockerfile'
+      - 'docker-compose.yml'
+      - '.trivyignore'
+      - '.github/workflows/security.yml'
+  schedule:
+    # Mondays 04:23 UTC — after the Dependabot Monday-morning PRs
+    - cron: '23 4 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  RELEASE_IMAGE: registry.wielandseb.synology.me/concertjournal:latest
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  trivy-fs:
+    name: Repo scan (vulns, secrets, misconfig)
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Trivy re-downloads the DB itself when the cache is stale (static key is fine).
+      # Same key as in global-ci.yml → one shared DB fetch across jobs.
+      - name: Cache Trivy vulnerability database
+        uses: actions/cache@v4
+        with:
+          path: $HOME/.cache/trivy
+          key: trivy-db-${{ runner.os }}
+
+      - name: Scan repository
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'table'
+          # npm lockfiles are scanned WITHOUT dev deps (matches our npm audit --omit=dev gate);
+          # Maven: pom.xml direct deps — the full runtime graph is covered by the image scan
+          scanners: 'vuln,secret,misconfig'
+          severity: 'HIGH,CRITICAL'
+          ignore-unfixed: true
+          exit-code: '1'
+
+  trivy-released-image:
+    name: Released image scan
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      # checkout only for .trivyignore — trivy reads it from the working directory
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Cache Trivy vulnerability database
+        uses: actions/cache@v4
+        with:
+          path: $HOME/.cache/trivy
+          key: trivy-db-${{ runner.os }}
+
+      - name: Login to Docker registry
+        uses: docker/login-action@v3
+        with:
+          registry: https://registry.wielandseb.synology.me
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Pull released image
+        run: |
+          docker pull "$RELEASE_IMAGE" --platform linux/amd64
+
+      - name: Scan released image
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: ${{ env.RELEASE_IMAGE }}
+          format: 'table'
+          severity: 'CRITICAL,HIGH'
+          ignore-unfixed: true
+          exit-code: '1'
