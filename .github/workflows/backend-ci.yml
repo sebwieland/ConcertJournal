@@ -4,7 +4,10 @@ on:
   workflow_call:
 
 env:
-  JWT_SECRET: ${{ secrets.JWT_SECRET }}
+  # Dependabot PRs run WITHOUT repository secrets → empty JWT_SECRET would make
+  # JwtUtils hard-fail at init and all security tests error out. Fallback keeps
+  # those PRs testable; the string is unique, so it passes the app's known-default ban.
+  JWT_SECRET: ${{ secrets.JWT_SECRET || 'backend-ci-test-secret-rotate-me-9f3c1d8e77a2' }}
 
 jobs:
   backend-test:
