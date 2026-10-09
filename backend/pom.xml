@@ -17,6 +17,10 @@
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <!-- CVE-clearing overrides ahead of the next Boot 3.5.x patch.
+             Drop both once Boot manages the same versions itself. -->
+        <tomcat.version>10.1.60</tomcat.version>
+        <jackson-bom.version>2.21.7</jackson-bom.version>
     </properties>
 <dependencies>
         <dependency>
