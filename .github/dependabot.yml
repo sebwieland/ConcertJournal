@@ -54,21 +54,18 @@ updates:
       - dependency-name: "cross-env"
         versions: [">=8"]
     groups:
-      # @mui/* must move in lockstep (material + x-charts + x-data-grid + x-date-pickers)
-      # update-type:minor keeps MAJORS (v7->v8/v9, react 18->19) OUT of group PRs —
-      # a recreate once rolled react@19 + x-charts@9 into a mixed PR that broke react-query v3.
+      # @mui/* must move in lockstep (material + x-charts + x-data-grid + x-date-pickers).
+      # NOTE: groups do NOT support update-type (schema rejects it) — majors inside
+      # these groups are held off by the `ignore:` blocks above instead.
       mui:
         patterns:
           - "@mui/*"
-        update-type: "minor"
       production-dependencies:
         dependency-type: "production"
         exclude-patterns:
           - "@mui/*"
-        update-type: "minor"
       dev-dependencies:
         dependency-type: "development"
-        update-type: "minor"
     commit-message:
       prefix: "deps"
       prefix-development: "deps-dev"
@@ -95,7 +92,6 @@ updates:
           - "*"
         exclude-patterns:
           - "org.springframework.boot:*"
-        update-type: "minor"
     commit-message:
       prefix: "deps"
 
