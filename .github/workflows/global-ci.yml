@@ -6,6 +6,7 @@ on:
       - 'backend/**'
       - 'frontend/**'
       - '.github/workflows/**'
+      - '.trivyignore'
       - 'Dockerfile'
       - 'docker-compose.yml'
   pull_request:
