@@ -191,7 +191,7 @@ jobs:
 
       - name: Tear down
         if: always()
-        run: docker compose -f ci-compose.yml down -v
+        run: docker compose -f ci-compose.yml down -v || true  # compose file absent if the scan gate failed first
 
   publish-artifacts:
     name: Publish Release Image
