@@ -93,7 +93,7 @@ jobs:
       # authoritative scan of the FULL transitive backend dependency graph
       # (Boot fat jar + alpine base) since trivy fs only sees pom.xml direct deps.
       - name: Security scan of the unified image (HIGH/CRITICAL gate)
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: 'concertjournal:ci'
           scan-type: 'image'

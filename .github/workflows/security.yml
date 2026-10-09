@@ -58,7 +58,7 @@ jobs:
           key: trivy-db-${{ runner.os }}
 
       - name: Scan repository
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: 'fs'
           scan-ref: '.'
@@ -98,7 +98,7 @@ jobs:
           docker pull "$RELEASE_IMAGE" --platform linux/amd64
 
       - name: Scan released image
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: ${{ env.RELEASE_IMAGE }}
           format: 'table'
