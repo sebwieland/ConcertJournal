@@ -21,14 +21,15 @@ import { handleApiError } from "../../api/apiErrors";
 import { Rating } from "@mui/material";
 
 declare module "musicbrainz-api" {
+  // Augment only `tags` on IArtist — musicbrainz-api >=0.25 retypes IArtistMatch as a
+  // type alias there, and a redundant `interface IArtistMatch` declaration in this
+  // block collided with it (TS2300). The library provides IArtistMatch itself.
   interface IArtist {
     tags?: Array<{
       count: number;
       name: string;
     }>;
   }
-
-  interface IArtistMatch extends IArtist {}
 }
 
 interface EntryFormProps {
