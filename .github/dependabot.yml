@@ -18,10 +18,11 @@ updates:
         versions: [">=19"]
       - dependency-name: "web-vitals"
         versions: [">=3"]
-      # musicbrainz-api 1.x exports its own IArtistMatch etc. — our type augmentations in
-      # EntryForm.tsx then collide (TS2300). Migration = rework the module augmentation.
+      # musicbrainz-api 0.26+ (and 1.x) exports its own IArtistMatch etc. — our type
+      # augmentations in EntryForm.tsx then collide (TS2300). Migration = rework the
+      # module augmentation once, then delete this hold.
       - dependency-name: "musicbrainz-api"
-        versions: [">=1"]
+        versions: [">=0.26"]
       # --- dev toolchain majors: each needs a dedicated upgrade session ---
       # vite 8 + plugin-react 6 + sitemap/tsconfig-paths move together
       - dependency-name: "vite"
