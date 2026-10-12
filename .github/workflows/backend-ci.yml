@@ -38,7 +38,7 @@ jobs:
 
       - name: Upload code coverage report
         if: always()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: backend-coverage
           path: backend/target/site/jacoco/*
@@ -46,7 +46,7 @@ jobs:
 
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: backend-test-results
           path: backend/target/surefire-reports/*
