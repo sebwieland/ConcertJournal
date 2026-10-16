@@ -25,7 +25,7 @@ RUN mvn package -DskipTests -T 1C \
     -Dmaven.source.skip=true && \
     test -f target/ConcertJournalAPI-0.0.1-SNAPSHOT.jar
 
-FROM eclipse-temurin:21-jre-alpine AS production
+FROM eclipse-temurin:25-jre-alpine AS production
 WORKDIR /app
 
 RUN addgroup -g 1001 -S appgroup && \
