@@ -44,7 +44,7 @@ Access: Frontend http://localhost:3000 (proxies `/api` → `:8080`), Backend htt
 ## Architecture
 
 **Frontend:**
-- Entry: `src/index.tsx` → `src/App.tsx` (class shell, lazy routes: `/`, `/new-entry`, `/your-journal`, `/statistics`, `/artist/:name`, `/venue/:name`, `/edit-entry/:id`, `/sign-in`, `/sign-up`)
+- Entry: `src/index.tsx` → `src/App.tsx` (class shell, lazy routes: `/`, `/new-entry`, `/your-journal`, `/statistics`, `/artist/:name`, `/venue/:name`, `/edit-entry/:id`, `/settings`, `/sign-in`, `/sign-up`)
 - API clients: `src/api/` — `apiClient` (baseURL `/api`), `rootClient` (auth endpoints at root)
 - Auth: `src/contexts/AuthContext.tsx`; theme: `src/theme/` (InterVariable font bundled via @fontsource, indigo/amber palette)
 - Test utils: `src/tests/utils/test-utils.tsx` (use `renderWithProviders`); note `vitest.setup.ts` globally mocks `apiClient`, `apiErrors`, `musicBrainzApi`, `DefaultLayout` and `RatingStars`
@@ -52,8 +52,8 @@ Access: Frontend http://localhost:3000 (proxies `/api` → `:8080`), Backend htt
 
 **Backend:**
 - Entry: `src/main/java/com/ConcertJournalAPI/ConcertJournalAPI.java` — **no `@EnableWebMvc`** (it disables Boot auto-config and silently drops all `spring.jackson.*` settings)
-- Errors: `ApiExceptionHandler` maps `EventNotFoundException` → 404 and `AuthenticationCredentialsNotFoundException` → 401 with `{status,error,message}`; throw those (or add a mapping), never bare `RuntimeException`
-- Controllers: all under `@RequestMapping("/api")` — BandEventController (`/api/allEvents`, `/api/event/{id}`), HomeController (`/api/me`), SecurityController (`/api/refresh-token`, `/api/get-xsrf-cookie`)
+- Errors: `ApiExceptionHandler` maps `EventNotFoundException` → 404 and `AuthenticationCredentialsNotFoundException` → 401 with `{status,error,message}`; `@Valid` failures and `InvalidFieldException` → 422 with an extra `errors: {field: message}` map (the frontend shows `message` and per-field `details`); throw those (or add a mapping), never bare `RuntimeException`. Resolve the owner via `CurrentUserProvider`, not by hand
+- Controllers: all under `@RequestMapping("/api")` — BandEventController (`/api/allEvents`, `/api/event/{id}`), HomeController (`/api/me`), AccountController (`/api/me/export`, `PUT /api/me/password`, `DELETE /api/me` — password-confirmed, expires the refresh cookie), SecurityController (`/api/refresh-token`, `/api/get-xsrf-cookie`)
 - Auth endpoints at **root** (no /api prefix): `/login`, `/register`, `/logout` (Spring Security convention)
 - Security chain (`SecurityConfiguration`): `/api/**` → authenticated, `denyAll` fallback, JSON 401 entrypoint for APIs. **Must stay anonymously permitted:** `/api/refresh-token`, `/api/get-xsrf-cookie`, `/register`, `/login`, `/logout`, actuator health, and the SPA document-route matcher
 - SPA serving: `SpaController` forwards `/` plus all 1- and 2-segment dot-free document routes to `index.html`; adding a deeper route (e.g. `/a/:param`) requires updating **both** the `SpaController` mapping and the SecurityConfiguration matcher, plus the `RateLimitFilter` needs no change (300 req/min keyed on `remoteAddr` only — never on `X-Forwarded-For`; proxies are honoured via `server.forward-headers-strategy=native` from internal addresses; clean 429)

@@ -91,7 +91,8 @@ so the limiter map stays bounded. Exceeding requests get a 429 and never reach t
 
 | Error type | Propagation | HTTP status | Logged |
 |---|---|---|---|
-| Bean validation failure (`@Valid`) | Spring MVC method validation | 400 | No |
+| Bean validation failure (`@Valid`) | `MethodArgumentNotValidException` → `ApiExceptionHandler` | 422 `{…, errors: {field: message}}` | No |
+| Wrong password on account actions | `InvalidFieldException` → `ApiExceptionHandler` | 422 (same shape) | No |
 | Not authenticated (`/api/**`) | custom entrypoint in `SecurityConfiguration` | 401 `{"error":"Unauthorized"}` | No |
 | Not authenticated (other non-public routes) | `LoginUrlAuthenticationEntryPoint` | 302 → `/login` | No |
 | CSRF token mismatch | Spring Security CsrfFilter | 403 | No |
@@ -101,9 +102,9 @@ so the limiter map stays bounded. Exceeding requests get a 429 and never reach t
 | Invalid refresh token | `SecurityController` catches `JwtException` | 400 | No |
 
 `ApiExceptionHandler` (`@RestControllerAdvice`) maps expected domain errors to status codes;
-anything unmapped is still a 500. Deleting an unknown id stays an idempotent 200. Validation
-failures use Boot's default 400 body, while `apiErrors.ts` (which normalises axios errors
-centrally on the frontend) expects field errors on a 422 (see §11 TD2).
+anything unmapped is still a 500. Deleting an unknown id stays an idempotent 200. The frontend
+normalises axios errors centrally in `apiErrors.ts`: on 422 it shows the backend's joined
+`message` and exposes `errors` as per-field `details` for form hints.
 
 ## Domain Model
 

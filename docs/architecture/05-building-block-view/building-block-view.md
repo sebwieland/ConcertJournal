@@ -54,8 +54,8 @@ flowchart TB
 | Frontend: AuthContext | Owns access token, CSRF token, silent refresh interval (2 min), login state | `frontend/src/contexts/AuthContext.tsx` |
 | Frontend: API Clients | Axios instance (`baseURL: /api`, `withCredentials`), auth/event calls, error normalisation, MusicBrainz lookup | `frontend/src/api/*.tsx` |
 | Frontend: UI Components | Journal table, entry forms, sign-in/up pages, landing page, statistics dashboard (MUI X Charts), navbar, theming | `frontend/src/components/**` |
-| Backend: Controllers | REST endpoints (`BandEventController`, `HomeController`, `SecurityController`, `UserController`), SPA forwarding (`SpaController`), login page (`LoginController`) | `backend/.../controller/` |
-| Backend: Services | `BandEventService` (CRUD + per-user ownership scoping), `CustomUserDetailsService` | `backend/.../service/` |
+| Backend: Controllers | REST endpoints (`BandEventController`, `HomeController`, `AccountController`, `SecurityController`, `UserController`), SPA forwarding (`SpaController`), login page (`LoginController`) | `backend/.../controller/` |
+| Backend: Services | `BandEventService` (CRUD + per-user ownership scoping), `AccountService` (export, password change, deletion), `CurrentUserProvider` (owner resolution), `CustomUserDetailsService` | `backend/.../service/` |
 | Backend: Repositories | `BandEventRepository`, `AppUserRepository` (Spring Data JPA) | `backend/.../repository/` |
 | Backend: Security Layer | `JwtAuthenticationFilter`, `JwtUtils`, auth success/failure handlers, `RateLimitFilter` | `backend/.../security/`, `backend/.../filter/` |
 | Backend: Configuration | `SecurityConfiguration` (filter chain, headers, CSRF), `PasswordConfig` (BCrypt), `WebConfig`, `MetricsConfig`, `SecurityConstants` | `backend/.../configuration/` |

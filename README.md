@@ -118,6 +118,7 @@ All data endpoints require a valid access token and are scoped to the signed-in 
 - `GET /api/allEvents`: all of the user's concert entries
 - `GET|PUT|DELETE /api/event/{id}`, `POST /api/event`: single-entry CRUD (unknown ids return 404)
 - `GET /api/me`: the current user
+- `GET /api/me/export`, `PUT /api/me/password`, `DELETE /api/me`: account self-service (data export, password change, account deletion)
 - `POST /api/refresh-token`, `GET /api/get-xsrf-cookie`: token refresh and CSRF bootstrap (anonymous)
 - `POST /login`, `POST /register`, `POST /logout`: authentication, at the root path (no `/api` prefix)
 
