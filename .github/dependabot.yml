@@ -79,11 +79,8 @@ updates:
       time: "06:00"
       timezone: "Europe/Berlin"
     open-pull-requests-limit: 10
-    # springdoc 3.x targets Boot 4 / Spring Framework 7 — hold until the Boot 4.1 migration.
-    # mysql-connector-j 26.x is the new release-numbering line; re-check compat (Boot 3.5, Java 21) before letting it in.
+    # mysql-connector-j 26.x is the new release-numbering line; re-check compat (Boot 4.1, Java 21) before letting it in.
     ignore:
-      - dependency-name: "org.springdoc:springdoc-openapi-starter-webmvc-ui"
-        versions: [">=3.0.0"]
       - dependency-name: "com.mysql:mysql-connector-j"
         versions: [">=26.0.0"]
     groups:

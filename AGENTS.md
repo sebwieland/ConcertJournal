@@ -73,7 +73,7 @@ Access: Frontend http://localhost:3000 (proxies `/api` → `:8080`), Backend htt
 - Never run plain `tsc` with emit; `tsconfig.json` has `noEmit` and `src/**/*.js(.map)` artifacts are gitignored — stale `.js` files used to shadow `.tsx` sources in Vite dev
 - `npm run build` = `tsc && vite build` — unit tests don't type-check, CI does; run `npx tsc --noEmit` after test-only changes
 - The e2e journey (`e2e/e2e.cjs`) self-diagnoses: on failure it dumps browser console + ≥400 network responses; `frontend/e2e/e2e-out/` is gitignored
-- Dates on the wire are ISO strings (`spring.jackson.serialization.write-dates-as-timestamps=false`); `parseEventDate` still tolerates legacy array shapes from old caches
+- Dates on the wire are ISO strings (`spring.jackson.datatype.datetime.write-dates-as-timestamps=false` — Jackson 3 key; the old `spring.jackson.serialization.*` form now fails startup); `parseEventDate` still tolerates legacy array shapes from old caches
 
 ## CI & SEO
 
@@ -84,9 +84,15 @@ Access: Frontend http://localhost:3000 (proxies `/api` → `:8080`), Backend htt
 
 ## Conventions
 
-- Dependabot grouping lessons (purchased 2026-10-09): groups' `update-type:` filter does **not** keep majors out (verified in updater logs — react 19 rode a "prod-minors" PR). The working mechanism is flat `ignore:` version blocks in `dependabot.yml`; every held major is listed there with a one-line comment citing the session that owes the migration (web-vitals 3+, vite 8 family, vitest 5, eslint 10+ts-es 8, TypeScript 7 (Go compiler!), springdoc 3 ⇒ Boot 4.x, mysql-connector-j 26.x). When a migration lands, delete its ignore line in the same PR. `@dependabot recreate` re-cuts a PR; queue-lag means recreate jobs can replay the pre-config resolution — never stack multiple recreate comments, one at a time, and re-read the PR's package table before re-running CI
+- Dependabot grouping lessons (purchased 2026-10-09): groups' `update-type:` filter does **not** keep majors out (verified in updater logs — react 19 rode a "prod-minors" PR). The working mechanism is flat `ignore:` version blocks in `dependabot.yml`; every held major is listed there with a one-line comment citing the session that owes the migration (web-vitals 3+, vite 8 family, vitest 5, eslint 10+ts-es 8, TypeScript 7 (Go compiler!), mysql-connector-j 26.x). When a migration lands, delete its ignore line in the same PR. `@dependabot recreate` re-cuts a PR; queue-lag means recreate jobs can replay the pre-config resolution — never stack multiple recreate comments, one at a time, and re-read the PR's package table before re-running CI
 
 - Test data auto-generated on startup if DB empty (`DataLoader.java`: admin@example.com / password + 10 demo events)
+- **Spring Boot 4.1** (Framework 7, Security 7, Jackson 3, Hibernate 7, Tomcat 11) — lessons from the 2026-10-23 migration:
+  - Auto-configuration is split per module: Flyway needs `spring-boot-starter-flyway` (with only `flyway-core`, migrations **silently never run**); `@WebMvcTest`/`@AutoConfigureMockMvc` need `spring-boot-starter-webmvc-test` and live in `org.springframework.boot.webmvc.test.autoconfigure`
+  - `@MockBean` is gone → `@MockitoBean` (`org.springframework.test.context.bean.override.mockito`)
+  - Security 7 string matchers are strict path patterns: they must start with `/` (`"/*.ico"`, not `"*.ico"`) or the filter chain fails to build
+  - App code uses Jackson 3 (`tools.jackson.*`); annotations stay `com.fasterxml.jackson.annotation`. Jackson 2 remains on the classpath only for jjwt
+  - `AuthFlowIntegrationTest` drives login → API → refresh through the full context without a socket — run it first after framework bumps
 - Backend uses Lombok; frontend uses MUI + @tanstack/react-query v5 (object syntax: `useQuery({queryKey, queryFn})`; `mutationFn` receives `(variables, context)`, so wrap API calls instead of passing them directly)
 - CI order: lint → test → build (frontend); test → build (backend)
 - **No CORS config** - Vite proxy in dev, same-origin in prod
