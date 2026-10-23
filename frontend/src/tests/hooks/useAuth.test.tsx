@@ -24,6 +24,7 @@ vi.mock("../../api/apiErrors", () => ({
   handleApiError: (error: any) => ({
     type: ApiErrorType.UNKNOWN_ERROR,
     message: error.message || "Unknown error",
+    statusCode: error.statusCode,
     originalError: error,
   }),
 }));
@@ -144,6 +145,42 @@ describe("useAuth", () => {
         expect(result.current.error).not.toBeNull();
       });
     });
+  });
+
+  it("explains a rejected login as wrong credentials, not a session problem", async () => {
+    mockLogin.mockRejectedValueOnce(
+      Object.assign(new Error("Request failed"), { statusCode: 401 }),
+    );
+    const { result } = renderHook(() => useAuth(), { wrapper: AllProviders });
+
+    await act(async () => {
+      await expect(result.current.login(mockLoginData)).rejects.toThrow();
+    });
+
+    await waitFor(() =>
+      expect(result.current.error?.message).toBe(
+        "Incorrect email or password.",
+      ),
+    );
+  });
+
+  it("explains a duplicate registration", async () => {
+    mockRegister.mockRejectedValueOnce(
+      Object.assign(new Error("Request failed"), { statusCode: 409 }),
+    );
+    const { result } = renderHook(() => useAuth(), { wrapper: AllProviders });
+
+    await act(async () => {
+      await expect(
+        result.current.signUp(mockRegistrationData),
+      ).rejects.toThrow();
+    });
+
+    await waitFor(() =>
+      expect(result.current.error?.message).toBe(
+        "An account with this email already exists.",
+      ),
+    );
   });
 
   describe("signUp", () => {

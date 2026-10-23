@@ -9,7 +9,12 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 
 import { styled } from "@mui/material/styles";
-import { useLayoutEffect } from "react";
+import { useLayoutEffect, useState } from "react";
+import Alert from "@mui/material/Alert";
+
+const EMAIL_PATTERN = /\S+@\S+\.\S+/;
+const MIN_USERNAME_LENGTH = 3;
+const MIN_PASSWORD_LENGTH = 6;
 
 interface SignUpCardProps {
   username: string;
@@ -24,6 +29,7 @@ interface SignUpCardProps {
   setLastName: (lastName: string) => void;
   handleSignUp: (event: React.FormEvent<HTMLFormElement>) => Promise<void>;
   isLoading: boolean;
+  errorMessage?: string;
 }
 
 const Card = styled(MuiCard)(({ theme }) => ({
@@ -57,7 +63,20 @@ export default function SignUpCard({
   setLastName,
   handleSignUp,
   isLoading,
+  errorMessage,
 }: SignUpCardProps) {
+  // Rules show as neutral hints while typing; they only turn red once the
+  // user has left the field
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const touch = (field: string) => () =>
+    setTouched((t) => ({ ...t, [field]: true }));
+  const usernameInvalid =
+    !!touched.username && username.length < MIN_USERNAME_LENGTH;
+  const emailInvalid =
+    !!touched.email && email.length > 0 && !EMAIL_PATTERN.test(email);
+  const passwordInvalid =
+    !!touched.password && password.length < MIN_PASSWORD_LENGTH;
+
   useLayoutEffect(() => {
     if (isLoading && process.env.NODE_ENV === "development") {
       console.log("Loading...");
@@ -96,12 +115,8 @@ export default function SignUpCard({
         <FormControl>
           <FormLabel htmlFor="username">Username</FormLabel>
           <TextField
-            error={username.length > 0 && username.length < 3}
-            helperText={
-              username.length > 0 && username.length < 3
-                ? "Username must be at least 3 characters long."
-                : ""
-            }
+            error={usernameInvalid}
+            helperText={`At least ${MIN_USERNAME_LENGTH} characters`}
             id="username"
             type="text"
             name="username"
@@ -111,22 +126,14 @@ export default function SignUpCard({
             required
             fullWidth
             variant="outlined"
-            color={
-              username.length > 0 && username.length < 3 ? "error" : "primary"
-            }
             value={username}
             onChange={(e) => setUsername(e.target.value)}
+            onBlur={touch("username")}
           />
         </FormControl>
         <FormControl>
           <FormLabel htmlFor="firstName">First Name</FormLabel>
           <TextField
-            error={firstName.length > 0 && firstName.length < 1}
-            helperText={
-              firstName.length > 0 && firstName.length < 1
-                ? "Please enter your first name."
-                : ""
-            }
             id="firstName"
             type="text"
             name="firstName"
@@ -135,9 +142,6 @@ export default function SignUpCard({
             required
             fullWidth
             variant="outlined"
-            color={
-              firstName.length > 0 && firstName.length < 1 ? "error" : "primary"
-            }
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)}
           />
@@ -145,12 +149,6 @@ export default function SignUpCard({
         <FormControl>
           <FormLabel htmlFor="lastName">Last Name</FormLabel>
           <TextField
-            error={lastName.length > 0 && lastName.length < 1}
-            helperText={
-              lastName.length > 0 && lastName.length < 1
-                ? "Please enter your last name."
-                : ""
-            }
             id="lastName"
             type="text"
             name="lastName"
@@ -159,9 +157,6 @@ export default function SignUpCard({
             required
             fullWidth
             variant="outlined"
-            color={
-              lastName.length > 0 && lastName.length < 1 ? "error" : "primary"
-            }
             value={lastName}
             onChange={(e) => setLastName(e.target.value)}
           />
@@ -169,11 +164,9 @@ export default function SignUpCard({
         <FormControl>
           <FormLabel htmlFor="email">Email</FormLabel>
           <TextField
-            error={email.includes("@") && !/\S+@\S+\.\S+/.test(email)}
+            error={emailInvalid}
             helperText={
-              email.includes("@") && !/\S+@\S+\.\S+/.test(email)
-                ? "Please enter a valid email address."
-                : ""
+              emailInvalid ? "Please enter a valid email address." : ""
             }
             id="email"
             type="email"
@@ -183,24 +176,16 @@ export default function SignUpCard({
             required
             fullWidth
             variant="outlined"
-            color={
-              email.includes("@") && !/\S+@\S+\.\S+/.test(email)
-                ? "error"
-                : "primary"
-            }
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            onBlur={touch("email")}
           />
         </FormControl>
         <FormControl>
           <FormLabel htmlFor="password">Password</FormLabel>
           <TextField
-            error={password.length > 0 && password.length < 6}
-            helperText={
-              password.length > 0 && password.length < 6
-                ? "Password must be at least 6 characters long."
-                : ""
-            }
+            error={passwordInvalid}
+            helperText={`At least ${MIN_PASSWORD_LENGTH} characters`}
             name="password"
             placeholder="••••••"
             type="password"
@@ -209,14 +194,13 @@ export default function SignUpCard({
             required
             fullWidth
             variant="outlined"
-            color={
-              password.length > 0 && password.length < 6 ? "error" : "primary"
-            }
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            onBlur={touch("password")}
           />
         </FormControl>
 
+        {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
         <Button
           type="submit"
           fullWidth
