@@ -3,7 +3,6 @@ import SignUpCard from "./SignUpCard";
 import Content from "./Content";
 import DefaultLayout from "../../theme/DefaultLayout";
 import useAuth from "../../hooks/useAuth";
-import { Alert } from "@mui/material";
 
 export default function SignUpSide() {
   const { signUp, error, isLoading } = useAuth();
@@ -43,12 +42,8 @@ export default function SignUpSide() {
         setLastName={setLastName}
         handleSignUp={handleSignUp}
         isLoading={isLoading}
+        errorMessage={showError && error ? error.message : undefined}
       />
-      {showError && error && (
-        <Alert severity="error" sx={{ mt: 2 }}>
-          {error.message}
-        </Alert>
-      )}
     </DefaultLayout>
   );
 }

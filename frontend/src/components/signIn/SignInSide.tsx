@@ -3,7 +3,6 @@ import SignInCard from "./SignInCard";
 import Content from "./Content";
 import DefaultLayout from "../../theme/DefaultLayout";
 import useAuth from "../../hooks/useAuth";
-import { Alert } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { useContext } from "react";
 import { AuthContext } from "../../contexts/AuthContext";
@@ -62,12 +61,8 @@ export default function SignInSide() {
         setPassword={setPassword}
         handleLogin={handleLogin}
         isLoading={isLoading}
+        errorMessage={showError && error ? error.message : undefined}
       />
-      {showError && error && (
-        <Alert severity="error" sx={{ mt: 2 }}>
-          {error.message}
-        </Alert>
-      )}
     </DefaultLayout>
   );
 }

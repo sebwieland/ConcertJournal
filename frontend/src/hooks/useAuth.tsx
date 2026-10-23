@@ -50,7 +50,12 @@ const useAuth = (): UseAuth => {
       // Development logging removed
     },
     onError: (error: unknown) => {
-      setError(handleApiError(error));
+      const apiError = handleApiError(error);
+      setError(
+        apiError.statusCode === 401
+          ? { ...apiError, message: "Incorrect email or password." }
+          : apiError,
+      );
     },
     onMutate: () => {
       setIsLoading(true);
@@ -68,7 +73,15 @@ const useAuth = (): UseAuth => {
       // Development logging removed
     },
     onError: (error: unknown) => {
-      setError(handleApiError(error));
+      const apiError = handleApiError(error);
+      setError(
+        apiError.statusCode === 409
+          ? {
+              ...apiError,
+              message: "An account with this email already exists.",
+            }
+          : apiError,
+      );
     },
     onMutate: () => {
       setIsLoading(true);

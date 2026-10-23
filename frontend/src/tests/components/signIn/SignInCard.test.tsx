@@ -111,17 +111,36 @@ describe("SignInCard", () => {
     ).toBeInTheDocument();
   });
 
-  it("shows error message for short password", async () => {
+  it("does not flag an incomplete email while the user is still typing", () => {
     renderWithProviders(
-      <SignInCard {...{ ...mockProps, password: "12345" }} />,
+      <SignInCard {...{ ...mockProps, email: "invalid@email" }} />,
     );
+
+    expect(
+      screen.queryByText("Please enter a valid email address."),
+    ).not.toBeInTheDocument();
+  });
+
+  it("never judges password length on the login form", () => {
+    renderWithProviders(<SignInCard {...{ ...mockProps, password: "123" }} />);
 
     const passwordInput = screen.getByLabelText("Password");
     fireEvent.blur(passwordInput);
 
-    expect(
-      screen.getByText("Password must be at least 6 characters long."),
-    ).toBeInTheDocument();
+    expect(passwordInput).not.toHaveAttribute("aria-invalid", "true");
+    expect(screen.queryByText(/at least/i)).not.toBeInTheDocument();
+  });
+
+  it("shows the login error inside the card", () => {
+    renderWithProviders(
+      <SignInCard
+        {...{ ...mockProps, errorMessage: "Incorrect email or password." }}
+      />,
+    );
+
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Incorrect email or password.",
+    );
   });
 
   it("submits the form when Enter key is pressed", async () => {

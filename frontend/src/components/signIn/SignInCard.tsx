@@ -9,7 +9,10 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 
 import { styled } from "@mui/material/styles";
-import { useLayoutEffect } from "react";
+import { useLayoutEffect, useState } from "react";
+import Alert from "@mui/material/Alert";
+
+const EMAIL_PATTERN = /\S+@\S+\.\S+/;
 
 interface SignInCardProps {
   email: string;
@@ -18,6 +21,7 @@ interface SignInCardProps {
   setPassword: (password: string) => void;
   handleLogin: (event: React.FormEvent<HTMLFormElement>) => Promise<void>;
   isLoading: boolean;
+  errorMessage?: string;
 }
 
 const Card = styled(MuiCard)(({ theme }) => ({
@@ -45,7 +49,13 @@ export default function SignInCard({
   setPassword,
   handleLogin,
   isLoading,
+  errorMessage,
 }: SignInCardProps) {
+  // Only judge the email once the user has left the field — not mid-typing
+  const [emailTouched, setEmailTouched] = useState(false);
+  const emailInvalid =
+    emailTouched && email.length > 0 && !EMAIL_PATTERN.test(email);
+
   useLayoutEffect(() => {
     if (isLoading && process.env.NODE_ENV === "development") {
       console.log("Loading...");
@@ -84,11 +94,9 @@ export default function SignInCard({
         <FormControl>
           <FormLabel htmlFor="email">Email</FormLabel>
           <TextField
-            error={email.includes("@") && !/\S+@\S+\.\S+/.test(email)}
+            error={emailInvalid}
             helperText={
-              email.includes("@") && !/\S+@\S+\.\S+/.test(email)
-                ? "Please enter a valid email address."
-                : ""
+              emailInvalid ? "Please enter a valid email address." : ""
             }
             id="email"
             type="email"
@@ -99,13 +107,9 @@ export default function SignInCard({
             required
             fullWidth
             variant="outlined"
-            color={
-              email.includes("@") && !/\S+@\S+\.\S+/.test(email)
-                ? "error"
-                : "primary"
-            }
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            onBlur={() => setEmailTouched(true)}
           />
         </FormControl>
         <FormControl>
@@ -113,12 +117,6 @@ export default function SignInCard({
             <FormLabel htmlFor="password">Password</FormLabel>
           </Box>
           <TextField
-            error={password.length > 0 && password.length < 6}
-            helperText={
-              password.length > 0 && password.length < 6
-                ? "Password must be at least 6 characters long."
-                : ""
-            }
             name="password"
             placeholder="••••••"
             type="password"
@@ -127,14 +125,12 @@ export default function SignInCard({
             required
             fullWidth
             variant="outlined"
-            color={
-              password.length > 0 && password.length < 6 ? "error" : "primary"
-            }
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
         </FormControl>
 
+        {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
         <Button
           type="submit"
           fullWidth
