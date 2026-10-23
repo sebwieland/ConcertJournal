@@ -15,7 +15,7 @@
 
 | Decision | Choice | Key reason |
 |---|---|---|
-| Language / Runtime (backend) | Java 21 / Spring Boot 3.4 | Mature security & JPA ecosystem; team familiarity |
+| Language / Runtime (backend) | Java 21 / Spring Boot 4.1 | Mature security & JPA ecosystem; team familiarity |
 | Frontend framework | React 19 + TypeScript 5, Vite 5 | SPA with fast HMR dev loop |
 | UI library | MUI v9 (+ x-data-grid, x-date-pickers, x-charts) | Ready-made data table & date pickers for the journal |
 | Server state (frontend) | @tanstack/react-query v5 | Caching/refetching of journal data |

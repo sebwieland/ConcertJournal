@@ -46,6 +46,6 @@
 | TD9 | ~~Stale README~~ | Inadvertent | — | **Resolved** with R7 |
 | TD10 | **Frontend debug leftovers**: class-component `App`, `NODE_ENV`-guarded `console.log` blocks in `AuthContext.tsx` (13) | Deliberate | Bundle and review noise | Next frontend refactor |
 | TD11 | **Java package naming** `com.ConcertJournalAPI` violates lowercase convention | Deliberate | Cosmetic but complicates refactoring tooling expectations | Major backend refactor (renaming touches every file) |
-| TD12 | **Held security fix**: `.trivyignore` suppresses spring-webmvc CVE-2026-47884/47890 — no 6.2 backport, fix ships with Boot 4.1 | Deliberate | Known CVEs in the shipped image | Boot 4.x migration (also unblocks springdoc 3) |
+| TD12 | ~~Held security fix: `.trivyignore` suppressed spring-webmvc CVE-2026-47884/47890~~ | Deliberate | — | **Resolved** 2026-10-23: Spring Boot 4.1.2 (spring-webmvc 7.0.10); suppressions deleted |
 
-> Prioritised pay-down order (reviewed 2026-10-23): **TD12 (Boot 4) → R2 revocation → TD2 validation → TD3 DTOs**, then the hygiene items opportunistically.
+> Prioritised pay-down order (reviewed 2026-10-23): **R2 revocation (+ refresh-cookie rotation is never sent: `SecurityController` builds the cookie but never calls `addCookie`) → TD2 validation → TD3 DTOs**, then the hygiene items opportunistically.

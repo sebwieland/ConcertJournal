@@ -14,7 +14,7 @@
 
 | Constraint | Background / Reason |
 |---|---|
-| Java 21 runtime; Spring Boot 3.4 with Spring Security, JPA/Hibernate | Existing codebase and ecosystem choice (`backend/pom.xml`) |
+| Java 21 runtime; Spring Boot 4.1 with Spring Security 7, JPA/Hibernate 7 | Existing codebase and ecosystem choice (`backend/pom.xml`) |
 | Frontend must run on React 19 + TypeScript 5 with Vite 5 | Existing codebase (`frontend/package.json`) |
 | Production database is MySQL 8; Flyway is the only schema-change mechanism | Self-hosted MySQL on Docker volume; `db/migration` is source of truth |
 | H2 embedded DB must remain supported (default Spring profile) | Local development without Docker; *note: migration scripts use H2-flavoured SQL — see §11* |
