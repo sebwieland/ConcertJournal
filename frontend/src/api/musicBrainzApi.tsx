@@ -3,5 +3,6 @@ import { MusicBrainzApi } from "musicbrainz-api";
 export const mbApi = new MusicBrainzApi({
   appName: "concertjournal",
   appVersion: "0.1.0",
-  appContactInfo: "contact@example.com",
+  // MusicBrainz asks API clients for a real contact; a URL is accepted
+  appContactInfo: "https://concertjournal.de",
 });

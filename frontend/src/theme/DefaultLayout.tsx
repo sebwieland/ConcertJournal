@@ -6,6 +6,7 @@ import React, { PropsWithChildren, useContext } from "react";
 import CssBaseline from "@mui/material/CssBaseline";
 import { AuthContext } from "../contexts/AuthContext";
 import AddButton from "../components/utilities/AddButton";
+import Footer from "../components/legal/Footer";
 
 const DefaultLayout = ({ children }: PropsWithChildren) => {
   const { theme } = useTheme();
@@ -60,6 +61,7 @@ const DefaultLayout = ({ children }: PropsWithChildren) => {
         >
           {children}
         </Stack>
+        <Footer />
       </Stack>
     </ThemeProvider>
   );
