@@ -17,7 +17,7 @@
 |---|---|---|
 | Language / Runtime (backend) | Java 21 / Spring Boot 3.4 | Mature security & JPA ecosystem; team familiarity |
 | Frontend framework | React 18 + TypeScript 5, Vite 5 | SPA with fast HMR dev loop |
-| UI library | MUI v7 (+ x-data-grid, x-date-pickers) | Ready-made data table & date pickers for the journal |
+| UI library | MUI v9 (+ x-data-grid, x-date-pickers, x-charts) | Ready-made data table & date pickers for the journal |
 | Server state (frontend) | react-query v3 | Caching/refetching of journal data |
 | Primary database | MySQL 8 (Docker volume) | Self-hosted, runs on NAS; H2 as embedded default-profile fallback |
 | Schema management | Flyway (`V{N}__*.sql`) | Reproducible migrations on every startup |

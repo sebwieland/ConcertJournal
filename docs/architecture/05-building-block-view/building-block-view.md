@@ -71,7 +71,7 @@ flowchart TB
 
 ```mermaid
 flowchart TB
-    Req["HTTP Request"] --> RL["RateLimitFilter\n(Resilience4j, 60 req/min per client IP)"]
+    Req["HTTP Request"] --> RL["RateLimitFilter\n(Resilience4j, 300 req/min per client IP)"]
     RL --> JWT["JwtAuthenticationFilter\n(Bearer token → SecurityContext)"]
     JWT --> CSRF["CsrfFilter\n(CookieCsrfTokenRepository + CookieCsrfTokenRequestHandler)"]
     CSRF --> Chain["SecurityFilterChain\nauthorizeHttpRequests:\n/api/** authenticated,\nroot + static + auth endpoints permitted"]
@@ -80,7 +80,7 @@ flowchart TB
 
 | Block | Responsibility | Source path |
 |---|---|---|
-| `RateLimitFilter` | 60 requests/minute per client (X-Forwarded-For → X-Real-IP → remote addr); returns 429 on exhaustion | `backend/.../filter/RateLimitFilter.java` |
+| `RateLimitFilter` | 300 requests/minute per `remoteAddr` (proxy headers honoured only via Tomcat RemoteIpValve from internal proxies); idle buckets evicted; returns 429 on exhaustion | `backend/.../filter/RateLimitFilter.java` |
 | `JwtAuthenticationFilter` | Extracts `Authorization: Bearer` token, parses claims, sets `UsernamePasswordAuthenticationToken` (subject = email, no authorities) | `backend/.../security/JwtAuthenticationFilter.java` |
 | `JwtUtils` | Static token factory/signature (HMAC via `JWT_SECRET` env var); access token 3 min, refresh token 30 days | `backend/.../security/JwtUtils.java` |
 | `AuthSuccessHandler` | On formLogin success: returns access + refresh token JSON body, sets `refreshToken` cookie | `backend/.../security/AuthSuccessHandler.java` |
