@@ -14,7 +14,8 @@ import Alert from "@mui/material/Alert";
 
 const EMAIL_PATTERN = /\S+@\S+\.\S+/;
 const MIN_USERNAME_LENGTH = 3;
-const MIN_PASSWORD_LENGTH = 6;
+// Matches the backend RegisterRequest / ChangePasswordRequest @Size(min = 8)
+const MIN_PASSWORD_LENGTH = 8;
 
 interface SignUpCardProps {
   username: string;

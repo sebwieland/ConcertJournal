@@ -135,6 +135,15 @@ class AccountIntegrationTest {
     }
 
     @Test
+    void registrationRequiresEightCharacterPassword() throws Exception {
+        mockMvc.perform(post("/register").cookie(xsrf).header("X-XSRF-TOKEN", xsrf.getValue())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"short-" + UUID.randomUUID() + "@example.com\",\"password\":\"1234567\"}"))
+                .andExpect(status().isUnprocessableContent())
+                .andExpect(jsonPath("$.errors.password").value("Password must be at least 8 characters."));
+    }
+
+    @Test
     void invalidEventIs422WithFieldErrors() throws Exception {
         String token = accessToken(login(PASSWORD));
 
