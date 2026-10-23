@@ -34,6 +34,31 @@ describe("handleApiError (real implementation)", () => {
     expect(result.message).toBe("Validation error. Please check your input.");
   });
 
+  it("is idempotent: an already-normalised error passes through unchanged", () => {
+    // Regression: login errors were normalised in apiAuth and again in
+    // useAuth, turning a 401 into "Unknown error occurred" without statusCode
+    const once = handleApiError(axiosError(401, { error: "Bad credentials" }));
+    const twice = handleApiError(once);
+
+    expect(twice).toBe(once);
+    expect(twice.statusCode).toBe(401);
+    expect(twice.type).toBe(ApiErrorType.UNAUTHORIZED);
+  });
+
+  it("keeps 422 field details across layers (interceptor → api module → page)", () => {
+    const error = axiosError(422, {
+      message: "Password is incorrect.",
+      errors: { currentPassword: "Password is incorrect." },
+    });
+
+    const result = handleApiError(handleApiError(handleApiError(error)));
+
+    expect(result.message).toBe("Password is incorrect.");
+    expect(result.details).toEqual({
+      currentPassword: "Password is incorrect.",
+    });
+  });
+
   it("uses plain-string bodies for unmapped statuses (e.g. 409 on register)", () => {
     const result = handleApiError(axiosError(409, "User already exists"));
 

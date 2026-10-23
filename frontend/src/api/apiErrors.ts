@@ -11,7 +11,25 @@ export interface ApiError {
   originalError?: unknown;
 }
 
+const API_ERROR_TYPES = new Set<string>(Object.values(ApiErrorType));
+
+function isApiError(error: unknown): error is ApiError {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    !axios.isAxiosError(error) &&
+    API_ERROR_TYPES.has((error as ApiError).type) &&
+    typeof (error as ApiError).message === "string"
+  );
+}
+
 export function handleApiError(error: unknown): ApiError {
+  // Errors pass through several layers (axios interceptor → api module →
+  // hook), each calling this. Re-normalising an ApiError used to discard it
+  // as "Unknown error occurred" and drop statusCode/details.
+  if (isApiError(error)) {
+    return error;
+  }
   if (axios.isAxiosError(error)) {
     if (!error.response) {
       return {
