@@ -36,7 +36,7 @@
 | ID | Debt Item | Type | Cost if Left | Pay-down Trigger |
 |---|---|---|---|---|
 | TD1 | **Config that lies**: all `@Value` header fields (HSTS/CSP/frame-options/referrer/permissions-policy) and `corsEnabled` in `SecurityConfiguration` are injected but never read — the filter chain hardcodes the values; `JwtAuthenticationFilter.handleInvalidToken` is dead code | Inadvertent | Config changes silently have no effect; review/maintenance overhead | Next security-config change |
-| TD2 | **Error-handling contract incomplete**: `ApiExceptionHandler` now maps not-found → 404 and missing auth → 401 (2026-10-23). Remaining: bean-validation failures return Boot's default 400 body, while the frontend's `apiErrors.ts` expects field errors on 422 | Inadvertent | Validation messages never reach the user in a structured way | Next entry-form change |
+| TD2 | ~~Error-handling contract incomplete (validation → Boot default 400 without field info)~~ | Inadvertent | — | **Resolved** 2026-10-23: `@Valid` failures → 422 with `errors` map, shown in the UI |
 | TD3 | **Entities used as API DTOs**: `BandEventController` accepts/returns the JPA entity (`@Valid BandEvent`); only `@JsonIgnore` keeps the owner out | Deliberate | Over-posting risk if fields are added, API schema coupled to DB schema | Next `BandEvent` schema change |
 | TD4 | ~~Frontend dependency drift: deprecated `react-query` v3 pinning React 18~~ | Inadvertent | — | **Resolved** 2026-10-23: `@tanstack/react-query` v5 + React 19; `web-vitals` 3+ still held (API change in `reportWebVitals.ts`) |
 | TD5 | **Hardcoded prod domain** `concertjournal.de` in base `application.properties` (`auth.cookie.domain`, `server.servlet.session.cookie.domain`) and `application-production.properties`. Overridable via `AUTH_COOKIE_DOMAIN` | Deliberate | Other deployment targets must remember the override | Before adding any new environment |
@@ -48,4 +48,4 @@
 | TD11 | **Java package naming** `com.ConcertJournalAPI` violates lowercase convention | Deliberate | Cosmetic but complicates refactoring tooling expectations | Major backend refactor (renaming touches every file) |
 | TD12 | ~~Held security fix: `.trivyignore` suppressed spring-webmvc CVE-2026-47884/47890~~ | Deliberate | — | **Resolved** 2026-10-23: Spring Boot 4.1.2 (spring-webmvc 7.0.10); suppressions deleted |
 
-> Prioritised pay-down order (reviewed 2026-10-23): **R2 revocation → TD2 validation → TD3 DTOs**, then the hygiene items opportunistically.
+> Prioritised pay-down order (reviewed 2026-10-23): **TD3 DTOs → R2 revocation (only if stolen refresh tokens become a concern)**, then the hygiene items opportunistically.
