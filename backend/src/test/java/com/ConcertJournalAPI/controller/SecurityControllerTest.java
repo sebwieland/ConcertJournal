@@ -1,7 +1,7 @@
 package com.ConcertJournalAPI.controller;
 
+import com.ConcertJournalAPI.repository.AppUserRepository;
 import com.ConcertJournalAPI.security.JwtUtils;
-import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -34,6 +34,9 @@ public class SecurityControllerTest {
 
     @Mock
     private JwtUtils jwtUtils;
+
+    @Mock
+    private AppUserRepository appUserRepository;
 
     @InjectMocks
     private SecurityController securityController;
@@ -69,7 +72,7 @@ public class SecurityControllerTest {
         String validToken = JwtUtils.generateRefreshToken(authentication);
         Cookie[] cookies = new Cookie[]{new Cookie("refreshToken", validToken)};
         when(request.getCookies()).thenReturn(cookies);
-        Claims claims = mock(Claims.class);
+        when(appUserRepository.existsAppUserByEmail(any())).thenReturn(true);
 
         // Act
         ResponseEntity<?> res = securityController.refreshAccessToken(request, response);
@@ -85,5 +88,16 @@ public class SecurityControllerTest {
         } catch (JwtException e) {
             Assertions.fail("Invalid token");
         }
+    }
+
+    @Test
+    void testRefreshAccessToken_ValidTokenOfDeletedAccount_ReturnsBadRequest() {
+        String validToken = JwtUtils.generateRefreshToken(authentication);
+        when(request.getCookies()).thenReturn(new Cookie[]{new Cookie("refreshToken", validToken)});
+        when(appUserRepository.existsAppUserByEmail(any())).thenReturn(false);
+
+        ResponseEntity<?> res = securityController.refreshAccessToken(request, response);
+
+        assertEquals(400, res.getStatusCode().value());
     }
 }

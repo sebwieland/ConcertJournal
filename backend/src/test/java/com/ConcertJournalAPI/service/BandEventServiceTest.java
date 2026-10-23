@@ -7,7 +7,6 @@ import com.ConcertJournalAPI.repository.AppUserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -29,7 +28,6 @@ class BandEventServiceTest {
     @Mock
     private BandEventRepository bandEventRepository;
 
-    @InjectMocks
     private BandEventService bandEventService;
 
     @Mock
@@ -53,6 +51,8 @@ class BandEventServiceTest {
 
     @BeforeEach
     void setup() {
+        // Real provider over the mocked repository: auth edge cases stay under test
+        bandEventService = new BandEventService(bandEventRepository, new CurrentUserProvider(appUserRepository));
         appUser = getSampleAppUser();
         // lenient: the unauthenticated tests never reach the user lookup
         lenient().when(appUserRepository.findByEmail("testUser")).thenReturn(appUser);
