@@ -1,6 +1,7 @@
 import {
   AppBar,
   Toolbar,
+  IconButton,
   Typography,
   useMediaQuery,
   useTheme,
@@ -8,6 +9,7 @@ import {
 import LogoutIcon from "@mui/icons-material/Logout";
 import BookIcon from "@mui/icons-material/Book";
 import InsightsIcon from "@mui/icons-material/Insights";
+import SettingsIcon from "@mui/icons-material/Settings";
 import React, { useContext } from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
@@ -63,6 +65,9 @@ const Navbar = () => {
       <Button color="inherit" onClick={() => navigate("/new-entry")}>
         Add Entry
       </Button>
+      <Button color="inherit" onClick={() => navigate("/settings")}>
+        Settings
+      </Button>
       <Button color="inherit" onClick={handleLogout}>
         Logout
       </Button>
@@ -87,6 +92,15 @@ const Navbar = () => {
         <InsightsIcon sx={{ mr: 1 }} />
         <Typography>Stats</Typography>
       </Button>
+      {/* Icon only: four labelled buttons don't fit next to the logo on phones */}
+      <IconButton
+        color="inherit"
+        aria-label="Settings"
+        onClick={() => navigate("/settings")}
+        sx={{ padding: 0 }}
+      >
+        <SettingsIcon />
+      </IconButton>
       <Button
         color="inherit"
         onClick={handleLogout}

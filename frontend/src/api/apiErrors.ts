@@ -49,9 +49,12 @@ export function handleApiError(error: unknown): ApiError {
       case 422:
         return {
           type: ApiErrorType.VALIDATION_ERROR,
-          message: "Validation error. Please check your input.",
+          // Backend joins its field messages (e.g. "Band Name is required.")
+          message:
+            responseData?.message ||
+            "Validation error. Please check your input.",
           statusCode,
-          details: responseData.errors,
+          details: responseData?.errors,
           originalError: error,
         };
       case 500:
@@ -67,7 +70,12 @@ export function handleApiError(error: unknown): ApiError {
       default:
         return {
           type: ApiErrorType.UNKNOWN_ERROR,
-          message: `Error: ${responseData.message || "Unknown error"}`,
+          // Some endpoints (e.g. /register 409) answer with a plain string
+          message: `Error: ${
+            (typeof responseData === "string" && responseData) ||
+            responseData?.message ||
+            "Unknown error"
+          }`,
           statusCode,
           originalError: error,
         };

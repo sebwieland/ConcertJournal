@@ -169,6 +169,28 @@ async function shot(name) { await page.screenshot({ path: `${out}/${name}.png`, 
     await shot('05c-deepdive');
   } catch (e) { step('deepdive', 'FAIL', String(e).slice(0, 200)); await shot('05c-deepdive-fail'); }
 
+  // ---------- 5d. Account settings: hard load + data export ----------
+  // Hard navigation proves /settings passes SpaController + the security
+  // SPA matcher in the unified container; the account is NOT deleted here
+  // because later steps still use it.
+  try {
+    await page.goto(`${BASE}/settings`, { waitUntil: 'networkidle', timeout: 30000 });
+    await page.waitForTimeout(1500);
+    const body = await page.evaluate(() => document.body.innerText);
+    const rendered = body.includes('Account settings') && body.includes('Delete account');
+    step('settings:renders', rendered && !/sign-in/.test(page.url()) ? 'PASS' : 'FAIL', `url=${page.url()}`);
+    const [exportResp] = await Promise.all([
+      page.waitForResponse(r => r.url().includes('/api/me/export'), { timeout: 15000 }).catch(() => null),
+      page.getByRole('button', { name: /download my data/i }).click(),
+    ]);
+    if (exportResp) {
+      const data = await exportResp.json().catch(() => ({}));
+      const ok = exportResp.status() === 200 && Array.isArray(data.events) && data.events.length > 0 && !('password' in data);
+      step('settings:export', ok ? 'PASS' : 'FAIL', `status=${exportResp.status()} events=${(data.events || []).length}`);
+    } else step('settings:export', 'FAIL', 'no GET /api/me/export observed');
+    await shot('05d-settings');
+  } catch (e) { step('settings', 'FAIL', String(e).slice(0, 200)); await shot('05d-settings-fail'); }
+
     // ---------- 6a. API probe: allEvents payload (R1 must be FIXED) ----------
     if (globalThis.accessToken) {
       try {
