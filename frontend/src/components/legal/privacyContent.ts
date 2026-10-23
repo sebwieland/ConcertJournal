@@ -43,7 +43,7 @@ export const privacyContent: Record<Language, PrivacyContent> = {
       {
         heading: "3. Zugriffsdaten und Missbrauchsschutz",
         blocks: [
-          "Es werden keine Zugriffsprotokolle (Server-Logs) mit IP-Adressen gespeichert.",
+          "Beim Aufruf der Website verarbeitet der Server technisch bedingt Ihre IP-Adresse, Datum und Uhrzeit, die aufgerufene Adresse sowie Browser-Informationen. Soweit diese Daten in Server-Protokollen gespeichert werden, dienen sie ausschließlich dem sicheren Betrieb und der Fehleranalyse und werden spätestens nach 14 Tagen gelöscht. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO.",
           "Zum Schutz vor Missbrauch wird die Zahl der Anfragen pro Minute begrenzt. Dafür wird Ihre IP-Adresse kurzzeitig im Arbeitsspeicher des Servers verarbeitet, nicht dauerhaft gespeichert und in der Regel nach wenigen Minuten verworfen. Rechtsgrundlage ist mein berechtigtes Interesse an einem sicheren Betrieb (Art. 6 Abs. 1 lit. f DSGVO).",
         ],
       },
@@ -128,7 +128,7 @@ export const privacyContent: Record<Language, PrivacyContent> = {
       {
         heading: "3. Access data and abuse protection",
         blocks: [
-          "No access logs (server logs) containing IP addresses are stored.",
+          "When you visit the website, the server technically processes your IP address, date and time, the requested address and browser information. Insofar as this data is stored in server logs, it is used solely for secure operation and troubleshooting and deleted after 14 days at the latest. The legal basis is Art. 6(1)(f) GDPR.",
           "To protect against abuse, the number of requests per minute is limited. For this, your IP address is processed briefly in the server's memory, not stored permanently, and usually discarded within a few minutes. The legal basis is my legitimate interest in secure operation (Art. 6(1)(f) GDPR).",
         ],
       },
