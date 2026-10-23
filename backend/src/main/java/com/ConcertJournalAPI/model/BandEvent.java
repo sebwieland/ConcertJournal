@@ -31,10 +31,8 @@ public class BandEvent {
     @NotNull(message = "Rating is required.")
     private Integer rating;
     @CreationTimestamp
-    @Temporal(TemporalType.TIMESTAMP)
     private Instant creationDate;
     @UpdateTimestamp
-    @Temporal(TemporalType.TIMESTAMP)
     private Instant modificationDate;
 
     /** Owner is resolved server-side — never accepted from or leaked to the client (risk R1). */

@@ -13,7 +13,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Set;
 
-import static org.junit.Assert.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 

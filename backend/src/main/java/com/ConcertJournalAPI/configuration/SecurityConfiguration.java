@@ -105,11 +105,12 @@ public class SecurityConfiguration {
             }
 
             cookieBuilder.secure(effectiveSecure);
+            // Security 7 removed setCookieHttpOnly — the flag now lives on the customizer
+            cookieBuilder.httpOnly(httpOnlyCookie);
             if (StringUtils.hasText(SecurityConstants.cookieDomain)) {
                 cookieBuilder.domain(SecurityConstants.cookieDomain);
             }
         });
-        repository.setCookieHttpOnly(httpOnlyCookie);
         return repository;
     }
 
@@ -142,7 +143,8 @@ public class SecurityConfiguration {
                     }
                 })
                 .headers(headers -> headers
-                        .referrerPolicy(org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
+                        .referrerPolicy(referrer -> referrer.policy(
+                                org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN)))
                 .headers(headers -> headers
                         .addHeaderWriter(new org.springframework.security.web.header.writers.PermissionsPolicyHeaderWriter(
                                 "geolocation=(), microphone=(), camera=(), payment=(), usb=(), magnetometer=(), gyroscope=()")))
@@ -163,7 +165,7 @@ public class SecurityConfiguration {
 
                 // Authorize requests
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/index.html", "/assets/**", "*.js", "*.css", "*.ico", "*.png", "*.svg", "*.woff", "*.woff2", "*.xml", "*.txt", "*.webmanifest").permitAll()
+                        .requestMatchers("/", "/index.html", "/assets/**", "/*.js", "/*.css", "/*.ico", "/*.png", "/*.svg", "/*.woff", "/*.woff2", "/*.xml", "/*.txt", "/*.webmanifest", "/manifest.json").permitAll()
                         // SPA document routes (single-segment, no dot) forward to index.html
                         // via SpaController and must load anonymously — React Router then
                         // handles its own auth gating client-side. Implemented as an
