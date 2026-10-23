@@ -16,9 +16,9 @@
 | Decision | Choice | Key reason |
 |---|---|---|
 | Language / Runtime (backend) | Java 21 / Spring Boot 3.4 | Mature security & JPA ecosystem; team familiarity |
-| Frontend framework | React 18 + TypeScript 5, Vite 5 | SPA with fast HMR dev loop |
+| Frontend framework | React 19 + TypeScript 5, Vite 5 | SPA with fast HMR dev loop |
 | UI library | MUI v9 (+ x-data-grid, x-date-pickers, x-charts) | Ready-made data table & date pickers for the journal |
-| Server state (frontend) | react-query v3 | Caching/refetching of journal data |
+| Server state (frontend) | @tanstack/react-query v5 | Caching/refetching of journal data |
 | Primary database | MySQL 8 (Docker volume) | Self-hosted, runs on NAS; H2 as embedded default-profile fallback |
 | Schema management | Flyway (`V{N}__*.sql`) | Reproducible migrations on every startup |
 | Auth | Spring Security formLogin + JWT (jjwt) | Stateless access tokens (3 min) + refresh cookie (30 days) |

@@ -8,14 +8,10 @@ updates:
       time: "06:00"
       timezone: "Europe/Berlin"
     open-pull-requests-limit: 10
-    # React 19 must arrive as a MANUALLY-driven migration (react-query v3 -> @tanstack/react-query v5).
     # Dependabot's group update-type filter doesn't hold majors out (verified in updater logs),
-    # so these get hard-ignored until that session. Delete the entries then.
+    # so every held major is hard-ignored here until its migration session. Delete the entry then.
     ignore:
-      - dependency-name: "react"
-        versions: [">=19"]
-      - dependency-name: "react-dom"
-        versions: [">=19"]
+      # web-vitals 3+ replaced getCLS/getFID/... with onCLS/onINP/... — port reportWebVitals.ts first
       - dependency-name: "web-vitals"
         versions: [">=3"]
       # musicbrainz-api turned IArtistMatch from interface into a type alias at 0.25 —

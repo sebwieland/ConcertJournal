@@ -15,7 +15,7 @@
 | Constraint | Background / Reason |
 |---|---|
 | Java 21 runtime; Spring Boot 3.4 with Spring Security, JPA/Hibernate | Existing codebase and ecosystem choice (`backend/pom.xml`) |
-| Frontend must run on React 18 + TypeScript 5 with Vite 5 | Existing codebase (`frontend/package.json`) |
+| Frontend must run on React 19 + TypeScript 5 with Vite 5 | Existing codebase (`frontend/package.json`) |
 | Production database is MySQL 8; Flyway is the only schema-change mechanism | Self-hosted MySQL on Docker volume; `db/migration` is source of truth |
 | H2 embedded DB must remain supported (default Spring profile) | Local development without Docker; *note: migration scripts use H2-flavoured SQL — see §11* |
 | Production runs as a single Docker container (frontend + backend unified, `/app/static/`) | Self-hosted single-service deployment; `SpaController.java`, `Dockerfile` |
@@ -46,7 +46,7 @@
 | All REST controllers use `@RequestMapping("/api")`; SPA/static and auth endpoints at root | Backend API layer |
 | No CORS configuration — Vite proxy in dev, same-origin (or same-site) in prod | Frontend ↔ Backend integration (see ADR-002) |
 | Backend uses Lombok; entities carry Bean Validation annotations | Backend model layer |
-| Frontend uses MUI components, react-query for server state, axios client with `/api` baseURL | Frontend |
+| Frontend uses MUI components, @tanstack/react-query v5 for server state, axios client with `/api` baseURL | Frontend |
 | Tests colocated: `src/tests/` tree with shared `renderWithProviders` util | Frontend testing |
 | CI order: lint → test → build (frontend); test → build (backend) | CI pipelines |
 | Flyway naming: `V{N}__{description}.sql` | Backend migrations |
