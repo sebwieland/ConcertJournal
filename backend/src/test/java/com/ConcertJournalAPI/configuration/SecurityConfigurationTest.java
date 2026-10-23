@@ -8,9 +8,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
@@ -43,10 +43,10 @@ public class SecurityConfigurationTest {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    @MockBean
+    @MockitoBean
     private BandEventService bandEventService;
 
-    @MockBean
+    @MockitoBean
     private AppUserRepository appUserRepository;
 
     @Test
@@ -85,6 +85,18 @@ public class SecurityConfigurationTest {
         // lands on the backend login form instead of the client router.
         mockMvc.perform(get("/edit-entry/11"))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @WithAnonymousUser
+    public void testRootStaticFilesServeAnonymously() throws Exception {
+        // Security 7 path patterns need a leading slash ("/*.ico", not "*.ico");
+        // crawlers and the browser fetch these without credentials. 404 = passed
+        // authorization (no static files in this slice); 302 = bounced to /login.
+        for (String file : new String[]{"/favicon.ico", "/robots.txt", "/sitemap.xml", "/logo192.png", "/manifest.json"}) {
+            mockMvc.perform(get(file))
+                    .andExpect(status().isNotFound());
+        }
     }
 
     @Test

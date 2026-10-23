@@ -41,9 +41,7 @@ public class AppUser {
     private List<BandEvent> bandEvents;
 
     @CreationTimestamp
-    @Temporal(TemporalType.TIMESTAMP)
     private Instant creationDate;
     @UpdateTimestamp
-    @Temporal(TemporalType.TIMESTAMP)
     private Instant modificationDate;
 }

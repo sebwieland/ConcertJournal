@@ -47,7 +47,7 @@ public class SecurityControllerTest {
         ResponseEntity<?> res = securityController.refreshAccessToken(request, response);
 
         // Assert
-        assertEquals(400, res.getStatusCodeValue());
+        assertEquals(400, res.getStatusCode().value());
     }
 
     @Test
@@ -60,7 +60,7 @@ public class SecurityControllerTest {
         ResponseEntity<?> res = securityController.refreshAccessToken(request, response);
 
         // Assert
-        assertEquals(400, res.getStatusCodeValue());
+        assertEquals(400, res.getStatusCode().value());
     }
 
     @Test
@@ -75,7 +75,7 @@ public class SecurityControllerTest {
         ResponseEntity<?> res = securityController.refreshAccessToken(request, response);
 
         // Assert
-        assertEquals(200, res.getStatusCodeValue());
+        assertEquals(200, res.getStatusCode().value());
         assertNotNull(res.getBody());
         Assertions.assertTrue(res.getBody() instanceof String);
         String responseBody = (String) res.getBody();

@@ -13,7 +13,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import java.io.IOException;
 import java.io.PrintWriter;
 
-import static org.junit.Assert.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 
