@@ -1,12 +1,14 @@
 package com.ConcertJournalAPI.controller;
 
 import com.ConcertJournalAPI.configuration.SecurityConstants;
+import com.ConcertJournalAPI.repository.AppUserRepository;
 import com.ConcertJournalAPI.security.JwtUtils;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -28,9 +30,9 @@ public class SecurityController {
     @Value("${auth.cookie.secure}")
     private boolean secureCookie;
 
-    @Value("${auth.cookie.httpOnly}")
-    private boolean httpOnlyCookie;
-    
+    @Autowired
+    private AppUserRepository appUserRepository;
+
     @Value("${server.servlet.session.cookie.same-site:None}")
     private String sameSiteCookie;
 
@@ -55,35 +57,15 @@ public class SecurityController {
                 return ResponseEntity.badRequest().build();
             }
             String subject = claims.getSubject();
+            // Deleted accounts keep a valid-looking refresh cookie on other devices
+            if (!Boolean.TRUE.equals(appUserRepository.existsAppUserByEmail(subject))) {
+                return ResponseEntity.badRequest().build();
+            }
+            // No refresh-token rotation by design: sessions end 30 days after
+            // login regardless of activity (accepted, see arc42 §11 R2)
             Authentication authentication = new UsernamePasswordAuthenticationToken(subject, null, Collections.emptyList());
             String newAccessToken = JwtUtils.generateToken(authentication);
-            String newRefreshToken = JwtUtils.generateRefreshToken(authentication);
 
-            // Refresh token is a credential — always JS-unreadable (config-driven)
-            Cookie newRefreshTokenCookie = new Cookie("refreshToken", newRefreshToken);
-            newRefreshTokenCookie.setHttpOnly(httpOnlyCookie);
-            
-            // Ensure secure=true when SameSite=None (required by browsers)
-            boolean effectiveSecure = secureCookie;
-            if ("None".equals(sameSiteCookie)) {
-                effectiveSecure = true;
-                if (!secureCookie) {
-                    log.warn("Forcing secure=true for refreshToken cookie because SameSite=None requires it. Original setting was secure=false.");
-                }
-            }
-            
-            newRefreshTokenCookie.setSecure(effectiveSecure);
-            newRefreshTokenCookie.setMaxAge(86400 * 30); // 30 days
-            newRefreshTokenCookie.setValue(newRefreshToken);
-            newRefreshTokenCookie.setAttribute("SameSite", sameSiteCookie);
-            if (org.springframework.util.StringUtils.hasText(SecurityConstants.cookieDomain)) {
-                newRefreshTokenCookie.setDomain(SecurityConstants.cookieDomain);
-            }
-            newRefreshTokenCookie.setPath("/");
-            
-            log.info("Setting refreshToken cookie - secure: {}, sameSite: {}",
-                    effectiveSecure, sameSiteCookie);
-            
             return ResponseEntity.ok().body("{\"accessToken\":\"" + newAccessToken + "\"}");
         } catch (JwtException e) {
             // Handle invalid refresh token

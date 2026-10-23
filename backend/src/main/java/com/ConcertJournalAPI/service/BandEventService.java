@@ -1,13 +1,7 @@
 package com.ConcertJournalAPI.service;
 
-import com.ConcertJournalAPI.model.AppUser;
 import com.ConcertJournalAPI.model.BandEvent;
 import com.ConcertJournalAPI.repository.BandEventRepository;
-import com.ConcertJournalAPI.repository.AppUserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,18 +9,20 @@ import java.util.List;
 
 @Service
 public class BandEventService {
-    @Autowired
-    private BandEventRepository bandEventRepository;
+    private final BandEventRepository bandEventRepository;
+    private final CurrentUserProvider currentUser;
 
-    @Autowired
-    private AppUserRepository appUserRepository;
+    public BandEventService(BandEventRepository bandEventRepository, CurrentUserProvider currentUser) {
+        this.bandEventRepository = bandEventRepository;
+        this.currentUser = currentUser;
+    }
 
     public List<BandEvent> getAllEvents() {
-        return bandEventRepository.findAllByAppUser(currentUser());
+        return bandEventRepository.findAllByAppUser(currentUser.get());
     }
 
     public BandEvent getEventById(Long id) {
-        return bandEventRepository.findByIdAndAppUser(id, currentUser())
+        return bandEventRepository.findByIdAndAppUser(id, currentUser.get())
                 .orElseThrow(() -> new EventNotFoundException(id));
     }
 
@@ -43,27 +39,13 @@ public class BandEventService {
 
     @Transactional
     public void deleteEventById(Long id) {
-        bandEventRepository.deleteByIdAndAppUser(id, currentUser());
+        bandEventRepository.deleteByIdAndAppUser(id, currentUser.get());
     }
 
     @Transactional
     public BandEvent saveEvent(BandEvent bandEvent) {
-        bandEvent.setAppUser(currentUser());
+        bandEvent.setAppUser(currentUser.get());
         return bandEventRepository.save(bandEvent);
-    }
-
-    /** Every query is scoped to the authenticated owner — never trust an id alone. */
-    private AppUser currentUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null) {
-            throw new AuthenticationCredentialsNotFoundException("User is not authenticated");
-        }
-        AppUser appUser = appUserRepository.findByEmail(authentication.getName());
-        if (appUser == null) {
-            // Token still valid for an account that has since been removed
-            throw new AuthenticationCredentialsNotFoundException("User no longer exists");
-        }
-        return appUser;
     }
 
 }
