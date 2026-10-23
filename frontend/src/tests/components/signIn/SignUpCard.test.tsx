@@ -24,7 +24,7 @@ describe("SignUpCard", () => {
     renderWithProviders(<SignUpCard {...baseProps} password="abc" />);
 
     const passwordInput = screen.getByLabelText("Password");
-    expect(screen.getByText("At least 6 characters")).toBeInTheDocument();
+    expect(screen.getByText("At least 8 characters")).toBeInTheDocument();
     expect(passwordInput).not.toHaveAttribute("aria-invalid", "true");
   });
 
@@ -35,6 +35,25 @@ describe("SignUpCard", () => {
     fireEvent.blur(passwordInput);
 
     expect(passwordInput).toHaveAttribute("aria-invalid", "true");
+  });
+
+  it("uses the same 8-character minimum as the backend", () => {
+    const { unmount } = renderWithProviders(
+      <SignUpCard {...baseProps} password="1234567" />,
+    );
+    fireEvent.blur(screen.getByLabelText("Password"));
+    expect(screen.getByLabelText("Password")).toHaveAttribute(
+      "aria-invalid",
+      "true",
+    );
+    unmount();
+
+    renderWithProviders(<SignUpCard {...baseProps} password="12345678" />);
+    fireEvent.blur(screen.getByLabelText("Password"));
+    expect(screen.getByLabelText("Password")).not.toHaveAttribute(
+      "aria-invalid",
+      "true",
+    );
   });
 
   it("flags an invalid email only after the field is left", () => {

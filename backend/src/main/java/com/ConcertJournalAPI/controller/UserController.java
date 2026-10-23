@@ -4,6 +4,7 @@ import com.ConcertJournalAPI.model.AppUser;
 import com.ConcertJournalAPI.repository.AppUserRepository;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -28,6 +29,7 @@ public class UserController {
             @Email(message = "Invalid email.")
             String email,
             @NotBlank(message = "Password is required.")
+            @Size(min = 8, message = "Password must be at least 8 characters.")
             String password,
             String firstName,
             String lastName) {
