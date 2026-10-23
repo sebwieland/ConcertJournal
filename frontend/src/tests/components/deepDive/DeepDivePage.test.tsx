@@ -1,6 +1,6 @@
 import { render, screen, within } from "@testing-library/react";
 import { vi, describe, it, expect, beforeEach } from "vitest";
-import { QueryClient, QueryClientProvider } from "react-query";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthContext } from "../../../contexts/AuthContext";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import DeepDivePage from "../../../components/deepDive/DeepDivePage";

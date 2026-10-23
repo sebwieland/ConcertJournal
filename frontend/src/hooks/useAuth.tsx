@@ -1,6 +1,6 @@
 import { useContext, useState } from "react";
 import { AuthContext } from "../contexts/AuthContext";
-import { useMutation } from "react-query";
+import { useMutation } from "@tanstack/react-query";
 import useAuthApi from "../api/apiAuth";
 import { ApiError, handleApiError } from "../api/apiErrors";
 
@@ -38,7 +38,11 @@ const useAuth = (): UseAuth => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<ApiError | null>(null);
 
-  const { mutateAsync: loginMutation } = useMutation(authApi.login, {
+  // v5 calls mutationFn(variables, context) — wrap so the API layer only
+  // ever receives the request payload
+  const { mutateAsync: loginMutation } = useMutation({
+    mutationFn: (data: Parameters<typeof authApi.login>[0]) =>
+      authApi.login(data),
     onSuccess: (data) => {
       setAccessToken(data.accessToken);
       setIsLoggedIn(true);
@@ -56,7 +60,9 @@ const useAuth = (): UseAuth => {
     },
   });
 
-  const { mutateAsync: signUpMutation } = useMutation(authApi.register, {
+  const { mutateAsync: signUpMutation } = useMutation({
+    mutationFn: (data: Parameters<typeof authApi.register>[0]) =>
+      authApi.register(data),
     onSuccess: () => {
       fetchCsrfToken();
       // Development logging removed
@@ -72,7 +78,8 @@ const useAuth = (): UseAuth => {
     },
   });
 
-  const { mutateAsync: logoutMutation } = useMutation(authApi.logout, {
+  const { mutateAsync: logoutMutation } = useMutation({
+    mutationFn: () => authApi.logout(),
     onSuccess: () => {
       authContext.setIsLoggedIn(false);
       authContext.setAccessToken("");
