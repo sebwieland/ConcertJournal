@@ -25,6 +25,8 @@
 | R6 | **Migrations are H2-flavoured.** | Medium | Medium | Resolved | Migrations use MySQL-compatible DDL; the CI e2e job boots a fresh MySQL stack |
 | R7 | **Stale public docs mislead contributors.** | Low | High | Resolved | README rewritten against actual endpoints, compose profiles and the no-CORS design (2026-10-23) |
 | R8 | Key-person dependency — solo owner holds all architecture knowledge (typical for hobby projects). | Medium | Low | Accepted | This arc42 documentation is the mitigation; keep it updated (§9 update-docs workflow) |
+| R9 | **No Impressum.** The site publishes a GDPR privacy policy (controller name + alias email) but no Impressum (§ 5 DDG), on the reading that a free, ad-free hobby service is not "geschäftsmäßig". Courts read the term broadly. | Low | Low | Accepted (2026-10-23) | Re-evaluate as soon as the site earns money (ads, donations, paid features) — then add an Impressum, e.g. with a c/o address service |
+| R10 | **Privacy policy drifts from the code.** `privacyContent.ts` states concrete facts (no logs, three cookies, MusicBrainz as the only third party). A new cookie, log line or external call silently makes it false. | Medium | Medium | Mitigated | Rule in AGENTS.md (update policy in the same PR); e2e checks the page is public; DE/EN parity test. Found and fixed on creation: login logged user emails, `DataLoader` seeded a known admin login in production |
 
 ## Technical Debt
 
