@@ -6,8 +6,8 @@ import Sitemap from 'vite-plugin-sitemap'
 
 // Only public routes belong in the sitemap — everything else sits behind
 // login and must not be advertised to crawlers. The home page is picked
-// up automatically; an empty list avoids duplicated entries.
-const dynamicRoutes: string[] = []
+// up automatically, so it is not listed here.
+const dynamicRoutes: string[] = ['/privacy']
 
 // Get environment variables with defaults
 const isDev = process.env.NODE_ENV === 'development';

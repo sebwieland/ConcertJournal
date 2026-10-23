@@ -293,6 +293,21 @@ async function shot(name) { await page.screenshot({ path: `${out}/${name}.png`, 
     await shot('08-after-logout');
   } catch (e) { step('logout', 'FAIL', String(e).slice(0, 150)); }
 
+  // ---------- 11. Privacy policy: public, crawlable ----------
+  // Fresh context = guaranteed anonymous, independent of how logout went
+  try {
+    const anon = await browser.newContext();
+    const anonPage = await anon.newPage();
+    await anonPage.goto(`${BASE}/privacy`, { waitUntil: 'networkidle', timeout: 20000 });
+    await anonPage.waitForTimeout(1000);
+    const text = await anonPage.evaluate(() => document.body.innerText);
+    const ok = !/sign-in/.test(anonPage.url()) && text.includes('Sebastian Wieland') && text.includes('MusicBrainz');
+    step('privacy:public', ok ? 'PASS' : 'FAIL', `url=${anonPage.url()}`);
+    const sitemap = await (await anonPage.request.get(`${BASE}/sitemap.xml`)).text();
+    step('privacy:in-sitemap', sitemap.includes('/privacy') ? 'PASS' : 'FAIL', '');
+    await anon.close();
+  } catch (e) { step('privacy', 'FAIL', String(e).slice(0, 150)); }
+
   fs.writeFileSync(`${out}/e2e-report.json`, JSON.stringify(results, null, 2));
   fs.writeFileSync(`${out}/e2e-console.txt`, [...new Set(consoleLog)].join('\n'));
   const fail = results.filter(r => r.status === 'FAIL' || r.status.startsWith('❌')).length;

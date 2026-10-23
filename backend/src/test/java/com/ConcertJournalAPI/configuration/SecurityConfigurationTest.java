@@ -85,6 +85,9 @@ public class SecurityConfigurationTest {
         // lands on the backend login form instead of the client router.
         mockMvc.perform(get("/edit-entry/11"))
                 .andExpect(status().isNotFound());
+        // The privacy policy must be reachable without an account (GDPR Art. 13)
+        mockMvc.perform(get("/privacy"))
+                .andExpect(status().isNotFound());
     }
 
     @Test
