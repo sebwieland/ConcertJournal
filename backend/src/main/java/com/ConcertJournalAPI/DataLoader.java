@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Profile;
 import org.springframework.core.env.Environment;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -17,7 +18,12 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.IntStream;
 
+/**
+ * Seeds admin@example.com / password plus demo events for local runs and tests.
+ * Never in production: a publicly known login on the live site.
+ */
 @Component
+@Profile("!production")
 public class DataLoader implements CommandLineRunner {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DataLoader.class);

@@ -1,15 +1,11 @@
 package com.ConcertJournalAPI.security;
 
-import com.ConcertJournalAPI.DataLoader;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 
@@ -21,7 +17,6 @@ import static com.ConcertJournalAPI.security.JwtUtils.generateToken;
 @Component
 public class AuthSuccessHandler extends SavedRequestAwareAuthenticationSuccessHandler {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(DataLoader.class);
 
     @Value("${auth.cookie.secure}")
     private boolean secureCookie;
@@ -36,9 +31,6 @@ public class AuthSuccessHandler extends SavedRequestAwareAuthenticationSuccessHa
         response.setStatus(HttpStatus.OK.value());
         response.setContentType("application/json");
         response.getWriter().write("{\"accessToken\":\"" + accessToken + "\", \"refreshToken\":\"" + refreshToken + "\"}");
-
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        LOGGER.info("UserDetails: {}", userDetails);
 
         // Store refresh token in cookie — httpOnly per config: the SPA must never
         // need to read this credential (XSS exfiltration barrier, risk §11/R2)

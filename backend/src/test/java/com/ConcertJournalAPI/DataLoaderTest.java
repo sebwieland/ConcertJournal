@@ -58,4 +58,13 @@ public class DataLoaderTest {
     }
 
     // Add more tests as needed
+
+    @Test
+    public void testNeverRunsInProduction() {
+        // The seeded admin@example.com / password must not exist on the live site
+        org.springframework.context.annotation.Profile profile =
+                DataLoader.class.getAnnotation(org.springframework.context.annotation.Profile.class);
+        org.junit.jupiter.api.Assertions.assertNotNull(profile);
+        org.junit.jupiter.api.Assertions.assertArrayEquals(new String[]{"!production"}, profile.value());
+    }
 }
