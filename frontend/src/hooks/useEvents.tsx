@@ -1,4 +1,4 @@
-import { useQuery, useMutation } from "react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import EventsApi from "../api/apiEvents";
 import useAuth from "./useAuth";
 import parseEventDate from "../utils/parseEventDate";
@@ -42,9 +42,9 @@ const useEvents = (): UseEvents => {
   const eventsApi = EventsApi();
   const { token } = useAuth();
 
-  const { data, error, isLoading, refetch } = useQuery(
-    "allEvents",
-    async () => {
+  const { data, error, isLoading, refetch } = useQuery({
+    queryKey: ["allEvents"],
+    queryFn: async () => {
       if (!token) {
         throw handleApiError(new Error("No authentication token found"));
       }
@@ -77,25 +77,25 @@ const useEvents = (): UseEvents => {
         throw handleApiError(error);
       }
     },
-    {
-      enabled: !!token, // only fetch when token is available
-    },
-  );
-
-  const createEventMutation = useMutation(async (data: CreateEventData) => {
-    if (!token) {
-      throw handleApiError(new Error("No authentication token found"));
-    }
-    try {
-      const response = await eventsApi.createEvent(data, token);
-      return response;
-    } catch (error) {
-      throw handleApiError(error);
-    }
+    enabled: !!token, // only fetch when token is available
   });
 
-  const updateEventMutation = useMutation(
-    async ({ id, data }: { id: number; data: UpdateEventData }) => {
+  const createEventMutation = useMutation({
+    mutationFn: async (data: CreateEventData) => {
+      if (!token) {
+        throw handleApiError(new Error("No authentication token found"));
+      }
+      try {
+        const response = await eventsApi.createEvent(data, token);
+        return response;
+      } catch (error) {
+        throw handleApiError(error);
+      }
+    },
+  });
+
+  const updateEventMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: UpdateEventData }) => {
       if (!token) {
         throw handleApiError(new Error("No authentication token found"));
       }
@@ -106,18 +106,20 @@ const useEvents = (): UseEvents => {
         throw handleApiError(error);
       }
     },
-  );
+  });
 
-  const deleteEventMutation = useMutation(async (id: number) => {
-    if (!token) {
-      throw handleApiError(new Error("No authentication token found"));
-    }
-    try {
-      const response = await eventsApi.deleteEvent(id, token);
-      return response;
-    } catch (error) {
-      throw handleApiError(error);
-    }
+  const deleteEventMutation = useMutation({
+    mutationFn: async (id: number) => {
+      if (!token) {
+        throw handleApiError(new Error("No authentication token found"));
+      }
+      try {
+        const response = await eventsApi.deleteEvent(id, token);
+        return response;
+      } catch (error) {
+        throw handleApiError(error);
+      }
+    },
   });
 
   const createEvent = async (
