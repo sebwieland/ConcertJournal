@@ -4,6 +4,7 @@ import com.ConcertJournalAPI.model.AppUser;
 import com.ConcertJournalAPI.model.BandEvent;
 import com.ConcertJournalAPI.repository.BandEventRepository;
 import com.ConcertJournalAPI.repository.AppUserRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -11,6 +12,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.test.context.support.WithMockUser;
 
 import java.util.Arrays;
@@ -49,9 +51,11 @@ class BandEventServiceTest {
         return sampleUser;
     }
 
+    @BeforeEach
     void setup() {
         appUser = getSampleAppUser();
-        when(appUserRepository.findByEmail("testUser")).thenReturn(appUser);
+        // lenient: the unauthenticated tests never reach the user lookup
+        lenient().when(appUserRepository.findByEmail("testUser")).thenReturn(appUser);
     }
 
 
@@ -114,29 +118,28 @@ class BandEventServiceTest {
 
     @Test
     void testGetAllEventsInvalidAuthentification() {
-        assertThrows(RuntimeException.class, () -> bandEventService.getAllEvents());
+        assertThrows(AuthenticationCredentialsNotFoundException.class, () -> bandEventService.getAllEvents());
     }
 
     @Test
     void testGetEventInvalidAuthentification() {
-        assertThrows(RuntimeException.class, () -> bandEventService.getEventById(1L));
+        assertThrows(AuthenticationCredentialsNotFoundException.class, () -> bandEventService.getEventById(1L));
     }
 
     @Test
     void testSaveEventInvalidAuthentification() {
-        assertThrows(RuntimeException.class, () -> bandEventService.saveEvent(getSampleBandEvent()));
+        assertThrows(AuthenticationCredentialsNotFoundException.class, () -> bandEventService.saveEvent(getSampleBandEvent()));
     }
 
     @Test
     void testDeleteEventInvalidAuthentification() {
-        assertThrows(RuntimeException.class, () -> bandEventService.deleteEventById(1L));
+        assertThrows(AuthenticationCredentialsNotFoundException.class, () -> bandEventService.deleteEventById(1L));
     }
 
     @Test
     @WithMockUser(username = "testUser")
     void testUpdateEvent() {
         // Given: a mock repository with one sample BandEvent
-        setup();
         BandEvent sampleEvent = getSampleBandEvent();
         BandEvent updatedEvent = getSampleBandEvent();
         updatedEvent.setBandName("Updated Band");
@@ -156,12 +159,11 @@ class BandEventServiceTest {
     @WithMockUser(username = "testUser")
     void testUpdateEventNotFound() {
         // Given: a mock repository with no BandEvent
-        setup();
         BandEvent updatedEvent = getSampleBandEvent();
         when(bandEventRepository.findByIdAndAppUser(updatedEvent.getId(), appUser)).thenReturn(java.util.Optional.empty());
 
         // When: calling the service method
-        assertThrows(RuntimeException.class, () -> bandEventService.updateEvent(updatedEvent.getId(), updatedEvent));
+        assertThrows(EventNotFoundException.class, () -> bandEventService.updateEvent(updatedEvent.getId(), updatedEvent));
     }
 
     @Test
@@ -170,7 +172,22 @@ class BandEventServiceTest {
         BandEvent updatedEvent = getSampleBandEvent();
 
         // When: calling the service method
-        assertThrows(RuntimeException.class, () -> bandEventService.updateEvent(updatedEvent.getId(), updatedEvent));
+        assertThrows(AuthenticationCredentialsNotFoundException.class, () -> bandEventService.updateEvent(updatedEvent.getId(), updatedEvent));
+    }
+
+    @Test
+    @WithMockUser(username = "testUser")
+    void testGetEventNotFound() {
+        when(bandEventRepository.findByIdAndAppUser(42L, appUser)).thenReturn(java.util.Optional.empty());
+
+        assertThrows(EventNotFoundException.class, () -> bandEventService.getEventById(42L));
+    }
+
+    @Test
+    @WithMockUser(username = "deletedUser")
+    void testAuthenticatedButUnknownUser() {
+        assertThrows(AuthenticationCredentialsNotFoundException.class, () -> bandEventService.getAllEvents());
+        verify(bandEventRepository, never()).findAllByAppUser(any());
     }
 
 }
