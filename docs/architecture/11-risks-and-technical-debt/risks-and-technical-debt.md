@@ -18,7 +18,7 @@
 | ID | Risk | Impact | Likelihood | Status | Mitigation |
 |---|---|---|---|---|---|
 | R1 | **Password hashes leak via API.** Entities were serialised with owner + BCrypt hash. | High | High | Resolved | `@JsonIgnore` on `AppUser.password` and `BandEvent.appUser`; registration binds a `RegisterRequest` record. Full DTO layer still outstanding (TD3) |
-| R2 | **Refresh token doubles as access token.** | High | Medium | Mitigated | `typ` claim (`access`/`refresh`) enforced in `JwtAuthenticationFilter` and `/api/refresh-token`. Still open: no server-side revocation — a leaked refresh token stays valid for 30 days after logout |
+| R2 | **Refresh token doubles as access token.** | High | Medium | Mitigated | `typ` claim (`access`/`refresh`) enforced in `JwtAuthenticationFilter` and `/api/refresh-token`. Still open: no server-side revocation — a leaked refresh token stays valid for 30 days after logout. **Accepted (2026-10-23):** refresh tokens are not rotated — `/api/refresh-token` builds a new cookie but deliberately never sends it, so sessions end 30 days after login regardless of activity. Owner decision; do not "fix" without asking |
 | R3 | **Permissive fallback rule.** `anyRequest().permitAll()` | Medium | Medium | Resolved | Fallback is `denyAll()`; public routes are whitelisted explicitly |
 | R4 | **JWT secret falls back to known defaults.** | High | Low | Resolved | `JwtUtils` hard-fails on a missing secret, < 32 bytes, or the docker-compose default strings (the compose fallbacks still exist but are rejected at startup) |
 | R5 | **Rate limit key is spoofable.** `RateLimitFilter` trusted `X-Forwarded-For`; every distinct header value also added a permanent limiter entry (unbounded memory). | Medium | Medium | Resolved | Keyed on `remoteAddr` only, idle buckets evicted; `server.forward-headers-strategy=native` honours proxy headers only from internal proxy addresses. **Deployment check:** if the prod reverse proxy reaches the app from a public IP, all users share one bucket — configure `server.tomcat.remoteip.internal-proxies` |
@@ -48,4 +48,4 @@
 | TD11 | **Java package naming** `com.ConcertJournalAPI` violates lowercase convention | Deliberate | Cosmetic but complicates refactoring tooling expectations | Major backend refactor (renaming touches every file) |
 | TD12 | ~~Held security fix: `.trivyignore` suppressed spring-webmvc CVE-2026-47884/47890~~ | Deliberate | — | **Resolved** 2026-10-23: Spring Boot 4.1.2 (spring-webmvc 7.0.10); suppressions deleted |
 
-> Prioritised pay-down order (reviewed 2026-10-23): **R2 revocation (+ refresh-cookie rotation is never sent: `SecurityController` builds the cookie but never calls `addCookie`) → TD2 validation → TD3 DTOs**, then the hygiene items opportunistically.
+> Prioritised pay-down order (reviewed 2026-10-23): **R2 revocation → TD2 validation → TD3 DTOs**, then the hygiene items opportunistically.
