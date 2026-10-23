@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.LongSupplier;
 
 @Component
 public class RateLimitFilter extends OncePerRequestFilter {
@@ -22,13 +23,27 @@ public class RateLimitFilter extends OncePerRequestFilter {
     // + fonts + API calls through one socket — 60/min 500-blocked legit users
     // (E2E smoke caught it: every container request shares one limiter).
     private static final int REQUESTS_PER_MINUTE = 300;
+    private static final Duration REFRESH_PERIOD = Duration.ofMinutes(1);
 
-    private final Map<String, RateLimiter> limiters = new ConcurrentHashMap<>();
+    private record Bucket(RateLimiter limiter, long lastSeenMillis) {}
+
+    private final Map<String, Bucket> limiters = new ConcurrentHashMap<>();
+    private final LongSupplier clock;
+    private volatile long lastSweepMillis;
+
+    public RateLimitFilter() {
+        this(System::currentTimeMillis);
+    }
+
+    RateLimitFilter(LongSupplier clock) {
+        this.clock = clock;
+        this.lastSweepMillis = clock.getAsLong();
+    }
 
     private RateLimiter createRateLimiter(String key) {
         RateLimiterConfig config = RateLimiterConfig.custom()
                 .limitForPeriod(REQUESTS_PER_MINUTE)
-                .limitRefreshPeriod(Duration.ofMinutes(1))
+                .limitRefreshPeriod(REFRESH_PERIOD)
                 .timeoutDuration(Duration.ofSeconds(0))
                 .build();
 
@@ -36,18 +51,39 @@ public class RateLimitFilter extends OncePerRequestFilter {
     }
 
     private RateLimiter getRateLimiter(String key) {
-        return limiters.computeIfAbsent(key, k -> createRateLimiter(k));
+        long now = clock.getAsLong();
+        sweepIdleBuckets(now);
+        return limiters.compute(key, (k, existing) -> new Bucket(
+                existing != null ? existing.limiter() : createRateLimiter(k), now)).limiter();
     }
 
+    /**
+     * A bucket idle for a full refresh period has refilled completely, so
+     * dropping it is indistinguishable from keeping it. Without this the map
+     * grows with every client address ever seen (IPv6 rotation, scanners).
+     */
+    private void sweepIdleBuckets(long now) {
+        long idleCutoff = REFRESH_PERIOD.toMillis();
+        if (now - lastSweepMillis < idleCutoff) {
+            return;
+        }
+        lastSweepMillis = now;
+        limiters.values().removeIf(bucket -> now - bucket.lastSeenMillis() >= idleCutoff);
+    }
+
+    int trackedClients() {
+        return limiters.size();
+    }
+
+    /**
+     * Deliberately only the socket peer: X-Forwarded-For / X-Real-IP are
+     * client-controlled, and trusting them let anyone pick a fresh bucket per
+     * request (risk R5). Behind a reverse proxy, server.forward-headers-strategy=native
+     * makes Tomcat's RemoteIpValve rewrite remoteAddr — but only when the
+     * header arrives from an internal proxy address.
+     */
     private String getClientIdentifier(HttpServletRequest request) {
-        String ip = request.getHeader("X-Forwarded-For");
-        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getHeader("X-Real-IP");
-        }
-        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getRemoteAddr();
-        }
-        return ip;
+        return request.getRemoteAddr();
     }
 
     @Override

@@ -5,7 +5,9 @@ import org.springframework.mock.web.MockFilterChain;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 
+import java.time.Duration;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -16,7 +18,7 @@ public class RateLimitFilterTest {
 
     private MockHttpServletRequest request(String clientIp) {
         MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/allEvents");
-        request.addHeader("X-Forwarded-For", clientIp);
+        request.setRemoteAddr(clientIp);
         return request;
     }
 
@@ -77,5 +79,33 @@ public class RateLimitFilterTest {
         MockHttpServletResponse otherClient = new MockHttpServletResponse();
         filter.doFilter(request("198.51.100.7"), otherClient, new MockFilterChain());
         assertEquals(200, otherClient.getStatus());
+    }
+
+    @Test
+    public void testForwardedHeadersCannotSelectAFreshBucket() throws Exception {
+        String attacker = "203.0.113.13";
+        for (int i = 0; i < 300; i++) {
+            filter.doFilter(request(attacker), new MockHttpServletResponse(), new MockFilterChain());
+        }
+        MockHttpServletRequest spoofed = request(attacker);
+        spoofed.addHeader("X-Forwarded-For", "192.0.2.99");
+        spoofed.addHeader("X-Real-IP", "192.0.2.100");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        filter.doFilter(spoofed, response, new MockFilterChain());
+        assertEquals(429, response.getStatus(), "spoofed headers must not bypass the limit");
+    }
+
+    @Test
+    public void testIdleBucketsAreEvicted() throws Exception {
+        AtomicLong now = new AtomicLong(0);
+        RateLimitFilter clocked = new RateLimitFilter(now::get);
+        for (int i = 0; i < 50; i++) {
+            clocked.doFilter(request("10.0.0." + i), new MockHttpServletResponse(), new MockFilterChain());
+        }
+        assertEquals(50, clocked.trackedClients());
+
+        now.set(Duration.ofMinutes(1).toMillis());
+        clocked.doFilter(request("10.0.1.1"), new MockHttpServletResponse(), new MockFilterChain());
+        assertEquals(1, clocked.trackedClients(), "only the active client should remain");
     }
 }
