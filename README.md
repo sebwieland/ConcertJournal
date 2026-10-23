@@ -25,19 +25,19 @@ This repository contains both the frontend and backend components of the Concert
 
 This project supports two development approaches:
 
-1. **Hybrid Approach (Strongly Recommended)**: Run the frontend locally and the backend in Docker
-2. **Full Docker Approach**: Run both frontend and backend in Docker
+1. **Hybrid Approach (Strongly Recommended)**: MySQL in Docker, backend and frontend on the host
+2. **Full Docker Approach**: Dev backend + MySQL in Docker, or the unified production container
 
 The hybrid approach is strongly recommended for frontend development as it provides a significantly better developer experience with faster hot reloading and immediate feedback.
 
 ### Why Hybrid Development?
 
-Running the frontend locally while keeping the backend in Docker provides several advantages:
+Running the app on the host while keeping the database in Docker provides several advantages:
 
 - **Much faster hot reloading** - Changes are detected instantly via native file system events
 - **Better developer experience** - Immediate feedback loop improves productivity
 - **Simpler frontend setup** - Fewer configuration files and environment variables to manage
-- **Consistent backend environment** - Backend services still run in Docker for consistency
+- **Consistent database** - MySQL still runs in Docker, sharing the volume with the other modes
 
 ## Getting Started
 
@@ -54,9 +54,9 @@ chmod +x local-dev.sh
 ```
 
 This script will:
-1. Start the backend services in Docker
-2. Wait for them to be ready
-3. Start the frontend locally with the correct configuration
+1. Start MySQL in Docker (and stop a Docker dev backend if one is running)
+2. Start the backend on the host with the `dev` profile (exports a local `JWT_SECRET` if you have none set)
+3. Start the Vite dev server on http://localhost:3000, which proxies `/api` to the backend on `:8080`
 
 This is the recommended way to start development on this project.
 
@@ -84,26 +84,24 @@ If you prefer to set up manually:
 
 ### Full Docker Approach
 
-If you need to run everything in Docker (e.g., for full-stack testing or CI/CD), you can use the Docker setup:
+Services are grouped into compose profiles — a plain `docker-compose up` only starts MySQL.
 
 ```bash
-# Start all services
-docker-compose up
+# Dev backend + MySQL (frontend runs on the host, see above)
+docker-compose --profile dev up -d
 
-# Start in detached mode
-docker-compose up -d
+# Unified production container: SPA + API on one origin
+docker-compose --profile production up --build
 
-# Stop all services
+# Stop all services (add -v to also delete the database volume)
 docker-compose down
 ```
 
-Note that this approach will result in significantly slower hot reloading due to Docker volume mounting overhead and the use of polling instead of native file system events.
-
-The services will be available at:
-- Frontend: http://localhost:3000
-- Backend API: http://localhost:8080
+In the production profile everything is served from http://localhost:8080 (SPA and `/api`).
 
 ## Backend Architecture
+
+The full architecture documentation (arc42) lives in [`docs/architecture/`](docs/architecture/ARCHITECTURE.md).
 
 The backend is a RESTful API built with:
 
@@ -115,11 +113,13 @@ The backend is a RESTful API built with:
 
 ### API Endpoints
 
-The API provides the following endpoints:
+All data endpoints require a valid access token and are scoped to the signed-in user:
 
-- `/api/events`: Band event operations
-- `/api/users`: User operations
-- `/api/auth`: Authentication operations
+- `GET /api/allEvents`: all of the user's concert entries
+- `GET|PUT|DELETE /api/event/{id}`, `POST /api/event`: single-entry CRUD (unknown ids return 404)
+- `GET /api/me`: the current user
+- `POST /api/refresh-token`, `GET /api/get-xsrf-cookie`: token refresh and CSRF bootstrap (anonymous)
+- `POST /login`, `POST /register`, `POST /logout`: authentication, at the root path (no `/api` prefix)
 
 For detailed API documentation, access the Swagger UI when the application is running:
 
@@ -131,8 +131,11 @@ http://localhost:8080/swagger-ui.html
 
 The application uses different property files for different environments:
 
-- `application.properties`: Default configuration (H2 database)
+- `application.properties`: Default configuration (in-memory H2 database, used by tests)
 - `application-dev.properties`: Development configuration (MySQL database)
+- `application-production.properties`: Production configuration (MySQL, secure cookies)
+
+The backend refuses to start without a `JWT_SECRET` environment variable of at least 32 characters.
 
 To use the development configuration when running locally:
 
@@ -185,7 +188,7 @@ docker-compose up
 
 ### Frontend Issues
 
-- **CORS issues**: Ensure the backend's CORS configuration includes `http://localhost:3000`
+- **CORS errors**: There is deliberately no CORS configuration. In development the Vite dev server proxies `/api` to `:8080`, in production SPA and API share one origin. A CORS error means a request bypassed the proxy (e.g. a hardcoded `http://localhost:8080` URL)
 - **Cannot connect to backend**: Check that the backend container is running and accessible
 - **Hot reloading not working**: 
   - In hybrid mode: Ensure you're using the `start:local` script which disables polling

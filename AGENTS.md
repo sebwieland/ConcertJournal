@@ -52,10 +52,11 @@ Access: Frontend http://localhost:3000 (proxies `/api` → `:8080`), Backend htt
 
 **Backend:**
 - Entry: `src/main/java/com/ConcertJournalAPI/ConcertJournalAPI.java` — **no `@EnableWebMvc`** (it disables Boot auto-config and silently drops all `spring.jackson.*` settings)
+- Errors: `ApiExceptionHandler` maps `EventNotFoundException` → 404 and `AuthenticationCredentialsNotFoundException` → 401 with `{status,error,message}`; throw those (or add a mapping), never bare `RuntimeException`
 - Controllers: all under `@RequestMapping("/api")` — BandEventController (`/api/allEvents`, `/api/event/{id}`), HomeController (`/api/me`), SecurityController (`/api/refresh-token`, `/api/get-xsrf-cookie`)
 - Auth endpoints at **root** (no /api prefix): `/login`, `/register`, `/logout` (Spring Security convention)
 - Security chain (`SecurityConfiguration`): `/api/**` → authenticated, `denyAll` fallback, JSON 401 entrypoint for APIs. **Must stay anonymously permitted:** `/api/refresh-token`, `/api/get-xsrf-cookie`, `/register`, `/login`, `/logout`, actuator health, and the SPA document-route matcher
-- SPA serving: `SpaController` forwards `/` plus all 1- and 2-segment dot-free document routes to `index.html`; adding a deeper route (e.g. `/a/:param`) requires updating **both** the `SpaController` mapping and the SecurityConfiguration matcher, plus the `RateLimitFilter` needs no change (300 req/min per IP, clean 429)
+- SPA serving: `SpaController` forwards `/` plus all 1- and 2-segment dot-free document routes to `index.html`; adding a deeper route (e.g. `/a/:param`) requires updating **both** the `SpaController` mapping and the SecurityConfiguration matcher, plus the `RateLimitFilter` needs no change (300 req/min keyed on `remoteAddr` only — never on `X-Forwarded-For`; proxies are honoured via `server.forward-headers-strategy=native` from internal addresses; clean 429)
 - Migrations: `src/main/resources/db/migration/` (Flyway, MySQL-compatible DDL); prod DBs use `SPRING_FLYWAY_BASELINE_ON_MIGRATE=true` if pre-existing
 - Static files: `/app/static/` in the unified container (`WebConfig` + `SpaController`)
 
@@ -66,8 +67,8 @@ Access: Frontend http://localhost:3000 (proxies `/api` → `:8080`), Backend htt
 
 ## Gotchas (purchased with debugging sessions — re-read before assuming)
 
-- `@mui/x-data-grid` **v7**: `valueFormatter` receives the raw value first `(value, row, column, apiRef)`, not a params object
-- MUI X Charts: use plain vertical `BarChart`/`LineChart` with `xAxis: [{scaleType: "band", data}]`; the `layout` prop gets overwritten by `useBarChartProps` and crashes as y-axis scale errors in 7.29
+- `@mui/x-data-grid` (since v7, now on v9): `valueFormatter` receives the raw value first `(value, row, column, apiRef)`, not a params object
+- MUI X Charts: use plain vertical `BarChart`/`LineChart` with `xAxis: [{scaleType: "band", data}]`; the `layout` prop gets overwritten by `useBarChartProps` and crashed as y-axis scale errors in 7.29 — re-verify before relying on `layout` in v9
 - `DefaultLayout` renders children inside a `md:flex-row` Stack — multi-block pages (statistics, deep dives) must wrap ALL content in **one** container `Box` or blocks split into side-by-side columns
 - Never run plain `tsc` with emit; `tsconfig.json` has `noEmit` and `src/**/*.js(.map)` artifacts are gitignored — stale `.js` files used to shadow `.tsx` sources in Vite dev
 - `npm run build` = `tsc && vite build` — unit tests don't type-check, CI does; run `npx tsc --noEmit` after test-only changes

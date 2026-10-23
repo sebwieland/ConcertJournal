@@ -67,9 +67,12 @@ hardcoded there (see §11 TD1). The CSP still contains `unsafe-inline`/`unsafe-e
 
 ## Rate Limiting
 
-`RateLimitFilter` (Resilience4j `RateLimiter`, 60 requests/minute) applies to **every** request,
-keyed by client IP (`X-Forwarded-For` → `X-Real-IP` → `remoteAddr`, spoofable if the proxy does
-not sanitize). Exceeding requests get a 429 and never reach the security chain.
+`RateLimitFilter` (Resilience4j `RateLimiter`, 300 requests/minute) applies to **every** request,
+keyed by `remoteAddr` only — forwarding headers are client-controlled and are never read by the
+filter. Behind a reverse proxy, `server.forward-headers-strategy=native` lets Tomcat's
+`RemoteIpValve` rewrite `remoteAddr` from `X-Forwarded-For`, but only when the request comes
+from an internal (private-range) proxy address. Buckets idle for a full refresh period are evicted
+so the limiter map stays bounded. Exceeding requests get a 429 and never reach the security chain.
 
 ## Observability — Logging, Metrics
 
@@ -89,16 +92,18 @@ not sanitize). Exceeding requests get a 429 and never reach the security chain.
 | Error type | Propagation | HTTP status | Logged |
 |---|---|---|---|
 | Bean validation failure (`@Valid`) | Spring MVC method validation | 400 | No |
-| Not authenticated | `LoginUrlAuthenticationEntryPoint` | 302 → `/login` | No |
+| Not authenticated (`/api/**`) | custom entrypoint in `SecurityConfiguration` | 401 `{"error":"Unauthorized"}` | No |
+| Not authenticated (other non-public routes) | `LoginUrlAuthenticationEntryPoint` | 302 → `/login` | No |
 | CSRF token mismatch | Spring Security CsrfFilter | 403 | No |
 | Rate limit exceeded | `RateLimitFilter` writes body directly | 429 | No |
-| Unauthenticated service call / event not found | `BandEventService` throws `RuntimeException` | 500 | Container logs |
-| Event lookup miss | `getEventById` returns `null` | 200 empty body | No |
+| Event not found / owned by another user | `EventNotFoundException` → `ApiExceptionHandler` | 404 `{status,error,message}` | No |
+| Service call without authentication, or token for a deleted account | `AuthenticationCredentialsNotFoundException` → `ApiExceptionHandler` | 401 | No |
 | Invalid refresh token | `SecurityController` catches `JwtException` | 400 | No |
 
-There is **no** `@ControllerAdvice`/global exception handler on the backend; expected domain
-errors surface as 500s (see §11 TD2). The frontend normalises axios errors centrally in
-`apiErrors.ts`.
+`ApiExceptionHandler` (`@RestControllerAdvice`) maps expected domain errors to status codes;
+anything unmapped is still a 500. Deleting an unknown id stays an idempotent 200. Validation
+failures use Boot's default 400 body, while `apiErrors.ts` (which normalises axios errors
+centrally on the frontend) expects field errors on a 422 (see §11 TD2).
 
 ## Domain Model
 
