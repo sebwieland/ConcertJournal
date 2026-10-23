@@ -17,6 +17,7 @@ const DeepDivePage = lazy(() => import("./components/deepDive/DeepDivePage"));
 const EditEntryFormPage = lazy(
   () => import("./components/entryForms/EditEntryFormPage"),
 );
+const SettingsPage = lazy(() => import("./components/settings/SettingsPage"));
 const SignUpSide = lazy(() => import("./components/signIn/SignUpSide"));
 const SignInSide = lazy(() => import("./components/signIn/SignInSide"));
 const AuthenticatedPage = lazy(() => import("./components/AuthenticatedPage"));
@@ -60,6 +61,10 @@ class App extends React.Component<Record<string, never>> {
                   element={
                     <AuthenticatedPage element={<EditEntryFormPage />} />
                   }
+                />
+                <Route
+                  path="/settings"
+                  element={<AuthenticatedPage element={<SettingsPage />} />}
                 />
                 <Route path="/sign-up" element={<SignUpSide />} />
                 <Route path="/sign-in" element={<SignInSide />} />

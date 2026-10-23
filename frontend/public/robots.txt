@@ -10,5 +10,6 @@ Disallow: /edit-entry
 Disallow: /statistics
 Disallow: /artist/
 Disallow: /venue/
+Disallow: /settings
 
 Sitemap: https://concertjournal.de/sitemap.xml
